@@ -20,7 +20,7 @@ class XMonadMode(Mode):
             "previous" : keys("ctrl+alt+o"),
             "move next" : keys("ctrl+alt+shift+e"),
             "move previous" : keys("ctrl+alt+shift+o"),
-            "grow" : keys("ctrl+alt+i"),
+            "expand" : keys("ctrl+alt+i"),
             "shrink" : keys("ctrl+alt+n"),
             "cycle" : keys("ctrl+alt+backslash"),
             "close window" : keys("ctrl+alt+x"),

@@ -107,12 +107,13 @@ class Mandimus:
         self.wordCorpus.update(self.activeMode.wordSet)
         
         for mode in config.modes:
-            assert mode.activationPhrase() not in self.commands
+            if mode.activationPhrase(): # not all modes have one
+                assert mode.activationPhrase() not in self.commands
             
-            # have to use partial because lambdas will capture by name!
-            self.commands[mode.activationPhrase()] = partial(self.setMode, mode)
-            
-            self.wordCorpus.update(mode.activationPhrase().split())
+                # have o use partial because lambdas will capture by name!
+                self.commands[mode.activationPhrase()] = partial(self.setMode, mode)
+                
+                self.wordCorpus.update(mode.activationPhrase().split())
 
         self.commands.update(self.activeMode.commands)
 
