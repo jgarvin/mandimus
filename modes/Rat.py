@@ -8,10 +8,6 @@ class RatMode(NumberMode):
         self.lastDigit = 4
         self.zoomLevel = 1
 
-    @classmethod
-    def activationPhrase(cls):
-        return "rat mode"
-
     @property
     def commands(self):
         c = {}

@@ -5,10 +5,6 @@ class XMonadMode(Mode):
     def __init__(self):
         Mode.__init__(self)
 
-    @classmethod
-    def activationPhrase(cls):
-        return "win mode"
-
     @property
     def commands(self):
         c = {

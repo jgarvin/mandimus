@@ -9,10 +9,6 @@ class ChromeMode(CUAMode, SpellMode, RatMode):
         SpellMode.__init__(self)
         RatMode.__init__(self)
 
-    @classmethod
-    def activationPhrase(cls):
-        return "chrome mode"
-
     @property
     def commands(self):
         c = {}

@@ -5,10 +5,6 @@ class SpellMode(NumberMode):
     def __init__(self):
         NumberMode.__init__(self)
 
-    @classmethod
-    def activationPhrase(cls):
-        return "spell mode"
-
     @property
     def commands(self):
         # Based on the NATO phonetic alphabet

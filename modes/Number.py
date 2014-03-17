@@ -5,10 +5,6 @@ class NumberMode(Mode):
     def __init__(self):
         Mode.__init__(self)
 
-    @classmethod
-    def activationPhrase(cls):
-        return "number mode"
-
     @property
     def commands(self):
         # Based on the NATO phonetic alphabet

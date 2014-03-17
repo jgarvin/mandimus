@@ -5,10 +5,6 @@ class CUAMode(Mode):
     def __init__(self):
         Mode.__init__(self)
 
-    @classmethod
-    def activationPhrase(cls):
-        return None
-
     @property
     def commands(self):
         c = {

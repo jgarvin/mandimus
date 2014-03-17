@@ -8,6 +8,7 @@ import signal
 import gobject
 import os.path
 import subprocess
+import itertools
 from tempfile import NamedTemporaryFile
 from optparse import OptionParser
 from contextlib import nested
@@ -30,23 +31,37 @@ dic_file = os.path.join(lang_dir,'dic')
 if not os.path.exists(lang_dir):
     os.makedirs(lang_dir)
 
+def flattenList(l):
+    return list(itertools.chain.from_iterable(l))
+
 class Mandimus:
     def __init__(self, opts):        
         self.opts = opts
-        self.wordBuffer = []
+        self.wordBuffer = {}
         self.recognizer = None
         
+        # These are the phrases that have meaning in ALL modes
+        self.globalPhrases = { "pop" : (lambda : self.pop) }
+
+        self.recognizers = {}
+
         # generate master corpus
         self.genMasterCorpus()
 
-        #whichever user listed first is default
+        #whichever user listed first is root unpoppable mode
         self.activeMode = None
         self.setMode(config.modes[0])
+
+        self.createRecognizer()
+
+    def pop(self):
+        pass
 
     def genMasterCorpus(self):
         masterCorpus = set()
         for mode in config.modes:
             masterCorpus.update(mode().wordSet)
+        masterCorpus.update(flattenList([k.split() for k in self.globalPhrases.keys()]))
 
         strings = open(strings_file, "w")
         
@@ -98,59 +113,72 @@ class Mandimus:
     def setMode(self, newMode):
         if self.activeMode and isinstance(self.activeMode, newMode):
             return
-        print "Activating new mode: %s" % (newMode.__name__)
-        
-        self.activeMode = newMode()
+        print "Activating new mode: %s" % (newMode.__name__)        
 
-        self.commands = {}
-        self.wordCorpus = set()
-        self.wordCorpus.update(self.activeMode.wordSet)
-        
-        for mode in config.modes:
-            if mode.activationPhrase(): # not all modes have one
-                assert mode.activationPhrase() not in self.commands
-            
-                # have o use partial because lambdas will capture by name!
-                self.commands[mode.activationPhrase()] = partial(self.setMode, mode)
-                
-                self.wordCorpus.update(mode.activationPhrase().split())
+        self.activeMode = newMode()        
 
-        self.commands.update(self.activeMode.commands)
+        self.commands = self.getModeCommandDictionary(self.activeMode)
+        self.wordCorpus = self.getModeWordCorpus(self.activeMode)
 
         self.phraseList = self.commands.keys()
 
         # sort by number of words descending
-        self.phraseList.sort(key=lambda x: len(x.split()), reverse=True)
+        self.phraseList.sort(key=lambda x: len(x.split()), reverse=True)        
 
+    def getModeWordCorpus(self, mode):
+        wordCorpus = set()
+        wordCorpus.update(mode.wordSet)
+        wordCorpus.update(flattenList([k.split() for k in self.globalPhrases]))        
+        return wordCorpus
+
+    def getModeCommandDictionary(self, mode):
+        commands = {}
+        commands.update(mode.commands)
+        commands.update(self.globalPhrases)
+        return commands
+
+    def createRecognizerSetup(self, mode):        
         # generate new lang_file/dic_file here, since pocketsphinx doesn't
         # provide a way to directly manipulate the word corpus over time
-        subDic = self.genDictionary(self.wordCorpus)
-        subModel = self.genLanguageModel(self.wordCorpus)
+        modeInstance = mode()
+        wordCorpus = self.getModeWordCorpus(modeInstance)
+        subDic = self.genDictionary(wordCorpus)
+        subModel = self.genLanguageModel(wordCorpus)
         with nested(NamedTemporaryFile(delete=False), NamedTemporaryFile(delete=False)) as (dicF, modelF):
             writeSphinxDictionaryFile(subDic, dicF)
             writeSphinxLanguageModelFile(subModel, modelF)
             dicF.flush()
             modelF.flush()
 
-            if not self.recognizer:
-                from Recognizer import Recognizer
-                self.recognizer = Recognizer(modelF.name, dicF.name, self.opts.microphone )
-                self.recognizer.connect('finished', self.utteranceFinished)                        
-            else:
-                self.recognizer.setLanguageFile(modelF.name)
-                self.recognizer.setDictionaryFile(dicF.name)                
+            from Recognizer import RecognizerSetup
+            setup = RecognizerSetup(modelF.name, dicF.name, partial(self.utteranceFinished, mode))
+        return setup
+
+    def createRecognizer(self):
+        setupObjects = []
+        for mode in config.modes:
+            setupObjects.append(self.createRecognizerSetup(mode))
+            
+        from Recognizer import Recognizer
+        self.recognizer = Recognizer(setupObjects, self.opts.microphone)
         
-    def utteranceFinished(self, recognizer, text):
+    def utteranceFinished(self, mode, text, finished):
+        print "%s: %s" % (str(mode), text)
+
         t = text.lower()
         
+        if mode not in self.wordBuffer:
+            self.wordBuffer[mode] = []        
+
         for word in t.split():
             if word in self.wordCorpus:
-                self.newWord(word)
+                print "recognized word: %s" % (word,)
+                self.wordBuffer[mode].append(word)
 
-    def newWord(self, word):
-        print "recognized word: %s" % (word,)
-        self.wordBuffer.append(word)
+        if finished:
+            self.parseBuffer(self.wordBuffer[type(self.activeMode)])
 
+    def parseBuffer(self, buf):
         # we look backwards from the most recent word to identify phrases
         # by going in this order we make sure longer phrases don't get
         # confused with shorter phrases containing the same words, e.g.
@@ -158,13 +186,13 @@ class Mandimus:
         for phrase in self.phraseList:
             words = phrase.split()
             
-            if len(self.wordBuffer) < len(words):
+            if len(buf) < len(words):
                 continue
             
-            if words == self.wordBuffer[-len(words):]:
+            if words == buf[-len(words):]:
                 print "Executing command for phrase: %s" % (phrase,)
                 self.commands[phrase]()
-                self.wordBuffer = []
+                del buf[:] # erase contents in place
                 break                
                 
     def run(self):

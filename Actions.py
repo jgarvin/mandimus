@@ -10,7 +10,7 @@ class keys:
 def pressKey(key):
     # TODO: pay attention to errors, exit status
     cmd = "xdotool key " + key
-    print "executing: " + cmd
+#    print "executing: " + cmd
     subprocess.call(cmd, shell=True)    
 
 class keydown:
@@ -20,7 +20,7 @@ class keydown:
     def __call__(self):
         # TODO: pay attention to errors, exit status
         cmd = "xdotool keydown " + self.keyStr
-        print "executing: " + cmd
+#        print "executing: " + cmd
         subprocess.call(cmd, shell=True)
 
 class keyup:
@@ -30,7 +30,7 @@ class keyup:
     def __call__(self):
         # TODO: pay attention to errors, exit status
         cmd = "xdotool keyup " + self.keyStr
-        print "executing: " + cmd
+#        print "executing: " + cmd
         subprocess.call(cmd, shell=True)
         
 class click:
@@ -40,10 +40,10 @@ class click:
     def __call__(self):
         # TODO: pay attention to errors, exit status
         cmd = "xdotool click " + str(self.keyStr)
-        print "executing: " + cmd
+#        print "executing: " + cmd
         subprocess.call(cmd, shell=True)
 
 def moveRelativeToWindow(x, y, windowId):
         cmd = "xdotool mousemove --window %s %s %s" % (windowId, x, y)
-        print "executing: " + cmd
+#        print "executing: " + cmd
         subprocess.call(cmd, shell=True)
