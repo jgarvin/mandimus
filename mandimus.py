@@ -18,6 +18,8 @@ from SphinxParser import (
     parseSphinxDictionaryFile, parseSphinxLanguageModelFile,
     writeSphinxDictionaryFile, writeSphinxLanguageModelFile)
 
+from listHelpers import rindex
+
 import config
 
 #where are the files?
@@ -41,7 +43,7 @@ class Mandimus:
         self.recognizer = None
         
         # These are the phrases that have meaning in ALL modes
-        self.globalPhrases = { "pop" : (lambda : self.pop) }
+        self.globalPhrases = { "pop" : (lambda : self.popMode) }
 
         self.recognizers = {}
 
@@ -49,13 +51,23 @@ class Mandimus:
         self.genMasterCorpus()
 
         #whichever user listed first is root unpoppable mode
-        self.activeMode = None
-        self.setMode(config.modes[0])
+        self.modeStack = []
+        self.pushMode(config.modes[0])
 
         self.createRecognizer()
 
-    def pop(self):
-        pass
+    @property
+    def activeMode(self):
+        if len(self.modeStack):
+            return self.modeStack[-1]
+        return None
+
+    def popMode(self):
+        # can't pop off the top level navigation mode
+        if self.modeStack.index(self.activeMode) == 0:
+            return
+        self.modeStack.pop()
+        self.updateModeData()
 
     def genMasterCorpus(self):
         masterCorpus = set()
@@ -110,18 +122,35 @@ class Mandimus:
                 
         return subModel
 
-    def setMode(self, newMode):
+    def pushMode(self, newMode):
+        # don't allow the same type to be pushed twice in a row
         if self.activeMode and isinstance(self.activeMode, newMode):
             return
-        print "Activating new mode: %s" % (newMode.__name__)        
+        print "Pushing new mode: %s" % (newMode.__name__)        
 
-        self.activeMode = newMode()        
+        # delete pending words in old mode's buffer
+        del self.activeModeBuffer[:]
 
+        self.modeStack.append(newMode())
+        self.updateModeData()
+
+        try:
+            # delete everything before the transition 'pop'
+            # and the pop itself. stuff before the pop was
+            # intended for the old mode to parse
+            anchorIdx = rindex(self.activeModeBuffer, "pop")
+            del self.activeModeBuffer[:anchorIdx+1]
+        except ValueError:
+            # happens when 'pop' isn't found, empty the whole
+            # buffer to be safe
+            del self.activeModeBuffer[:]
+            pass
+
+    def updateModeData(self):
         self.commands = self.getModeCommandDictionary(self.activeMode)
         self.wordCorpus = self.getModeWordCorpus(self.activeMode)
-
         self.phraseList = self.commands.keys()
-
+        
         # sort by number of words descending
         self.phraseList.sort(key=lambda x: len(x.split()), reverse=True)        
 
@@ -176,24 +205,44 @@ class Mandimus:
                 self.wordBuffer[mode].append(word)
 
         if finished:
-            self.parseBuffer(self.wordBuffer[type(self.activeMode)])
+            self.parseBuffer()
+        # TODO: if a pop didn't occur, clear all the buffers?
 
-    def parseBuffer(self, buf):
-        # we look backwards from the most recent word to identify phrases
-        # by going in this order we make sure longer phrases don't get
-        # confused with shorter phrases containing the same words, e.g.
-        # we test for "move left" before just "left"
-        for phrase in self.phraseList:
-            words = phrase.split()
-            
-            if len(buf) < len(words):
-                continue
-            
-            if words == buf[-len(words):]:
-                print "Executing command for phrase: %s" % (phrase,)
-                self.commands[phrase]()
-                del buf[:] # erase contents in place
-                break                
+    @property
+    def activeModeBuffer(self):
+        mode = type(self.activeMode)
+        if mode not in self.wordBuffer:
+            self.wordBuffer[mode] = []        
+        return self.wordBuffer[mode]
+
+    def parseBuffer(self):
+        parsed = []
+
+        buf = self.activeModeBuffer
+
+        while len(buf):
+            parsed.append(buf[0])
+            del buf[0]
+
+            # we look backwards from the most recent word to identify phrases
+            # by going in this order we make sure longer phrases don't get
+            # confused with shorter phrases containing the same words, e.g.
+            # we test for "move left" before just "left"
+            for phrase in self.phraseList:
+                words = phrase.split()
+
+                if len(parsed) < len(words):
+                    continue
+
+                if words == parsed[-len(words):]:
+                    print "Executing command for phrase: %s" % (phrase,)
+                    self.commands[phrase]()
+
+                    # reassign buf in case the mode has changed
+                    buf = self.activeModeBuffer
+                    
+                    parsed = []
+                    break                
                 
     def run(self):
             self.recognizer.listen()
