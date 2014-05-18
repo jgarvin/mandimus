@@ -13,3 +13,6 @@ class Mode(object):
             assert key == key.strip() # no leading/trailing whitespace allowed
             s.update(key.split())
         return s
+
+    def isModeWindow(self, window):
+        return False

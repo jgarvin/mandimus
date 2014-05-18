@@ -23,7 +23,9 @@ class XMonadMode(Mode):
             "kill window" : keys("ctrl+alt+x"),
             "make master" : keys("ctrl+alt+Return"),
             "editor" : keys("ctrl+alt+w"),
-            "browser" : keys("ctrl+alt+b")
+            "browser" : keys("ctrl+alt+b"),
+            "new terminal" : keys("ctrl+shift+alt+t"),
+            "restart window manager" : keys("ctrl+alt+q")
             }
         return c
 

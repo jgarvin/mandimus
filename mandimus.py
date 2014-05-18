@@ -1,8 +1,5 @@
 #!/usr/bin/env python2
 
-# -- this code is licensed GPLv3
-# Copyright 2013 Jezra
-
 import sys
 import signal
 import gobject
@@ -13,12 +10,18 @@ from tempfile import NamedTemporaryFile
 from optparse import OptionParser
 from contextlib import nested
 from functools import partial
+import Queue
+import traceback
+import time
 
 from SphinxParser import (
     parseSphinxDictionaryFile, parseSphinxLanguageModelFile,
     writeSphinxDictionaryFile, writeSphinxLanguageModelFile)
 
 from listHelpers import rindex
+from Window import Window
+from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent
+from xbox import XboxPadSubscription
 
 import config
 
@@ -36,14 +39,23 @@ if not os.path.exists(lang_dir):
 def flattenList(l):
     return list(itertools.chain.from_iterable(l))
 
-class Mandimus:
-    def __init__(self, opts):        
+### currently we don't push mode immediately with phrases
+### like next/previous/editor/browser. we need to change
+### that so phrases like 'editor browser new tab editor'
+### do the expected thing. when an app isn't already running
+### it shouldn't matter, but even then the focus changed event
+### won't come through until the window loads so we'll be
+### golden anyway
+
+class Mandimus(object):
+    def __init__(self, opts, eventQ):
         self.opts = opts
+        self.eventQ = eventQ
         self.wordBuffer = {}
         self.recognizer = None
-        
+
         # These are the phrases that have meaning in ALL modes
-        self.globalPhrases = { "pop" : (lambda : self.popMode) }
+        self.globalPhrases = { "pop" : (lambda : self.popModeOrSelect()) }
 
         self.recognizers = {}
 
@@ -62,12 +74,23 @@ class Mandimus:
             return self.modeStack[-1]
         return None
 
+    def popModeOrSelect(self):
+        """If we're already at the top level, then select the
+        currently focused window, otherwise pop the mode"""
+        if self.modeStack.index(self.activeMode) == 0:
+            for mode in config.modes:
+                if mode().isModeWindow(Window(winId=Window.FOCUSED)) and not isinstance(self.activeMode, mode):
+                    self.pushMode(mode)
+                    return
+        self.popMode()
+
     def popMode(self):
         # can't pop off the top level navigation mode
         if self.modeStack.index(self.activeMode) == 0:
             return
         self.modeStack.pop()
         self.updateModeData()
+        self.onModeChange()
 
     def genMasterCorpus(self):
         masterCorpus = set()
@@ -76,7 +99,7 @@ class Mandimus:
         masterCorpus.update(flattenList([k.split() for k in self.globalPhrases.keys()]))
 
         strings = open(strings_file, "w")
-        
+
         for word in masterCorpus:
             strings.write(word + '\n')
 
@@ -95,13 +118,13 @@ class Mandimus:
             assert w in self.masterDictionary
             subDic[w] = self.masterDictionary[w]
         return subDic
-            
+
     def genLanguageModel(self, wordSet):
         subModel = {}
         for ngram, phraseEntries in self.masterLanguageModel.items():
             for entry in phraseEntries:
                 phrase = entry[1]
-                
+
                 include = False
                 if len(phrase) == 1 and phrase[0] in ["<s>", "</s>"]:
                     # some entries are pure silence, those always make
@@ -119,21 +142,23 @@ class Mandimus:
                 if ngram not in subModel:
                     subModel[ngram] = []
                 subModel[ngram].append(entry)
-                
+
         return subModel
 
     def pushMode(self, newMode):
         # don't allow the same type to be pushed twice in a row
         if self.activeMode and isinstance(self.activeMode, newMode):
             return
-        print "Pushing new mode: %s" % (newMode.__name__)        
+        print "Pushing new mode: %s" % (newMode.__name__)
 
         # delete pending words in old mode's buffer
         del self.activeModeBuffer[:]
 
         self.modeStack.append(newMode())
         self.updateModeData()
+        self.onModeChange()
 
+    def onModeChange(self):
         try:
             # delete everything before the transition 'pop'
             # and the pop itself. stuff before the pop was
@@ -150,14 +175,14 @@ class Mandimus:
         self.commands = self.getModeCommandDictionary(self.activeMode)
         self.wordCorpus = self.getModeWordCorpus(self.activeMode)
         self.phraseList = self.commands.keys()
-        
+
         # sort by number of words descending
-        self.phraseList.sort(key=lambda x: len(x.split()), reverse=True)        
+        self.phraseList.sort(key=lambda x: len(x.split()), reverse=True)
 
     def getModeWordCorpus(self, mode):
         wordCorpus = set()
         wordCorpus.update(mode.wordSet)
-        wordCorpus.update(flattenList([k.split() for k in self.globalPhrases]))        
+        wordCorpus.update(flattenList([k.split() for k in self.globalPhrases]))
         return wordCorpus
 
     def getModeCommandDictionary(self, mode):
@@ -166,7 +191,7 @@ class Mandimus:
         commands.update(self.globalPhrases)
         return commands
 
-    def createRecognizerSetup(self, mode):        
+    def createRecognizerSetup(self, mode):
         # generate new lang_file/dic_file here, since pocketsphinx doesn't
         # provide a way to directly manipulate the word corpus over time
         modeInstance = mode()
@@ -187,23 +212,24 @@ class Mandimus:
         setupObjects = []
         for mode in config.modes:
             setupObjects.append(self.createRecognizerSetup(mode))
-            
+
         from Recognizer import Recognizer
         self.recognizer = Recognizer(setupObjects, self.opts.microphone)
-        
+
     def utteranceFinished(self, mode, text, finished):
-        print "%s: %s" % (str(mode), text)
+        # print "%s: %s" % (str(mode), text)
 
         t = text.lower()
-        
+
         if mode not in self.wordBuffer:
-            self.wordBuffer[mode] = []        
+            self.wordBuffer[mode] = []
 
+        # TODO: set max buffer size so unused modes don't grow
         for word in t.split():
-            if word in self.wordCorpus:
-                print "recognized word: %s" % (word,)
-                self.wordBuffer[mode].append(word)
+            self.wordBuffer[mode].append(word)
 
+        # we've received an interpretation from all the recognizers,
+        # now trying parsing in current mode
         if finished:
             self.parseBuffer()
         # TODO: if a pop didn't occur, clear all the buffers?
@@ -212,7 +238,7 @@ class Mandimus:
     def activeModeBuffer(self):
         mode = type(self.activeMode)
         if mode not in self.wordBuffer:
-            self.wordBuffer[mode] = []        
+            self.wordBuffer[mode] = []
         return self.wordBuffer[mode]
 
     def parseBuffer(self):
@@ -235,20 +261,38 @@ class Mandimus:
                     continue
 
                 if words == parsed[-len(words):]:
-                    print "Executing command for phrase: %s" % (phrase,)
+                    print "Executing command for phrase: %s in mode %s" % (phrase, type(self.activeMode))
                     self.commands[phrase]()
 
                     # reassign buf in case the mode has changed
                     buf = self.activeModeBuffer
-                    
+
                     parsed = []
-                    break                
-                
+                    break
+
     def run(self):
             self.recognizer.listen()
 
     def quit(self):
             sys.exit()
+
+    def checkEvents(self):
+        try:
+            # without a timeout, ctrl-c doesn't work because.. python
+            ONEYEAR = 365 * 24 * 60 * 60
+            event = self.eventQ.get(block=False)
+            # if isinstance(event, FocusChangeEvent):
+            #     self.popMode()
+            # if isinstance(event, FocusChangeEvent):
+            #     for mode in config.modes:
+            #         if mode().isModeWindow(event.window) and not isinstance(self.activeMode, mode):
+            #             self.pushMode(mode)
+            #             break
+            #     else:
+            #         self.popMode()
+        except Queue.Empty:
+            pass
+        return True
 
 if __name__ == "__main__":
     parser = OptionParser()
@@ -265,23 +309,32 @@ if __name__ == "__main__":
         action="store", dest="microphone", default=None,
         help="Audio input card to use (if other than system default)")
 
+    # queue for event listening threads to push events to the
+    # main thread with
+    eventQ = Queue.Queue()
+
     (options, args) = parser.parse_args()
     #make our mandimus object
-    mandimus = Mandimus(options)
+    mandimus = Mandimus(options, eventQ)
     #init gobject threads
     gobject.threads_init()
     #we want a main loop
     main_loop = gobject.MainLoop()
+    eventQTimer = gobject.timeout_add(1000 / 20, mandimus.checkEvents)
     #handle sigint
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    # signal.signal(signal.SIGINT, signal.SIG_DFL)
     #run the mandimus
     mandimus.run()
     #start the main loop
 
+    xboxThread = XboxPadSubscription(eventQ)
+    windowThread = WindowEventWatcher(eventQ)
+
     try:
         main_loop.run()
     except:
-        print "time to quit"
+        xboxThread.stop()
+        windowThread.stop()
         main_loop.quit()
         sys.exit()
 

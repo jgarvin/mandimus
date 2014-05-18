@@ -51,7 +51,6 @@ class XboxPadSubscription(object):
         xboxpads = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         oldStickState = [] 
         for i, pad in enumerate(xboxpads):
-            print "Initializing joystick %d" % (i,)
             pad.init()
 
             oldStickState.append({ True : self.getStickState(True, pad),
@@ -126,11 +125,9 @@ if __name__ == "__main__":
             # without a timeout, ctrl-c doesn't work because.. python
             ONEYEAR = 365 * 24 * 60 * 60
             
-            print "getting"
             ev = q.get(True, ONEYEAR)
             
             print str(ev)
     except KeyboardInterrupt:
-        print "othe"
         sub.stop()
         sys.exit()
