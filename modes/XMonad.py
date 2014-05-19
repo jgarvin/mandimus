@@ -1,6 +1,13 @@
 from Actions import keys
 from Mode import Mode
 from modes.Chrome import ChromeMode
+import sys, os
+
+def restartMandimus():
+    sys.stdout.flush()
+    sys.stderr.flush()
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 class XMonadMode(Mode):
     def __init__(self):
@@ -25,7 +32,8 @@ class XMonadMode(Mode):
             "editor" : keys("ctrl+alt+w"),
             "browser" : keys("ctrl+alt+b"),
             "new terminal" : keys("ctrl+shift+alt+t"),
-            "restart window manager" : keys("ctrl+alt+q")
+            "restart window manager" : keys("ctrl+alt+q"),
+            "restart mandimus" : restartMandimus
             }
         return c
 

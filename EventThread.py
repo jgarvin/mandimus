@@ -10,6 +10,7 @@ class EventThread(object):
 
         self.run = True
         self.thread = threading.Thread(target=self)
+        self.thread.daemon = True
         self.thread.start()
 
     def stop(self):

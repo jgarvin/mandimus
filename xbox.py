@@ -4,6 +4,7 @@ import threading
 import Queue
 
 from namedtuple import namedtuple
+from EventThread import EventThread
 
 def clamp(a, low, high):
     return min(max(a, low), high)
@@ -13,20 +14,9 @@ def roundBelowToZero(x, threshold):
         return 0
     return x
 
-class XboxPadSubscription(object):
+class XboxPadSubscription(EventThread):
     AXIS_DEAD_ZONE = 0.1
     TRIGGER_ACTIVATION = 0.5
-
-    def __init__(self, callbackQ):
-        self.cbQ = callbackQ
-
-        self.run = True
-        self.thread = threading.Thread(target=self)
-        self.thread.start()
-
-    def stop(self):
-        self.run = False
-        self.thread.join()
 
     @classmethod
     def __getAdjustedAxis(cls, pad, axis):
@@ -81,9 +71,9 @@ class XboxPadSubscription(object):
                 if ev.type == pygame.QUIT:
                     break
                 elif ev.type == pygame.JOYBUTTONUP:
-                    self.cbQ.put(ButtonEvent(buttons[ev.button], False))
+                    self.pushQ.put(ButtonEvent(buttons[ev.button], False))
                 elif ev.type == pygame.JOYBUTTONDOWN:
-                    self.cbQ.put(ButtonEvent(buttons[ev.button], True))
+                    self.pushQ.put(ButtonEvent(buttons[ev.button], True))
                 elif ev.type == pygame.JOYAXISMOTION:
                     joy = pygame.joystick.Joystick(ev.joy)
                     
@@ -91,7 +81,7 @@ class XboxPadSubscription(object):
                         # relay movement if different
                         newStickState = self.getStickState(stick, joy)
                         if not newStickState == oldStickState[joy.get_id()][stick]:
-                            self.cbQ.put(AxisEvent(stick, newStickState[0], newStickState[1]))
+                            self.pushQ.put(AxisEvent(stick, newStickState[0], newStickState[1]))
                             oldStickState[joy.get_id()][stick] = newStickState
 
                     # technically the trigger buttons are axes, but we just care if they're pressed
@@ -99,14 +89,14 @@ class XboxPadSubscription(object):
                     triggerNames = { 4 : "RT", 5 : "LT" }
                     for triggerAxis in [4, 5]:
                         if joy.get_axis(triggerAxis) < self.TRIGGER_ACTIVATION and oldTriggerState[triggerAxis]:
-                            self.cbQ.put(ButtonEvent(triggerNames[triggerAxis], False))
+                            self.pushQ.put(ButtonEvent(triggerNames[triggerAxis], False))
                             oldTriggerState[triggerAxis] = False
                         elif joy.get_axis(triggerAxis) >= self.TRIGGER_ACTIVATION and not oldTriggerState[triggerAxis]:
-                            self.cbQ.put(ButtonEvent(triggerNames[triggerAxis], True))
+                            self.pushQ.put(ButtonEvent(triggerNames[triggerAxis], True))
                             oldTriggerState[triggerAxis] = True
 
                 elif ev.type == pygame.JOYHATMOTION:
-                    self.cbQ.put(DPadEvent(*ev.value))
+                    self.pushQ.put(DPadEvent(*ev.value))
                 else:
                     print "Unknown xbox controller event: %s" % (ev,)
 

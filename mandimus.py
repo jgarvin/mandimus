@@ -18,7 +18,7 @@ from SphinxParser import (
     parseSphinxDictionaryFile, parseSphinxLanguageModelFile,
     writeSphinxDictionaryFile, writeSphinxLanguageModelFile)
 
-from listHelpers import rindex
+from listHelpers import rindex, flattenList
 from Window import Window
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent
 from xbox import XboxPadSubscription
@@ -36,17 +36,16 @@ dic_file = os.path.join(lang_dir,'dic')
 if not os.path.exists(lang_dir):
     os.makedirs(lang_dir)
 
-def flattenList(l):
-    return list(itertools.chain.from_iterable(l))
+### we almost have things working so that you can be in
+### chrome in chrome mode and say 'pop editor pop' and
+### have it go straight into emacs mode... but it's buggy
+### if I use rindex, then utterances that contain pop twice
+### don't work, but if I use index then I get weird backlogs
+### of uninterpreted commands that come through all at once
+### when I pop
 
-### currently we don't push mode immediately with phrases
-### like next/previous/editor/browser. we need to change
-### that so phrases like 'editor browser new tab editor'
-### do the expected thing. when an app isn't already running
-### it shouldn't matter, but even then the focus changed event
-### won't come through until the window loads so we'll be
-### golden anyway
-
+### also need to implement stop/start listening commands
+    
 class Mandimus(object):
     def __init__(self, opts, eventQ):
         self.opts = opts
@@ -164,6 +163,7 @@ class Mandimus(object):
             # and the pop itself. stuff before the pop was
             # intended for the old mode to parse
             anchorIdx = rindex(self.activeModeBuffer, "pop")
+            # anchorIdx = self.activeModeBuffer.index("pop")
             del self.activeModeBuffer[:anchorIdx+1]
         except ValueError:
             # happens when 'pop' isn't found, empty the whole
@@ -279,10 +279,9 @@ class Mandimus(object):
     def checkEvents(self):
         try:
             # without a timeout, ctrl-c doesn't work because.. python
-            ONEYEAR = 365 * 24 * 60 * 60
             event = self.eventQ.get(block=False)
-            # if isinstance(event, FocusChangeEvent):
-            #     self.popMode()
+            if isinstance(event, FocusChangeEvent):
+                self.popMode()
             # if isinstance(event, FocusChangeEvent):
             #     for mode in config.modes:
             #         if mode().isModeWindow(event.window) and not isinstance(self.activeMode, mode):
@@ -308,6 +307,8 @@ if __name__ == "__main__":
     parser.add_option("-m", "--microphone", type="int",
         action="store", dest="microphone", default=None,
         help="Audio input card to use (if other than system default)")
+
+    print sys.argv
 
     # queue for event listening threads to push events to the
     # main thread with

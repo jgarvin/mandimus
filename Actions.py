@@ -1,5 +1,13 @@
 import subprocess
 
+class typekeys:
+    def __init__(self, keyStr):
+        self.keyStr = keyStr
+
+    def __call__(self):
+        cmd = "xdotool type " + self.keyStr
+        subprocess.call(cmd, shell=True)    
+
 class keys:
     def __init__(self, keyStr):
         self.keyStr = keyStr
@@ -10,7 +18,6 @@ class keys:
 def pressKey(key):
     # TODO: pay attention to errors, exit status
     cmd = "xdotool key " + key
-#    print "executing: " + cmd
     subprocess.call(cmd, shell=True)    
 
 class keydown:

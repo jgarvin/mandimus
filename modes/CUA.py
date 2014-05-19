@@ -18,7 +18,6 @@ class CUAMode(Mode):
             "paste" : keys("ctrl+v"),
             "hold shift" : keydown("shift"),
             "release shift" : keyup("shift"),
-            "pop" : keys("alt+BackSpace"),
             "backspace" : keys("BackSpace"),
             "delete" : keys("Delete"),
             "enter" : keys("Return"),

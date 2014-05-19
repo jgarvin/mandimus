@@ -13,7 +13,6 @@ class ChromeMode(Mode):
             "previous" : keys("ctrl+shift+Tab"),
             "back" : keys("alt+Left"),
             "forward" : keys("alt+Right"),
-            "dot" : keys("period"),
             "refresh" : keys("F5"),
             "reopen tab" : keys("ctrl+shift+t")
             })
