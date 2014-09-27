@@ -14,6 +14,10 @@ def roundBelowToZero(x, threshold):
         return 0
     return x
 
+ButtonEvent = namedtuple("ButtonEvent", "button down")
+AxisEvent = namedtuple("AxisEvent", "left x y")
+DPadEvent = namedtuple("DPadEvent", "x y")
+
 class XboxPadSubscription(EventThread):
     AXIS_DEAD_ZONE = 0.1
     TRIGGER_ACTIVATION = 0.5
@@ -57,10 +61,6 @@ class XboxPadSubscription(EventThread):
                     8 : "Guide",
                     9 : "RStick",
                     10 : "LStick" }
-
-        ButtonEvent = namedtuple("ButtonEvent", "button down")
-        AxisEvent = namedtuple("AxisEvent", "left x y")
-        DPadEvent = namedtuple("DPadEvent", "x y")
 
         oldTriggerState = { 4 : False, 5 : False}
 
