@@ -35,6 +35,7 @@ class DragonflyClient(object):
     def eventLoop(self):
         if not self.sock:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.sock.connect(("10.0.0.2", 23133))
 
         if not self.testSent:
@@ -48,8 +49,8 @@ class DragonflyClient(object):
         messages = []
         try:
             self.sock.setblocking(False)
-            buf = self.sock.recv(4096)
-            (buf, messages) = parseMessages(buf)
+            self.buf += self.sock.recv(4096)
+            (self.buf, messages) = parseMessages(self.buf)
         except socket.error as e:
             pass
 
@@ -91,3 +92,4 @@ def unload():
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (shell-command (format "rsync -av %s %s/dragonshare/NatLink/NatLink/MacroSystem/_%s" (buffer-file-name) (getenv "HOME") (buffer-name)))) nil t)
 # End:
+

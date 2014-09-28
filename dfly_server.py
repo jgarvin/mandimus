@@ -1,36 +1,59 @@
-import SocketServer
+import socket
 import sys
+import inspect
+import errno
+import os
 from EventThread import EventThread
 
-from dfly_parser import parseMessages
+from dfly_parser import parseMessages, MESSAGE_TERMINATOR
 
-class DragonflyServer(SocketServer.TCPServer):
-    allow_reuse_address = True
-    def __init__(self, addr, cls, q):
-        self.pushQ = q
-        self.buf = ""
-        SocketServer.TCPServer.__init__(self, addr, cls)
-        self.timeout = 0.2
-
-class DragonflyHandler(SocketServer.BaseRequestHandler):
-    def handle(self):
-        "this is redonkuslously inefficient, but it doesn't matter"
-        self.server.buf += self.request.recv(1024)
-        print "buf state: " + self.server.buf
-        self.server.buf, messages = parseMessages(self.server.buf)
-        for m in messages:
-            #self.request.send("Ack msg starting: %s###>>>" % (m[:8],))
-            self.server.pushQ.put(m)
-            
 class DragonflyThread(EventThread):
     def __init__(self, address, pushQ):
         self.address = address
         EventThread.__init__(self, pushQ)
         
     def __call__(self):
-        self.server = DragonflyServer(self.address, DragonflyHandler, self.pushQ)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.address)
+        self.socket.listen(1)
+        self.client = None
+        self.buf = ''
+
         while self.run:
-            self.server.handle_request()
+            if not self.client:
+                # we use a timeout so ctrl-c will work
+                self.socket.settimeout(0.25)
+                try:
+                    self.client, addr = self.socket.accept()
+                except socket.timeout:
+                    continue
+                
+            messages = []
+            try:
+                self.buf += self.recv()
+                (self.buf, messages) = parseMessages(self.buf)
+            except socket.error as e:
+                if e.errno == errno.EAGAIN or e.errno == errno.EINTR:
+                    continue
+                else:
+                    self.client = None
+                    continue
+
+            for msg in messages:
+                self.onMessage(msg)
+
+    def recv(self):
+        self.client.settimeout(0.2)
+        return self.client.recv(4096)
+
+    def send(self, msg):
+        self.client.settimeout(None)
+        self.client.sendall(msg + MESSAGE_TERMINATOR)
+
+    def onMessage(self, msg):
+        self.send("ack " + msg)
+        self.pushQ.put(msg)
 
 if __name__ == "__main__":
     import Queue
@@ -46,6 +69,3 @@ if __name__ == "__main__":
         sub.stop()
         sys.exit()
     
-# Local Variables:
-# eval: (add-hook 'after-save-hook (lambda () (shell-command (format "touch %s/dragonshare/NatLink/NatLink/MacroSystem/_dfly_client.py" (getenv "HOME")))) nil t)
-# End:
