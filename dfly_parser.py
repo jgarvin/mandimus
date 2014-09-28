@@ -1,16 +1,13 @@
 import sys
 
-def test():
-    print 'hiccup'
+# terminator just picked to be something that doesn't come up
+# in python code
+MESSAGE_TERMINATOR = '###>>>'                
 
 def parseMessages(buf):
     messages = []
 
     try:
-        # terminator just picked to be something that doesn't come up
-        # in python code
-        MESSAGE_TERMINATOR = '###>>>'            
-
         idx = 0
         while idx < len(buf):
             message_end = buf.find(MESSAGE_TERMINATOR, idx)

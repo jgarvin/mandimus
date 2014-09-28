@@ -16,8 +16,10 @@ class DragonflyHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         "this is redonkuslously inefficient, but it doesn't matter"
         self.server.buf += self.request.recv(1024)
+        print "buf state: " + self.server.buf
         self.server.buf, messages = parseMessages(self.server.buf)
         for m in messages:
+            #self.request.send("Ack msg starting: %s###>>>" % (m[:8],))
             self.server.pushQ.put(m)
             
 class DragonflyThread(EventThread):

@@ -13,16 +13,17 @@ def importOrReload(module_name, *names):
     
     if module_name in sys.modules:
         reload(sys.modules[module_name])
-        for name in names:
-            globals()[name] = getattr(sys.modules[module_name], name)
     else:
-        __import__(module_name, names)
+        __import__(module_name, fromlist=names)
+        
+    for name in names:
+        globals()[name] = getattr(sys.modules[module_name], name)
 
 print "-----------load--------------"
 
 # load our project specific modules this way so
 # that changes apply when NatLink reloads our code
-importOrReload("dfly_parser", "parseMessages")
+importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR")
 
 class DragonflyClient(object):
     def __init__(self):
@@ -38,7 +39,11 @@ class DragonflyClient(object):
 
         if not self.testSent:
             self.testSent = True
-            self.send("test###>>>data###>>>print hi###>>>")
+            print "sending test"
+            self.sendMsg("test")
+            print "sending foo"
+            self.sendMsg("foo")
+            print "sent"
             
         messages = []
         try:
@@ -51,9 +56,9 @@ class DragonflyClient(object):
         for msg in messages:
             self.onMessage(msg)
 
-    def send(self, data):
+    def sendMsg(self, data):
         self.sock.setblocking(True)
-        self.sock.sendall(data)
+        self.sock.sendall(data + MESSAGE_TERMINATOR)
 
     def onMessage(self, msg):
         print "Message: " + msg
