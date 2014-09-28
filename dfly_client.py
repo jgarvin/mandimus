@@ -36,7 +36,12 @@ class DragonflyClient(object):
         if not self.sock:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.sock.connect(("10.0.0.2", 23133))
+            self.sock.settimeout(5)
+            try:
+                self.sock.connect(("10.0.0.2", 23133))
+            except socket.timeout as e:
+                self.sock = None
+                return
 
         if not self.testSent:
             self.testSent = True
