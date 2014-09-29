@@ -7,6 +7,37 @@ from EventThread import EventThread
 
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR
 
+# class XMonadRule(object):
+#     mapping  = {
+#         "left" : keys("ctrl+alt+s"),
+#         "right" : keys("ctrl+alt+h"),
+#         "move left" : keys("ctrl+alt+a"),
+#         "move right" : keys("ctrl+alt+t"),
+#         "next" : keys("ctrl+alt+e"),
+#         "previous" : keys("ctrl+alt+o"),
+#         "move next" : keys("ctrl+alt+shift+e"),
+#         "move previous" : keys("ctrl+alt+shift+o"),
+#         "expand" : keys("ctrl+alt+i"),
+#         "shrink" : keys("ctrl+alt+n"),
+#         "cycle" : keys("ctrl+alt+backslash"),
+#         "kill window" : keys("ctrl+alt+x"),
+#         "make master" : keys("ctrl+alt+Return"),
+#         "editor" : keys("ctrl+alt+w"),
+#         "browser" : keys("ctrl+alt+b"),
+#         "new terminal" : keys("ctrl+shift+alt+t"),
+#         "restart window manager" : keys("ctrl+alt+q"),
+#         "restart mandimus" : restartMandimus
+#         }
+    
+#     extras = [
+#         Integer("n", 1, 20),
+#         Dictation("text"),
+#         ]
+    
+#     defaults = {
+#         "n": 1,
+#         }
+
 class DragonflyThread(EventThread):
     def __init__(self, address, pushQ):
         self.address = address
@@ -33,10 +64,14 @@ class DragonflyThread(EventThread):
             try:
                 self.buf += self.recv()
                 (self.buf, messages) = parseMessages(self.buf)
+            except socket.timeout as e:
+                continue
             except socket.error as e:
                 if e.errno == errno.EAGAIN or e.errno == errno.EINTR:
+                    print os.strerror(e.errno)
                     continue
                 else:
+                    print 'dumping client'
                     self.client = None
                     continue
 

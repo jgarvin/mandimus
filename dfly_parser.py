@@ -3,6 +3,8 @@ import sys
 # terminator just picked to be something that doesn't come up
 # in python code
 MESSAGE_TERMINATOR = '###>>>'                
+ARG_DELIMETER = '$$$%%%'
+MATCH_MSG_START = 'MATCH'
 
 def parseMessages(buf):
     messages = []
