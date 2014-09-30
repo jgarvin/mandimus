@@ -4,39 +4,62 @@ import inspect
 import errno
 import os
 from EventThread import EventThread
+from Actions import keys
 
-from dfly_parser import parseMessages, MESSAGE_TERMINATOR
+from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER
 
-# class XMonadRule(object):
-#     mapping  = {
-#         "left" : keys("ctrl+alt+s"),
-#         "right" : keys("ctrl+alt+h"),
-#         "move left" : keys("ctrl+alt+a"),
-#         "move right" : keys("ctrl+alt+t"),
-#         "next" : keys("ctrl+alt+e"),
-#         "previous" : keys("ctrl+alt+o"),
-#         "move next" : keys("ctrl+alt+shift+e"),
-#         "move previous" : keys("ctrl+alt+shift+o"),
-#         "expand" : keys("ctrl+alt+i"),
-#         "shrink" : keys("ctrl+alt+n"),
-#         "cycle" : keys("ctrl+alt+backslash"),
-#         "kill window" : keys("ctrl+alt+x"),
-#         "make master" : keys("ctrl+alt+Return"),
-#         "editor" : keys("ctrl+alt+w"),
-#         "browser" : keys("ctrl+alt+b"),
-#         "new terminal" : keys("ctrl+shift+alt+t"),
-#         "restart window manager" : keys("ctrl+alt+q"),
-#         "restart mandimus" : restartMandimus
-#         }
+def restartMandimus():
+    sys.stdout.flush()
+    sys.stderr.flush()
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
+class Integer(object):
+    def __init__(self, var, lower_bound, upper_bound):
+        self.var = var
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+
+    def __str__(self):
+        return "INTEGER %s %d %d" % (self.var, self.lower_bound, self.upper_bound)
+
+class Dictation(object):
+    def __init__(self, var):
+        self.var = var
+
+    def __str__(self):
+        return "DICTATION %s" % (self.var,)
+
+class XMonadRule(object):
+    mapping  = {
+        "left" : keys("ctrl+alt+s"),
+        "right" : keys("ctrl+alt+h"),
+        "move left" : keys("ctrl+alt+a"),
+        "move right" : keys("ctrl+alt+t"),
+        "next" : keys("ctrl+alt+e"),
+        "previous" : keys("ctrl+alt+o"),
+        "move next" : keys("ctrl+alt+shift+e"),
+        "move previous" : keys("ctrl+alt+shift+o"),
+        "expand" : keys("ctrl+alt+i"),
+        "shrink" : keys("ctrl+alt+n"),
+        "cycle" : keys("ctrl+alt+backslash"),
+        "kill window" : keys("ctrl+alt+x"),
+        "make master" : keys("ctrl+alt+Return"),
+        "editor" : keys("ctrl+alt+w"),
+        "browser" : keys("ctrl+alt+b"),
+        "new terminal" : keys("ctrl+shift+alt+t"),
+        "restart window manager" : keys("ctrl+alt+q"),
+        "restart mandimus" : restartMandimus
+        }
     
-#     extras = [
-#         Integer("n", 1, 20),
-#         Dictation("text"),
-#         ]
+    extras = [
+        Integer("n", 1, 20),
+        Dictation("text"),
+        ]
     
-#     defaults = {
-#         "n": 1,
-#         }
+    defaults = {
+        "n": 1,
+        }
 
 class DragonflyThread(EventThread):
     def __init__(self, address, pushQ):
@@ -56,7 +79,10 @@ class DragonflyThread(EventThread):
                 # we use a timeout so ctrl-c will work
                 self.socket.settimeout(0.25)
                 try:
+                    print 'waiting for connection'
                     self.client, addr = self.socket.accept()
+                    print 'connected'
+                    self.onConnect()
                 except socket.timeout:
                     continue
                 
@@ -83,8 +109,28 @@ class DragonflyThread(EventThread):
         return self.client.recv(4096)
 
     def send(self, msg):
+        print 'sending ' + msg
         self.client.settimeout(None)
         self.client.sendall(msg + MESSAGE_TERMINATOR)
+
+    def onConnect(self):
+        self.loadGrammar(XMonadRule)
+
+    def loadGrammar(self, grammar):
+        msg = []
+        msg += ["GRAMMAR", ARG_DELIMETER.join(grammar.mapping.keys())]
+        msg += [ARG_DELIMETER]
+        msg += ["EXTRAS"]
+        if hasattr(grammar, "extras"):
+            for extra in grammar.extras:
+                msg += [ARG_DELIMETER, str(extra)]
+        msg += [ARG_DELIMETER]
+        msg += ["DEFAULTS"]
+        if hasattr(grammar, "defaults"):
+            for key, val in grammar.defaults.items():
+                msg += [ARG_DELIMETER, str(key), ':', str(val)]
+        msg += [ARG_DELIMETER]
+        self.send(''.join(msg)) 
 
     def onMessage(self, msg):
         self.send("ack " + msg)

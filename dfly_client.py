@@ -4,12 +4,14 @@ from dragonfly import Grammar, CompoundRule, MappingRule, ActionBase, Key, Text,
 from dragonfly import get_engine
 import natlink
 import socket
+import sys, os
 from functools import partial
 
 # Without this stderr won't go to the Natlink
 # message window.
 import logging
-logging.basicConfig(filename="E:\\log.txt", filemode='w+')
+# logging.basicConfig(filename="E:\\log.txt", filemode='w+')
+logging.basicConfig()
 
 # Natlink reloads modules when the mic is woken up
 # if the file has changed, so we need to support
@@ -54,6 +56,7 @@ class DragonflyClient(object):
         self.sock = None
         self.testSent = False
         self.buf = ""
+        self.grammar = None
 
     def eventLoop(self):
         if not self.sock:
@@ -88,12 +91,61 @@ class DragonflyClient(object):
         self.sock.sendall(data + MESSAGE_TERMINATOR)
 
     def onMessage(self, msg):
-        print "Message: " + msg
+        print 'got msg: ' + msg
+        if msg.startswith("GRAMMAR"):
+            self.parseGrammarMsg(msg)
+
+    def parseGrammarMsg(self, msg):
+        msg = msg.split("GRAMMAR")[1]
+        grammars, extras = msg.split("EXTRAS")
+        extras, defaults = extras.split("DEFAULTS")
         
+        omapping = filter(lambda a: a != '', grammars.split(ARG_DELIMETER))
+        omapping = self.transformMapping(omapping)
+        
+        oextras = filter(lambda a: a != '', extras.split(ARG_DELIMETER))
+        oextras = self.parseExtras(oextras)
+        
+        odefaults = filter(lambda a: a != '', defaults.split(ARG_DELIMETER)) 
+        odefaults = self.parseDefaults(odefaults)
+        
+        class NewRule(MappingRule):
+            mapping = omapping
+            extras = oextras
+            defaults = odefaults
+
+        if self.grammar is not None:
+            self.grammar.unload()
+        self.grammar = Grammar("The grammar")
+        self.grammar.add_rule(NewRule())
+        self.grammar.load()
+        
+    def parseExtras(self, extras):
+        parsed = []
+        # print extras
+        for e in extras:
+            # print e
+            e = e.split()
+            if e[0] == "INTEGER":
+                parsed.append(Integer(e[1], int(e[2]), int(e[3])))
+            elif e[0] == "DICTATION":
+                parsed.append(Dictation(e[1]))
+        return parsed
+        
+    def parseDefaults(self, defaults):
+        parsed = {}
+        for e in defaults:
+            e = e.split(':')
+            try:
+                parsed[e[0]] = int(e[1])
+            except ValueError:
+                parsed[e[0]] = e[1]
+        return parsed
+    
     def onMatch(self, grammarString, data):
         msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
         if data:
-            print data
+            print 'match: ' + str(data)
             for key, value in data.items():
                 if isinstance(value, int) or isinstance(value, str):
                     msg += [str(key), ":", str(value), ARG_DELIMETER]
@@ -102,6 +154,8 @@ class DragonflyClient(object):
     def unload(self):
         self.timer.stop()
         self.sock.close()
+        if self.grammar:
+            self.grammar.unload()
 
     def transformMapping(self, grammarList):
         """We never perform actions directly, we just send
@@ -113,43 +167,12 @@ class DragonflyClient(object):
         
 client = DragonflyClient()
 
-class ExampleRule(MappingRule):
-    mapping  = {
-                "[feed] address [bar]":                Key("a-d"),
-                "subscribe [[to] [this] feed]":        Key("a-u"),
-                "paste [feed] address":                Key("a-d, c-v, enter"),
-                "feeds | feed (list | window | win)":  Key("a-d, tab:2, s-tab"),
-                "down [<n>] (feed | feeds)":           Key("a-d, tab:2, s-tab, down:%(n)d"),
-                "up [<n>] (feed | feeds)":             Key("a-d, tab:2, s-tab, up:%(n)d"),
-                "open [item]":                         Key("a-d, tab:2, c-s"),
-                "newer [<n>]":                         Key("a-d, tab:2, up:%(n)d"),
-                "older [<n>]":                         Key("a-d, tab:2, down:%(n)d"),
-                "mark all [as] read":                  Key("cs-r"),
-                "mark all [as] unread":                Key("cs-u"),
-                "search [bar]":                        Key("a-s"),
-                "search [for] <text>":                 Key("a-s") + Text("%(text)s\n"),
-               }
-    extras   = [
-                Integer("n", 1, 20),
-                Dictation("text"),
-               ]
-    defaults = {
-                "n": 1,
-               }
-
-ExampleRule.mapping = client.transformMapping(ExampleRule.mapping.keys())
-
-# Create a grammar which contains and loads the command rule.
-grammar = Grammar("example grammar")                # Create a grammar to contain the command rule.
-grammar.add_rule(ExampleRule())                     # Add the command rule to the grammar.
-grammar.load()    
-
 def unload():
-    grammar.unload()
     client.unload()
     print "----------unload-------------"
 
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (shell-command (format "rsync -av %s %s/dragonshare/NatLink/NatLink/MacroSystem/_%s" (buffer-file-name) (getenv "HOME") (buffer-name)))) nil t)
 # End:
+
 
