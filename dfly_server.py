@@ -3,6 +3,7 @@ import sys
 import inspect
 import errno
 import os
+import time
 from EventThread import EventThread
 from Actions import keys
 
@@ -36,13 +37,14 @@ class XMonadRule(object):
         "right" : keys("ctrl+alt+h"),
         "move left" : keys("ctrl+alt+a"),
         "move right" : keys("ctrl+alt+t"),
+        # "move (left | right) [<n>]" : keys("ctrl+alt+t"),
         "next" : keys("ctrl+alt+e"),
         "previous" : keys("ctrl+alt+o"),
         "move next" : keys("ctrl+alt+shift+e"),
         "move previous" : keys("ctrl+alt+shift+o"),
         "expand" : keys("ctrl+alt+i"),
         "shrink" : keys("ctrl+alt+n"),
-        "cycle" : keys("ctrl+alt+backslash"),
+        "cycle" : keys("ctrl+alt+space"),
         "kill window" : keys("ctrl+alt+x"),
         "make master" : keys("ctrl+alt+Return"),
         "editor" : keys("ctrl+alt+w"),
@@ -65,6 +67,7 @@ class DragonflyThread(EventThread):
     def __init__(self, address, pushQ):
         self.address = address
         EventThread.__init__(self, pushQ)
+        self.grammars = set()
         
     def __call__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,6 +76,7 @@ class DragonflyThread(EventThread):
         self.socket.listen(1)
         self.client = None
         self.buf = ''
+        self.lastMsgSendTime = time.time()
 
         while self.run:
             if not self.client:
@@ -97,21 +101,45 @@ class DragonflyThread(EventThread):
                     print os.strerror(e.errno)
                     continue
                 else:
-                    print 'dumping client'
-                    self.client = None
+                    self.dumpClient()
                     continue
 
             for msg in messages:
                 self.onMessage(msg)
 
+            # heartbeating
+            newtime = time.time()
+            if newtime - self.lastMsgSendTime > 1 and self.client is not None:
+                self.sendMsg('')
+
+        self.cleanup()
+
+    def cleanup(self):
+        if self.client is not None:
+            self.client.close()
+        if self.socket is not None:
+            self.socket.close()
+
     def recv(self):
+        #print 'receiving...'
         self.client.settimeout(0.2)
         return self.client.recv(4096)
 
-    def send(self, msg):
+    def dumpClient(self):
+        print 'client lost'
+        self.client.close()
+        self.client = None        
+
+    def sendMsg(self, msg):
         print 'sending ' + msg
         self.client.settimeout(None)
-        self.client.sendall(msg + MESSAGE_TERMINATOR)
+        try:
+            self.client.sendall(msg + MESSAGE_TERMINATOR)
+        except socket.error as e:
+            if e.errno == errno.EPIPE:
+                self.dumpClient()
+            else:
+                raise            
 
     def onConnect(self):
         self.loadGrammar(XMonadRule)
@@ -130,11 +158,38 @@ class DragonflyThread(EventThread):
             for key, val in grammar.defaults.items():
                 msg += [ARG_DELIMETER, str(key), ':', str(val)]
         msg += [ARG_DELIMETER]
-        self.send(''.join(msg)) 
+        self.sendMsg(''.join(msg))
+
+        self.grammars.add(grammar)
 
     def onMessage(self, msg):
-        self.send("ack " + msg)
+        if msg.startswith("MATCH"):
+            self.parseMatchMsg(msg)
+        self.sendMsg("ack " + msg)
         self.pushQ.put(msg)
+
+    def parseMatchMsg(self, msg):
+        msg = msg.split("MATCH")[1]
+        tokens = msg.split(ARG_DELIMETER)
+        grammar, words = tokens[:2]
+        extras = tokens[2:]
+        
+        extras = [g for g in extras if g != '']
+        extras = self.parseExtras(extras)
+
+        for g in self.grammars:
+            if grammar in g.mapping:
+                g.mapping[grammar]()
+
+    def parseExtras(self, extras):
+        parsed = {}
+        for e in extras:
+            e = e.split(':')
+            try:
+                parsed[e[0]] = int(e[1])
+            except ValueError:
+                parsed[e[0]] = e[1]
+        return parsed        
 
 if __name__ == "__main__":
     import Queue

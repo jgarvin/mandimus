@@ -40,8 +40,8 @@ importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIME
 
 class ReportingAction(ActionBase):
     def __init__(self, grammarString, dclient):
-        self.grammarString = grammarString
         self.dclient = dclient
+        self.grammarString = grammarString
         ActionBase.__init__(self)
         
     def _execute(self, data=None):
@@ -52,20 +52,30 @@ class DragonflyClient(object):
         # Natlink doesn't provide a way to poll of files or sockets,
         # and it runs in the same thread as Dragon itself so we can't
         # block, so we run on a periodic timer.
-        self.timer = get_engine().create_timer(self.eventLoop, 1)
+        self.timer = get_engine().create_timer(self._eventLoop, 1)
         self.sock = None
         self.testSent = False
         self.buf = ""
         self.grammar = None
 
+    def _eventLoop(self):
+        try:
+            self.eventLoop()
+        except Exception as e:
+            print e.__doc__
+            print e.message
+            self.unload()
+
     def eventLoop(self):
-        if not self.sock:
+        if self.sock is None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.sock.settimeout(5)
             try:
                 self.sock.connect(("10.0.0.2", 23133))
+                print 'connected'
             except socket.timeout as e:
+                print 'connection timed out, resetting to none'
                 self.sock = None
                 return
 
@@ -143,9 +153,16 @@ class DragonflyClient(object):
         return parsed
     
     def onMatch(self, grammarString, data):
+        # print 'data ' + str(data)
+        # print 'node ' + str(' '.join(data['_node'].words()))
+        # print 'rule ' + str(data['_rule'].name)
+        # print 'grammar ' + str(data['_grammar'].name)
         msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
+        msg += [' '.join(data['_node'].words()), ARG_DELIMETER]
         if data:
-            print 'match: ' + str(data)
+            # TODO: we really should be sending the whole node structure
+            # so we can have more elaborate phrases that change meaning
+            # based on what was actually said...
             for key, value in data.items():
                 if isinstance(value, int) or isinstance(value, str):
                     msg += [str(key), ":", str(value), ARG_DELIMETER]
@@ -153,7 +170,9 @@ class DragonflyClient(object):
 
     def unload(self):
         self.timer.stop()
-        self.sock.close()
+        if self.sock is not None:
+            print 'closing socket'
+            self.sock.close()
         if self.grammar:
             self.grammar.unload()
 
@@ -170,9 +189,10 @@ client = DragonflyClient()
 def unload():
     client.unload()
     print "----------unload-------------"
-
+    
 # Local Variables:
 # eval: (add-hook 'after-save-hook (lambda () (shell-command (format "rsync -av %s %s/dragonshare/NatLink/NatLink/MacroSystem/_%s" (buffer-file-name) (getenv "HOME") (buffer-name)))) nil t)
 # End:
+
 
 
