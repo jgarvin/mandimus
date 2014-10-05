@@ -1,3 +1,57 @@
+print "-----------load--------------"
+
+# modified from aenea, taken from:
+# https://raw.githubusercontent.com/calmofthestorm/aenea/4b0f91ca82aa994cd4912b17cdb4ae700adc65fe/client/_aenea.py
+def unload_code():
+    import natlinkmain, sys, os
+
+    def topy(path):
+        if path.endswith == ".pyc":
+            return path[:-1]
+
+        return path
+
+    # Do not reload anything in these directories or their subdirectories.
+    dir_reload_blacklist = set(["core"])
+
+    # TODO: should only care about path ending in Natlink/Natlink/MacroSystem
+    macro_dir = "E:\\NatLink\\NatLink\\MacroSystem"
+
+    # Unload all grammars.
+    natlinkmain.unloadEverything()
+
+    # Unload all modules in macro_dir except for those in directories on the
+    # blacklist.
+
+    for name, module in sys.modules.items():
+        if module and hasattr(module, "__file__"):
+            # Some builtin modules only have a name so module is None or
+            # do not have a __file__ attribute.  We skip these.
+            path = module.__file__
+
+            # Convert .pyc paths to .py paths.
+            path = topy(path)
+
+            # Do not unimport this module!  This will cause major problems!
+            if (path.startswith(macro_dir) and
+                not bool(set(path.split(os.path.sep)) & dir_reload_blacklist)
+                and path != topy(os.path.abspath(__file__))):
+
+                print "unloading %s" % name
+                if hasattr(sys.modules[name], "unload") and callable(sys.modules[name].unload):
+                    sys.modules[name].unload()
+                
+                print "removing %s from cache" % name
+
+                # Remove the module from the cache so that it will be reloaded
+                # the next time # that it is imported.  The paths for packages
+                # end with __init__.pyc so this # takes care of them as well.
+                del sys.modules[name]
+                
+# now invoke it, making sure that all of the importing we do that follows
+# is fresh
+unload_code()
+    
 from dragonfly import (
     Grammar, CompoundRule, MappingRule, ActionBase,
     Key, Text, Integer, Dictation, RuleRef, Repetition, MappingRule )
@@ -13,31 +67,10 @@ import logging
 # logging.basicConfig(filename="E:\\log.txt", filemode='w+')
 logging.basicConfig()
 
-# Natlink reloads modules when the mic is woken up
-# if the file has changed, so we need to support
-# code reloading.
-def importOrReload(module_name, *names):
-    import sys
-    
-    if module_name in sys.modules:
-        if hasattr(sys.modules[module_name], "unload") and callable(sys.modules[module_name].unload):
-            sys.modules[module_name].unload()
-        reload(sys.modules[module_name])
-    else:
-        __import__(module_name, fromlist=names)
-        
-    for name in names:
-        globals()[name] = getattr(sys.modules[module_name], name) 
-
-print "-----------load--------------"
-
-# load our project specific modules this way so
-# that changes apply when NatLink reloads our code,
-# otherwise Natlink will reload dfly_client but not
-# the things that dfly_client imports
-importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIMETER",
-               "MATCH_MSG_START")
-importOrReload("SeriesMappingRule", "SeriesMappingRule")
+from dfly_parser import (parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER,
+                         MATCH_MSG_START)
+from SeriesMappingRule import SeriesMappingRule
+from DragonflyNode import DragonflyNode
 
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
@@ -51,13 +84,13 @@ class ReportingAction(ActionBase):
     def _execute(self, data=None):
         self.dclient.onMatch(self.grammarString, data)
 
-class DragonflyClient(object):
+class DragonflyClient(DragonflyNode):
     def __init__(self):
         # Natlink doesn't provide a way to poll of files or sockets,
         # and it runs in the same thread as Dragon itself so we can't
         # block, so we run on a periodic timer.
+        DragonflyNode.__init__(self)
         self.timer = get_engine().create_timer(self._eventLoop, 1)
-        self.sock = None
         self.testSent = False
         self.buf = ""
         self.grammar = None
@@ -67,19 +100,18 @@ class DragonflyClient(object):
             self.eventLoop()
         except Exception as e:
             print str(e)
-            self.unload()
+            self.cleanup()
 
     def eventLoop(self):
-        if self.sock is None:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            self.sock.settimeout(5)
+        if self.other is None:
+            self.other = self.makeSocket()
+            self.other.settimeout(5)
             try:
-                self.sock.connect(("10.0.0.2", 23133))
+                self.other.connect(("10.0.0.2", 23133))
                 print 'connected'
             except socket.timeout as e:
                 print 'connection timed out, resetting to none'
-                self.sock = None
+                self.other = None
                 return
 
         if not self.testSent:
@@ -87,21 +119,8 @@ class DragonflyClient(object):
             self.sendMsg("test")
             self.sendMsg("foo")
             
-        messages = []
-        try:
-            self.sock.setblocking(False)
-            self.buf += self.sock.recv(4096)
-            (self.buf, messages) = parseMessages(self.buf)
-        except socket.error as e:
-            pass
-
-        for msg in messages:
-            self.onMessage(msg)
-
-    def sendMsg(self, data):
-        print 'called with ' + data
-        self.sock.setblocking(True)
-        self.sock.sendall(data + MESSAGE_TERMINATOR)
+        self.retrieveMessages()
+        self.heartbeat()
 
     def onMessage(self, msg):
         if msg.startswith("MappingRule "):
@@ -176,11 +195,9 @@ class DragonflyClient(object):
                     msg += [str(key), ":", str(value), ARG_DELIMETER]
         self.sendMsg(''.join(msg))
 
-    def unload(self):
+    def cleanup(self):
+        DragonflyNode.cleanup(self)
         self.timer.stop()
-        if self.sock is not None:
-            print 'closing socket'
-            self.sock.close()
         if self.grammar:
             self.grammar.unload()
 
@@ -195,7 +212,7 @@ class DragonflyClient(object):
 client = DragonflyClient()
 
 def unload():
-    client.unload()
+    client.cleanup()
     print "----------unload-------------"
     
 ### DRAGONSHARE RSYNC

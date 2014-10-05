@@ -32,6 +32,4 @@ def parseMessages(buf):
         print "Buf state: %s" % (buf,)
         sys.exit(1)
 
-# Local Variables:
-# eval: (add-hook 'after-save-hook (lambda () (shell-command (format "rsync -av %s %s/dragonshare/NatLink/NatLink/MacroSystem" (buffer-file-name) (getenv "HOME") ))) nil t)
-# End:
+### DRAGONSHARE RSYNC
