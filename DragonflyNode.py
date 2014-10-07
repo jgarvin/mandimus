@@ -2,6 +2,9 @@ import time, socket, errno
 
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR
 
+class ConnectedEvent(object):
+    pass
+
 class DragonflyNode(object):
     def __init__(self):
         self.other = None
@@ -14,6 +17,9 @@ class DragonflyNode(object):
         return sock
 
     def retrieveMessages(self):
+        if self.other is None:
+            return
+
         messages = []
         try:
             self.buf += self.recv()
@@ -31,6 +37,9 @@ class DragonflyNode(object):
             self.onMessage(msg)
 
     def heartbeat(self):
+        if self.other is None:
+            return        
+
         # heartbeating
         newtime = time.time()
         if newtime - self.lastMsgSendTime > 1 and self.other is not None:
@@ -57,15 +66,15 @@ class DragonflyNode(object):
         self.other = None
 
     def sendMsg(self, msg):
-        if len(msg): # don't print heartbeats
+        if len(msg) and not msg.startswith('ack'): # don't print heartbeats
             print 'sending ' + msg
         self.other.settimeout(None)
         try:
             self.other.sendall(msg + MESSAGE_TERMINATOR)
             self.lastMsgSendTime = time.time()
         except socket.error as e:
-            if e.errno == errno.EPIPE:
-                self.dumpClient()
+            if e.errno == errno.EPIPE or e.errno == errno.EBADF:
+                self.dumpOther()
             else:
                 raise
 

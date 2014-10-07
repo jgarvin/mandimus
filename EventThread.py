@@ -1,9 +1,6 @@
 import Queue
 import threading
 
-# TODO: use collections.deque instead of queue?
-# apparently is lockless
-
 class EventThread(object):
     def __init__(self, pushQ):
         self.pushQ = pushQ

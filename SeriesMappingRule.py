@@ -6,7 +6,7 @@ from dragonfly import CompoundRule, MappingRule, RuleRef, Repetition
 class SeriesMappingRule(CompoundRule):
     """Just like a mapping rule except it lets you repeat commands."""
     
-    def __init__(self, mapping, extras=None, defaults=None):
+    def __init__(self, name=None, mapping=None, extras=None, defaults=None):
         mapping_rule = MappingRule(mapping=mapping, extras=extras,
             defaults=defaults, exported=False)
         single = RuleRef(rule=mapping_rule)

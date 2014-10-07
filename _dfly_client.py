@@ -52,13 +52,21 @@ def unload_code():
 # is fresh
 unload_code()
     
+def reload_code():
+    import natlinkmain
+    print 'Reloading code'
+    unload_code()
+    natlinkmain.findAndLoadFiles()
+    print 'Finished reloading'
+
 from dragonfly import (
     Grammar, CompoundRule, MappingRule, ActionBase,
-    Key, Text, Integer, Dictation, RuleRef, Repetition, MappingRule )
+    Key, Text, Integer, Dictation, RuleRef, Repetition, MappingRule,
+    Function )
 from dragonfly import get_engine
 import natlink
 import socket
-import sys, os
+import sys, os, traceback
 from functools import partial
 
 # Without this stderr won't go to the Natlink
@@ -72,6 +80,14 @@ from dfly_parser import (parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER,
 from SeriesMappingRule import SeriesMappingRule
 from DragonflyNode import DragonflyNode
 
+class GlobalRules(MappingRule):
+    mapping = {
+        "reload client code" : Function(reload_code),
+        "go to sleep" : Function(lambda: natlink.setMicState('sleeping')),
+        }
+    extras = []
+    defaults = {}
+
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
     informs the server that grammar rules have been matched.
@@ -84,23 +100,42 @@ class ReportingAction(ActionBase):
     def _execute(self, data=None):
         self.dclient.onMatch(self.grammarString, data)
 
+    def __str__(self):
+        return "ReportingAction," + self.grammarString
+
 class DragonflyClient(DragonflyNode):
     def __init__(self):
-        # Natlink doesn't provide a way to poll of files or sockets,
+        # Natlink doesn't provide a way to poll files or sockets,
         # and it runs in the same thread as Dragon itself so we can't
         # block, so we run on a periodic timer.
         DragonflyNode.__init__(self)
         self.timer = get_engine().create_timer(self._eventLoop, 1)
         self.testSent = False
         self.buf = ""
-        self.grammar = None
+        self.grammars = {}
+
+        self.addRule(GlobalRules(), "GlobalRules")
+
+    def addRule(self, rule, name):
+        print 'Adding rule: ' + name
+        grammar = Grammar(name)
+        grammar.add_rule(rule)
+        grammar.load()
+        get_engine().set_exclusiveness(grammar, 1)
+        self.grammars[name] = grammar
+
+    def removeRule(self, name):
+        print 'Removing rule: ' + name
+        self.grammars[name].unload()
+        del self.grammars[name]
 
     def _eventLoop(self):
         try:
             self.eventLoop()
         except Exception as e:
-            print str(e)
+            traceback.print_exc()
             self.cleanup()
+            raise
 
     def eventLoop(self):
         if self.other is None:
@@ -123,12 +158,15 @@ class DragonflyClient(DragonflyNode):
         self.heartbeat()
 
     def onMessage(self, msg):
-        if msg.startswith("MappingRule "):
-            self.parseMappingRuleMsg(msg[len("MappingRule "):], MappingRule)
-        elif msg.startswith("SeriesMappingRule "):
-            self.parseMappingRuleMsg(msg[len("SeriesMappingRule "):], SeriesMappingRule)
+        if msg.startswith("MappingRule"):
+            self.parseMappingRuleMsg(msg, MappingRule)
+        elif msg.startswith("SeriesMappingRule"):
+            self.parseMappingRuleMsg(msg, SeriesMappingRule)
+        elif msg.startswith("unload"):
+            self.parseUnloadMsg(msg)
         elif msg.startswith("ack"):
-            print 'received ack: ' + msg
+            pass
+            #print 'received ack: ' + msg
         elif len(msg) == 0:
             pass
             #print 'received heartbeat'
@@ -136,32 +174,53 @@ class DragonflyClient(DragonflyNode):
             print "Received unknown message type!: " + msg
             print 'Message length %d' % (len(msg),)
 
+    def parseUnloadMsg(self, msg):
+        allargs = msg.split(ARG_DELIMETER) 
+        
+        assert allargs[0] == "unload"
+        self.removeRule(allargs[1])
+        
     def parseMappingRuleMsg(self, msg, mappingCls):
-        grammars, extras = msg.split("EXTRAS")
-        extras, defaults = extras.split("DEFAULTS")
+        allargs = msg.split(ARG_DELIMETER) 
         
-        omapping = filter(lambda a: a != '', grammars.split(ARG_DELIMETER))
-        omapping = self.transformMapping(omapping)
-        
-        oextras = filter(lambda a: a != '', extras.split(ARG_DELIMETER))
-        oextras = self.parseExtras(oextras)
-        
-        odefaults = filter(lambda a: a != '', defaults.split(ARG_DELIMETER)) 
-        odefaults = self.parseDefaults(odefaults)
-        
-        new_rule = mappingCls(omapping, oextras, odefaults)
+        typ = allargs[0]
+        rule_name = allargs[1]
+        idx = 2
 
-        if self.grammar is not None:
-            self.grammar.unload()
-        self.grammar = Grammar("The grammar")
-        self.grammar.add_rule(new_rule)
-        self.grammar.load()
+        rules = []
+        for arg in allargs[idx:]:
+            idx += 1
+            if arg == "EXTRAS":
+                break
+            rules.append(arg)
+        rules = self.transformMapping(rules)
+
+        extras = []
+        for arg in allargs[idx:]:
+            idx += 1
+            if arg == "DEFAULTS":
+                break
+            extras.append(arg)
+        extras = self.parseExtras(extras)
+
+        defaults = []
+        for arg in allargs[idx:]:
+            if arg:
+                defaults.append(arg)
+            idx += 1
+        defaults = self.parseDefaults(defaults)
+
+        for key,val in rules.items():
+            print str(key),str(val)
+        #print str(mappingCls), str(mappingCls.__name__), str(rules), extras, defaults
+        print mappingCls.__name__
+        new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
+
+        self.addRule(new_rule, rule_name)
         
     def parseExtras(self, extras):
         parsed = []
-        # print extras
         for e in extras:
-            # print e
             e = e.split()
             if e[0] == "INTEGER":
                 parsed.append(Integer(e[1], int(e[2]), int(e[3])))
@@ -198,8 +257,8 @@ class DragonflyClient(DragonflyNode):
     def cleanup(self):
         DragonflyNode.cleanup(self)
         self.timer.stop()
-        if self.grammar:
-            self.grammar.unload()
+        for name, grammar in self.grammars.items():
+            grammar.unload()
 
     def transformMapping(self, grammarList):
         """We never perform actions directly, we just send
