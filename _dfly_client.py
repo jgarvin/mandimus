@@ -101,7 +101,7 @@ class DragonflyClient(DragonflyNode):
     def eventLoop(self):
         if self.other is None:
             self.other = self.makeSocket()
-            self.other.settimeout(5)
+            self.other.settimeout(0.25)
             try:
                 self.other.connect(("10.0.0.2", 23133))
                 print 'connected'
@@ -194,8 +194,11 @@ class DragonflyClient(DragonflyNode):
         return parsed
     
     def onMatch(self, grammarString, data):
-        print 'match ' + grammarString
-        print 'data ' + str(data)
+        if natlink.getMicState() != 'on':
+            return
+
+        # print 'match ' + grammarString
+        # print 'data ' + str(data)
         # print 'node ' + str(' '.join(data['_node'].words()))
         # print 'rule ' + str(data['_rule'].name)
         # print 'grammar ' + str(data['_grammar'].name)
