@@ -1,9 +1,10 @@
 import os, sys
 import Queue
 from dfly_server import DragonflyThread
-from Actions import keys
+from Actions import Key, Text
 from DragonflyNode import ConnectedEvent
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent
+from Window import Window
 
 from dfly_parser import ARG_DELIMETER
 
@@ -51,41 +52,83 @@ class ServerMappingRule(object):
 class ServerSeriesMappingRule(ServerMappingRule):
     serializedType = "ServerSeriesMappingRule"
 
+rules = set()    
+def registerRule(f):
+    global rules
+    rules.add(f)
+    return f
+
+@registerRule
+class EmacsRule(ServerSeriesMappingRule):
+    mapping  = {
+        "switch (buff | buffer)" : Key("c-x, b"),
+        "other window" : Key("c-x, o"),
+        "one window" : Key("c-x, 1"),
+        "new frame" : Key("c-x, 5, 2"),
+        "cancel" : Key("c-g"),
+        }
+
+    @classmethod
+    def activeForWindow(cls, window):
+        return "emacs" in window.wmclass or "Emacs" in window.wmclass
+    
+@registerRule
 class ChromeRule(ServerSeriesMappingRule):
     mapping  = {
-        "new tab" : keys("c-t"),
-        "close tab" : keys("c-w"),
-        "address" : keys("c-l"),
-        "next tab" : keys("c-tab"),
-        "previous tab" : keys("cs-tab"),
-        "back" : keys("a-left"),
-        "forward" : keys("a-right"),
-        "refresh" : keys("F5"),
-        "reopen tab" : keys("cs-t"),
-        "enter" : keys("enter"),
-        "tab" : keys("tab")
+        "new tab" : Key("c-t"),
+        "close tab" : Key("c-w"),
+        "address" : Key("c-l"),
+        "next tab" : Key("c-tab"),
+        "previous tab" : Key("cs-tab"),
+        "back" : Key("a-left"),
+        "forward" : Key("a-right"),
+        "refresh" : Key("F5"),
+        "reopen tab" : Key("cs-t"),
+        "enter" : Key("enter"),
+        "tab" : Key("tab"),
+        "reload" : Key("c-r"),
+        "refresh" : Key("c-r"),
+        # these are provided by the 'tabloid' extension
+        "move tab right" : Key("as-l"),
+        "move tab left" : Key("as-h"),
+        "move tab to start" : Key("as-k"),
+        "move tab to end" : Key("as-j"),
+        # these are provided by the 'tabasco' extension
+        "close other tabs" : Key("as-o"),
+        "close tabs to the right" : Key("as-r"),
+        "close right tabs" : Key("as-r"),
+        "pin tab" : Key("as-p"),
+        "search <text>" : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter")
         }
+
+    extras = [
+        Dictation("text")
+        ]
     
+    @classmethod
+    def activeForWindow(cls, window):
+        return "chrome" in window.wmclass or "chromium" in window.wmclass
+
+@registerRule
 class XMonadRule(ServerSeriesMappingRule):
     mapping  = {
-        "left" : keys("ca-s"),
-        "right" : keys("ca-h"),
-        "move left" : keys("ca-a"),
-        "move right" : keys("ca-t"),
-        "next" : keys("ca-e"),
-        "previous" : keys("ca-o"),
-        "move next" : keys("cas-e"),
-        "move previous" : keys("cas-o"),
-        "expand" : keys("ca-i"),
-        "shrink" : keys("ca-n"),
-        "cycle" : keys("ca-space"),
-        "kill window" : keys("ca-x"),
-        "make master" : keys("ca-enter"),
-        "editor" : keys("ca-w"),
-        "browser" : keys("ca-b"),
-        "new terminal" : keys("csa-t"),
-        "restart window manager" : keys("ca-q"),
-        #"restart mandimus" : restartMandimus
+        "left" : Key("ca-backspace"),
+        "right" : Key("ca-space"),
+        "move left" : Key("ca-a"),
+        "move right" : Key("ca-t"),
+        "next" : Key("ca-e"),
+        "previous" : Key("ca-o"),
+        "move next" : Key("cas-e"),
+        "move previous" : Key("cas-o"),
+        "expand" : Key("ca-i"),
+        "shrink" : Key("ca-n"),
+        "cycle" : Key("ca-space"),
+        "kill window" : Key("ca-x"),
+        "make master" : Key("ca-enter"),
+        "editor" : Key("ca-w"),
+        "browser" : Key("ca-b"),
+        "new terminal" : Key("csa-t"),
+        "restart window manager" : Key("ca-q"),
         }
     
     extras = [
@@ -97,7 +140,14 @@ class XMonadRule(ServerSeriesMappingRule):
         "n": 1,
         }
 
+    @classmethod
+    def activeForWindow(cls, window):
+        return True
+
 class RestartEvent(object):
+    pass
+
+class ExitEvent(object):
     pass
 
 class MainThread(object):
@@ -107,6 +157,14 @@ class MainThread(object):
         self.win = WindowEventWatcher(self.eventQ)
         self.run = True
 
+    def determineRules(self, window):
+        global rules
+        for r in rules:
+            if r.activeForWindow(window):
+                self.dfly.loadGrammar(r)
+            else:
+                self.dfly.unloadGrammar(r)
+
     def __call__(self):
         try:
             while self.run:
@@ -114,17 +172,20 @@ class MainThread(object):
                 ONEYEAR = 365 * 24 * 60 * 60
                 ev = self.eventQ.get(True, ONEYEAR)
                 if isinstance(ev, ConnectedEvent):
-                    class RestartRule(ServerMappingRule):
-                        mapping = { "restart mandimus" : (lambda: self.eventQ.put(RestartEvent())) }
-                    self.dfly.loadGrammar(RestartRule)
-                    self.dfly.loadGrammar(XMonadRule)
+                    class MainRule(ServerMappingRule):
+                        mapping = { "restart mandimus" : (lambda x: self.eventQ.put(RestartEvent())),
+                                    "completely exit mandimus" : (lambda x: self.eventQ.put(ExitEvent())) }
+                    self.dfly.loadGrammar(MainRule)
+
+                    # so that rules apply for whatever is focused on startup
+                    self.determineRules(Window(winId=Window.FOCUSED))
                 elif isinstance(ev, RestartEvent):
                     self.restart()
+                elif isinstance(ev, ExitEvent):
+                    self.stop()
+                    return
                 elif isinstance(ev, FocusChangeEvent):
-                    if "chrome" in ev.window.wmclass or "chromium" in ev.window.wmclass:
-                        self.dfly.loadGrammar(ChromeRule)
-                    else:
-                        self.dfly.unloadGrammar(ChromeRule)
+                    self.determineRules(ev.window)
                 elif len(ev): # don't print heartbeats
                     print "message: " + str(ev)
         except KeyboardInterrupt:

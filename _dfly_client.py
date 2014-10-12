@@ -1,63 +1,6 @@
 print "-----------load--------------"
-
-# modified from aenea, taken from:
-# https://raw.githubusercontent.com/calmofthestorm/aenea/4b0f91ca82aa994cd4912b17cdb4ae700adc65fe/client/_aenea.py
-def unload_code():
-    import natlinkmain, sys, os
-
-    def topy(path):
-        if path.endswith == ".pyc":
-            return path[:-1]
-
-        return path
-
-    # Do not reload anything in these directories or their subdirectories.
-    dir_reload_blacklist = set(["core"])
-
-    # TODO: should only care about path ending in Natlink/Natlink/MacroSystem
-    macro_dir = "E:\\NatLink\\NatLink\\MacroSystem"
-
-    # Unload all grammars.
-    natlinkmain.unloadEverything()
-
-    # Unload all modules in macro_dir except for those in directories on the
-    # blacklist.
-
-    for name, module in sys.modules.items():
-        if module and hasattr(module, "__file__"):
-            # Some builtin modules only have a name so module is None or
-            # do not have a __file__ attribute.  We skip these.
-            path = module.__file__
-
-            # Convert .pyc paths to .py paths.
-            path = topy(path)
-
-            # Do not unimport this module!  This will cause major problems!
-            if (path.startswith(macro_dir) and
-                not bool(set(path.split(os.path.sep)) & dir_reload_blacklist)
-                and path != topy(os.path.abspath(__file__))):
-
-                print "unloading %s" % name
-                if hasattr(sys.modules[name], "unload") and callable(sys.modules[name].unload):
-                    sys.modules[name].unload()
-                
-                print "removing %s from cache" % name
-
-                # Remove the module from the cache so that it will be reloaded
-                # the next time # that it is imported.  The paths for packages
-                # end with __init__.pyc so this # takes care of them as well.
-                del sys.modules[name]
-                
-# now invoke it, making sure that all of the importing we do that follows
-# is fresh
-unload_code()
-    
-def reload_code():
-    import natlinkmain
-    print 'Reloading code'
-    unload_code()
-    natlinkmain.findAndLoadFiles()
-    print 'Finished reloading'
+from hotCode import importOrReload, unloadCode, reloadCode, resetImportState
+resetImportState()
 
 from dragonfly import (
     Grammar, CompoundRule, MappingRule, ActionBase,
@@ -75,14 +18,19 @@ import logging
 # logging.basicConfig(filename="E:\\log.txt", filemode='w+')
 logging.basicConfig()
 
-from dfly_parser import (parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER,
-                         MATCH_MSG_START)
-from SeriesMappingRule import SeriesMappingRule
-from DragonflyNode import DragonflyNode
+importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIMETER",
+               "MATCH_MSG_START")
+importOrReload("SeriesMappingRule", "SeriesMappingRule")
+importOrReload("DragonflyNode", "DragonflyNode")
+
+def reloadClient():
+    client.cleanup()
+    unloadCode()
+    reloadCode()
 
 class GlobalRules(MappingRule):
     mapping = {
-        "reload client code" : Function(reload_code),
+        "reload client code" : Function(reloadClient),
         "go to sleep" : Function(lambda: natlink.setMicState('sleeping')),
         }
     extras = []
@@ -110,13 +58,16 @@ class DragonflyClient(DragonflyNode):
         # block, so we run on a periodic timer.
         DragonflyNode.__init__(self)
         self.timer = get_engine().create_timer(self._eventLoop, 1)
-        self.testSent = False
         self.buf = ""
         self.grammars = {}
 
         self.addRule(GlobalRules(), "GlobalRules")
 
     def addRule(self, rule, name):
+        if name in self.grammars:
+            print 'Already have rule: ' + name
+            return
+
         print 'Adding rule: ' + name
         grammar = Grammar(name)
         grammar.add_rule(rule)
@@ -126,8 +77,18 @@ class DragonflyClient(DragonflyNode):
 
     def removeRule(self, name):
         print 'Removing rule: ' + name
-        self.grammars[name].unload()
-        del self.grammars[name]
+        try:
+            self.grammars[name].unload()
+            del self.grammars[name]
+        except KeyError:
+            print 'Rule not found: %s, ignoring' % name
+
+    def dumpOther(self):
+        # on disconnect unload all the rules
+        for key, val in self.grammars.items():
+            if key != "GlobalRules":
+                self.removeRule(key)
+        DragonflyNode.dumpOther(self)
 
     def _eventLoop(self):
         try:
@@ -135,7 +96,7 @@ class DragonflyClient(DragonflyNode):
         except Exception as e:
             traceback.print_exc()
             self.cleanup()
-            raise
+            #raise
 
     def eventLoop(self):
         if self.other is None:
@@ -144,16 +105,14 @@ class DragonflyClient(DragonflyNode):
             try:
                 self.other.connect(("10.0.0.2", 23133))
                 print 'connected'
+            except socket.error as e:
+                print 'connect error'
+                self.dumpOther()
             except socket.timeout as e:
-                print 'connection timed out, resetting to none'
-                self.other = None
+                print 'connect timeout'
+                self.dumpOther()
                 return
 
-        if not self.testSent:
-            self.testSent = True
-            self.sendMsg("test")
-            self.sendMsg("foo")
-            
         self.retrieveMessages()
         self.heartbeat()
 
@@ -210,10 +169,6 @@ class DragonflyClient(DragonflyNode):
             idx += 1
         defaults = self.parseDefaults(defaults)
 
-        for key,val in rules.items():
-            print str(key),str(val)
-        #print str(mappingCls), str(mappingCls.__name__), str(rules), extras, defaults
-        print mappingCls.__name__
         new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
 
         self.addRule(new_rule, rule_name)
@@ -239,7 +194,8 @@ class DragonflyClient(DragonflyNode):
         return parsed
     
     def onMatch(self, grammarString, data):
-        # print 'data ' + str(data)
+        print 'match ' + grammarString
+        print 'data ' + str(data)
         # print 'node ' + str(' '.join(data['_node'].words()))
         # print 'rule ' + str(data['_rule'].name)
         # print 'grammar ' + str(data['_grammar'].name)
@@ -252,13 +208,15 @@ class DragonflyClient(DragonflyNode):
             for key, value in data.items():
                 if isinstance(value, int) or isinstance(value, str):
                     msg += [str(key), ":", str(value), ARG_DELIMETER]
+                elif isinstance(value, get_engine().DictationContainer):
+                    msg += [str(key), ":", str(value.format()), ARG_DELIMETER]
         self.sendMsg(''.join(msg))
 
     def cleanup(self):
-        DragonflyNode.cleanup(self)
         self.timer.stop()
         for name, grammar in self.grammars.items():
             grammar.unload()
+        DragonflyNode.cleanup(self)
 
     def transformMapping(self, grammarList):
         """We never perform actions directly, we just send
@@ -272,6 +230,7 @@ client = DragonflyClient()
 
 def unload():
     client.cleanup()
+    # unload_code()
     print "----------unload-------------"
     
 ### DRAGONSHARE RSYNC

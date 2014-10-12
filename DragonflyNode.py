@@ -1,6 +1,8 @@
+from hotCode import importOrReload
+
 import time, socket, errno
 
-from dfly_parser import parseMessages, MESSAGE_TERMINATOR
+importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR")
 
 class ConnectedEvent(object):
     pass
@@ -53,6 +55,7 @@ class DragonflyNode(object):
     def cleanup(self):
         if self.other is not None:
             self.other.close()
+        self.other = None
 
     def onMessage(self):
         pass
@@ -61,15 +64,16 @@ class DragonflyNode(object):
         pass
 
     def dumpOther(self):
-        print 'other lost'
+        if self.other is not None:
+            print 'other lost'
         self.other.close()
         self.other = None
 
     def sendMsg(self, msg):
         if len(msg) and not msg.startswith('ack'): # don't print heartbeats
             print 'sending ' + msg
-        self.other.settimeout(None)
         try:
+            self.other.settimeout(None)
             self.other.sendall(msg + MESSAGE_TERMINATOR)
             self.lastMsgSendTime = time.time()
         except socket.error as e:

@@ -1,17 +1,21 @@
 import subprocess
 import re
 
-class typekeys:
-    def __init__(self, keyStr):
-        self.keyStr = keyStr
-
-    def __call__(self):
-        cmd = "xdotool type " + self.keyStr
-        subprocess.call(cmd, shell=True)    
+def runCmd(cmd):
+    subprocess.call(cmd, shell=True)
 
 def parseKeyString(keyStr):
     """Translate dragonfly style key descriptions
     to xdotool's preferred versions"""
+    
+    # dragonfly uses comma sep keys, xdotool uses spaces
+    singles = keyStr.split(',')
+    keys = [parseSingleKeystring(s) for s in singles]
+    return ' '.join(keys)
+
+def parseSingleKeystring(keyStr):
+    keyStr = keyStr.strip()
+    
     xdo = []
     modifiers = []
     keys = keyStr.split('-')
@@ -27,7 +31,7 @@ def parseKeyString(keyStr):
         elif modifier == 's':
             xdo += ['shift']
         else:
-            print 'Unknown modifier'
+            raise Exception('Unknown modifier: ' + modifier)
 
     replacements = {
         "left" : "Left",
@@ -70,38 +74,44 @@ def parseKeyString(keyStr):
     keys = re.sub("f([0-9])+", "F\\1", keys)  
     return '+'.join(xdo) + '+' + keys
 
-class keys:
-    def __init__(self, keyStr):
-        self.keyStr = parseKeyString(keyStr)
-
-    def __call__(self):
-        pressKey(self.keyStr)
-
-def pressKey(key):
-    # TODO: pay attention to errors, exit status
-    cmd = "xdotool key " + key
-    subprocess.call(cmd, shell=True)    
-
-class keydown:
-    def __init__(self, keyStr):
-        self.keyStr = parseKeyString(keyStr)
-
-    def __call__(self):
-        # TODO: pay attention to errors, exit status
-        cmd = "xdotool keydown " + self.keyStr
-#        print "executing: " + cmd
-        subprocess.call(cmd, shell=True)
-
-class keyup:
-    def __init__(self, keyStr):
-        self.keyStr = parseKeyString(keyStr)
-
-    def __call__(self):
-        # TODO: pay attention to errors, exit status
-        cmd = "xdotool keyup " + self.keyStr
-#        print "executing: " + cmd
-        subprocess.call(cmd, shell=True)
+class ActionList(object):
+    def __init__(self, lst=[]):
+        self.lst = []
         
+    def __add__(self, other):
+        if isinstance(other, ActionList):
+            self.lst.extend(other.lst)
+        else:
+            self.lst.append(other)
+        return self
+
+    def __call__(self, extras={}):
+        for f in self.lst:
+            f(extras)
+
+class Action(object):
+    def __init__(self, data):
+        self.data = data
+
+    def __add__(self, other):
+        return ActionList() + self + other
+
+class Key(Action):
+    def __init__(self, keyStr):
+        Action.__init__(self, parseKeyString(keyStr)) 
+
+    def __call__(self, extras={}):
+        cmd = ("xdotool key " + self.data) % extras
+        runCmd(cmd)    
+
+class Text(Action):
+    def __init__(self, fmt):
+        Action.__init__(self, fmt) 
+
+    def __call__(self, extras={}):
+        cmd = ("xdotool type '" + self.data + "'") % extras
+        runCmd(cmd)
+
 class click:
     def __init__(self, keyStr):
         self.keyStr = keyStr
