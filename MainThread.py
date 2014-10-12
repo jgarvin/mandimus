@@ -88,6 +88,7 @@ class ChromeRule(ServerSeriesMappingRule):
         "tab" : Key("tab"),
         "reload" : Key("c-r"),
         "refresh" : Key("c-r"),
+        "search <text>" : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter"),
         # these are provided by the 'tabloid' extension
         "move tab right" : Key("as-l"),
         "move tab left" : Key("as-h"),
@@ -98,7 +99,6 @@ class ChromeRule(ServerSeriesMappingRule):
         "close tabs to the right" : Key("as-r"),
         "close right tabs" : Key("as-r"),
         "pin tab" : Key("as-p"),
-        "search <text>" : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter")
         }
 
     extras = [
@@ -166,15 +166,17 @@ class MainThread(object):
                 self.dfly.unloadGrammar(r)
 
     def __call__(self):
+        class MainRule(ServerMappingRule):
+            mapping = { "restart mandimus" : (lambda x: self.eventQ.put(RestartEvent())),
+                        "completely exit mandimus" : (lambda x: self.eventQ.put(ExitEvent())) }
+
+
         try:
             while self.run:
                 # without a timeout, ctrl-c doesn't work because.. python
                 ONEYEAR = 365 * 24 * 60 * 60
                 ev = self.eventQ.get(True, ONEYEAR)
                 if isinstance(ev, ConnectedEvent):
-                    class MainRule(ServerMappingRule):
-                        mapping = { "restart mandimus" : (lambda x: self.eventQ.put(RestartEvent())),
-                                    "completely exit mandimus" : (lambda x: self.eventQ.put(ExitEvent())) }
                     self.dfly.loadGrammar(MainRule)
 
                     # so that rules apply for whatever is focused on startup

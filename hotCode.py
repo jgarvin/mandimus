@@ -1,9 +1,8 @@
 import sys, inspect, random
 
 def topy(path):
-    if path.endswith == ".pyc":
+    if path.endswith(".pyc"):
         return path[:-1]
-
     return path
 
 def resetImportState():
@@ -24,6 +23,7 @@ def getCallingModule():
         mod = inspect.getmodulename(topy(frmfile))
         # print dir(inspect.currentframe())
         if frmfile != topy(__file__):
+            print frmfile, topy(__file__)
             return sys.modules[mod]
     raise "Couldn't find calling module in stack trace"
 

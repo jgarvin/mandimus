@@ -14,11 +14,10 @@ def parseKeyString(keyStr):
     return ' '.join(keys)
 
 def parseSingleKeystring(keyStr):
-    keyStr = keyStr.strip()
-    
     xdo = []
     modifiers = []
     keys = keyStr.split('-')
+    keys = [k.strip() for k in keys]
     if len(keys) > 1:
         modifiers = keys[0]
         del keys[0]
