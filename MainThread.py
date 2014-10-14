@@ -61,17 +61,53 @@ def registerRule(f):
 @registerRule
 class EmacsRule(ServerSeriesMappingRule):
     mapping  = {
+        # general commands
+        "cancel" : Key("c-g"),
+        # file commands
+        "open file" : Key("c-x,c-f"),
+        # buffer commands
         "switch (buff | buffer)" : Key("c-x, b"),
+        "kill (buff | buffer)" : Key("c-x,k,enter"),
+        # window commands
         "other window" : Key("c-x, o"),
         "one window" : Key("c-x, 1"),
         "new frame" : Key("c-x, 5, 2"),
-        "cancel" : Key("c-g"),
+        # text commands
+        "mark" : Key("c-space"),
+        "copy" : Key("a-w"),
+        "cut" : Key("c-x,c-k"),
+        "(yank | paste)" : Key("c-y"),
+        "term (yank | paste)" : Key("s-insert"),
+        "select all" : Key("c-a"),
+        "comp" : Key("c-space"),
+        "undo" : Key("cs-underscore"),
+        "redo" : Key("as-underscore"),
+        "enter" : Key("enter"),
         }
 
     @classmethod
     def activeForWindow(cls, window):
         return "emacs" in window.wmclass or "Emacs" in window.wmclass
     
+@registerRule
+class CUARule(ServerSeriesMappingRule):
+    mapping = {
+        "copy" : Key("c-c"),
+        "cut" : Key("c-x"),
+        "paste" : Key("c-v"),
+        "term paste" : Key("s-insert"),
+        "select all" : Key("c-a"),
+        "undo" : Key("c-z"),
+        "redo" : Key("c-y"),
+        "next form" : Key("tab"),
+        "previous form" : Key("s-tab"),
+        "escape" : Key("escape"),
+        }
+
+    @classmethod
+    def activeForWindow(cls, window):
+        return not EmacsRule.activeForWindow(window)
+
 @registerRule
 class ChromeRule(ServerSeriesMappingRule):
     mapping  = {
@@ -122,7 +158,7 @@ class XMonadRule(ServerSeriesMappingRule):
         "move previous" : Key("cas-o"),
         "expand" : Key("ca-i"),
         "shrink" : Key("ca-n"),
-        "cycle" : Key("ca-space"),
+        "cycle" : Key("ca-y"),
         "kill window" : Key("ca-x"),
         "make master" : Key("ca-enter"),
         "editor" : Key("ca-w"),
