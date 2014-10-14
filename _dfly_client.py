@@ -68,7 +68,7 @@ class DragonflyClient(DragonflyNode):
             print 'Already have rule: ' + name
             return
 
-        print 'Adding rule: ' + name
+        #print 'Adding rule: ' + name
         grammar = Grammar(name)
         grammar.add_rule(rule)
         grammar.load()
@@ -76,7 +76,7 @@ class DragonflyClient(DragonflyNode):
         self.grammars[name] = grammar
 
     def removeRule(self, name):
-        print 'Removing rule: ' + name
+        #print 'Removing rule: ' + name
         try:
             self.grammars[name].unload()
             del self.grammars[name]
@@ -203,17 +203,17 @@ class DragonflyClient(DragonflyNode):
         # print 'rule ' + str(data['_rule'].name)
         # print 'grammar ' + str(data['_grammar'].name)
         msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
-        msg += [' '.join(data['_node'].words()), ARG_DELIMETER]
+        msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
         if data:
             # TODO: we really should be sending the whole node structure
             # so we can have more elaborate phrases that change meaning
             # based on what was actually said...
             for key, value in data.items():
                 if isinstance(value, int) or isinstance(value, str):
-                    msg += [str(key), ":", str(value), ARG_DELIMETER]
+                    msg += [unicode(key), ":", unicode(value), ARG_DELIMETER]
                 elif isinstance(value, get_engine().DictationContainer):
-                    msg += [str(key), ":", str(value.format()), ARG_DELIMETER]
-        self.sendMsg(''.join(msg))
+                    msg += [unicode(key), ":", unicode(value.format()), ARG_DELIMETER]
+        self.sendMsg(u''.join(msg))
 
     def cleanup(self):
         self.timer.stop()

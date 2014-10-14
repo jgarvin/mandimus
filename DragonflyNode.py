@@ -50,7 +50,7 @@ class DragonflyNode(object):
     def recv(self):
         #print 'receiving...'
         self.other.settimeout(0.2)
-        return self.other.recv(4096)            
+        return unicode(self.other.recv(4096), 'utf-8')            
 
     def cleanup(self):
         if self.other is not None:
@@ -74,7 +74,7 @@ class DragonflyNode(object):
             print 'sending ' + msg
         try:
             self.other.settimeout(None)
-            self.other.sendall(msg + MESSAGE_TERMINATOR)
+            self.other.sendall((msg + MESSAGE_TERMINATOR).encode('utf-8'))
             self.lastMsgSendTime = time.time()
         except socket.error as e:
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
