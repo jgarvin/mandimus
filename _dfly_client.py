@@ -99,7 +99,7 @@ class DragonflyClient(DragonflyNode):
             #raise
 
     def eventLoop(self):
-        if self.other is None:
+        if self.other is None and natlink.getMicState() == 'on':
             self.other = self.makeSocket()
             self.other.settimeout(0.25)
             try:

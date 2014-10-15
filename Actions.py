@@ -10,7 +10,18 @@ def parseKeyString(keyStr):
     
     # dragonfly uses comma sep keys, xdotool uses spaces
     singles = keyStr.split(',')
-    keys = [parseSingleKeystring(s) for s in singles]
+    
+    keys = []
+    for s in singles:
+        if ':' in s:
+            key, count = s.split(':')
+            count = int(count)
+        else:
+            key, count = s, 1
+
+        key = parseSingleKeystring(key)
+        keys.extend([key] * count)
+            
     return ' '.join(keys)
 
 def parseSingleKeystring(keyStr):
@@ -97,19 +108,62 @@ class Action(object):
 
 class Key(Action):
     def __init__(self, keyStr):
-        Action.__init__(self, parseKeyString(keyStr)) 
+        Action.__init__(self, keyStr) 
 
     def __call__(self, extras={}):
-        cmd = ("xdotool key " + self.data) % extras
+        cmd = "xdotool key " + parseKeyString(self.data % extras)
         runCmd(cmd)    
 
 class Text(Action):
     def __init__(self, fmt):
         Action.__init__(self, fmt) 
 
-    def __call__(self, extras={}):
-        cmd = ("xdotool type '" + self.data + "'") % extras
+    def typeKeys(self, letters):
+        cmd = ("xdotool type '" + letters + "'")
         runCmd(cmd)
+
+    def __call__(self, extras={}):
+        self.typeKeys(self.data % extras)
+
+class Camel(Text):
+    def __init__(self, fmt):
+        Text.__init__(self, fmt) 
+
+    def __call__(self, extras={}):
+        words = self.data % extras
+        words = [w.lower() for w in words.split(' ')]
+        words = [words[0]] + [w.capitalize() for w in words[1:]]
+        self.typeKeys(''.join(words))
+
+class Camel(Text):
+    def __init__(self, fmt):
+        Text.__init__(self, fmt) 
+
+    def __call__(self, extras={}):
+        words = self.data % extras
+        words = [w.lower() for w in words.split(' ')]
+        words = [words[0]] + [w.capitalize() for w in words[1:]]
+        self.typeKeys(''.join(words))
+        
+class Underscore(Text):
+    def __init__(self, fmt, caps=False):
+        Text.__init__(self, fmt)
+        self.caps = unicode.upper if caps else unicode.lower
+
+    def __call__(self, extras={}):
+        words = self.data % extras
+        words = [self.caps(w) for w in words.split(' ')]
+        self.typeKeys('_'.join(words))        
+
+class Hyphen(Text):
+    def __init__(self, fmt, caps=False):
+        Text.__init__(self, fmt)
+        self.caps = unicode.upper if caps else unicode.lower
+
+    def __call__(self, extras={}):
+        words = self.data % extras
+        words = [self.caps(w) for w in words.split(' ')]
+        self.typeKeys('-'.join(words))        
 
 class click:
     def __init__(self, keyStr):

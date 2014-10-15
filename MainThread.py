@@ -1,7 +1,7 @@
 import os, sys
 import Queue
 from dfly_server import DragonflyThread
-from Actions import Key, Text
+from Actions import Key, Text, Camel, Underscore, Hyphen
 from DragonflyNode import ConnectedEvent
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent
 from Window import Window
@@ -72,23 +72,47 @@ class EmacsRule(ServerSeriesMappingRule):
         "other window" : Key("c-x, o"),
         "one window" : Key("c-x, 1"),
         "new frame" : Key("c-x, 5, 2"),
+        # navigation commands
+        "top" : Key("a-langle"),
+        "bottom" : Key("a-rangle"),
         # text commands
         "mark" : Key("c-space"),
         "copy" : Key("a-w"),
         "cut" : Key("c-x,c-k"),
-        "(yank | paste)" : Key("c-y"),
+        "yank" : Key("c-y"),
+        "yank pop" : Key("a-y"),
         "term (yank | paste)" : Key("s-insert"),
         "select all" : Key("c-a"),
-        "comp" : Key("c-space"),
+        "kill" : Key('c-k'),
+        "comp" : Key("a-space"),
         "undo" : Key("cs-underscore"),
         "redo" : Key("as-underscore"),
         "enter" : Key("enter"),
+        "eval" : Key("c-x,c-e"),
         }
 
     @classmethod
     def activeForWindow(cls, window):
         return "emacs" in window.wmclass or "Emacs" in window.wmclass
     
+@registerRule
+class AlwaysRule(ServerSeriesMappingRule):
+    mapping = {
+        "camel <text>" : Camel("%(text)s"),
+        "hyphen <text>" : Hyphen("%(text)s"),
+        "underscore <text>" : Underscore("%(text)s"),
+        "caps hyphen <text>" : Hyphen("%(text)s", True),
+        "caps underscore <text>" : Underscore("%(text)s", True),
+        }
+
+    extras = [
+        Dictation("text")
+        ]
+    
+    @classmethod
+    def activeForWindow(cls, window):
+        return True
+
 @registerRule
 class CUARule(ServerSeriesMappingRule):
     mapping = {
@@ -103,6 +127,10 @@ class CUARule(ServerSeriesMappingRule):
         "previous form" : Key("s-tab"),
         "escape" : Key("escape"),
         }
+
+    extras = [
+        Dictation("text")
+        ]
 
     @classmethod
     def activeForWindow(cls, window):
@@ -148,16 +176,16 @@ class ChromeRule(ServerSeriesMappingRule):
 @registerRule
 class XMonadRule(ServerSeriesMappingRule):
     mapping  = {
-        "left" : Key("ca-backspace"),
-        "right" : Key("ca-space"),
+        "left [<n>]" : Key("ca-backspace:%(n)d"),
+        "right [<n>]" : Key("ca-space:%(n)d"),
         "move left" : Key("ca-a"),
         "move right" : Key("ca-t"),
-        "next" : Key("ca-e"),
-        "previous" : Key("ca-o"),
+        "next [<n>]" : Key("ca-e:%(n)d"),
+        "previous [<n>]" : Key("ca-o:%(n)d"),
         "move next" : Key("cas-e"),
         "move previous" : Key("cas-o"),
-        "expand" : Key("ca-i"),
-        "shrink" : Key("ca-n"),
+        "expand [<n>]" : Key("ca-i:%(n)d"),
+        "shrink [<n>]" : Key("ca-n:%(n)d"),
         "cycle" : Key("ca-y"),
         "kill window" : Key("ca-x"),
         "make master" : Key("ca-enter"),
