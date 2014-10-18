@@ -106,19 +106,21 @@ class Action(object):
     def __add__(self, other):
         return ActionList() + self + other
 
-class Key(Action):
-    def __init__(self, keyStr):
-        Action.__init__(self, keyStr) 
+class Speak(Action):
+    def __call__(self, extras={}):
+        cmd = "echo '" + (self.data % extras) + "' | festival --tts"
+        runCmd(cmd)
 
+class Key(Action):
     def __call__(self, extras={}):
         cmd = "xdotool key " + parseKeyString(self.data % extras)
         runCmd(cmd)    
 
 class Text(Action):
-    def __init__(self, fmt):
-        Action.__init__(self, fmt) 
-
     def typeKeys(self, letters):
+        # escape single quotes, we actually close the string
+        # add the escape single quote, and reopen the string
+        letters = letters.replace("'", "'\\''")
         cmd = ("xdotool type '" + letters + "'")
         runCmd(cmd)
 
@@ -126,25 +128,12 @@ class Text(Action):
         self.typeKeys(self.data % extras)
 
 class Camel(Text):
-    def __init__(self, fmt):
-        Text.__init__(self, fmt) 
-
     def __call__(self, extras={}):
         words = self.data % extras
         words = [w.lower() for w in words.split(' ')]
         words = [words[0]] + [w.capitalize() for w in words[1:]]
         self.typeKeys(''.join(words))
 
-class Camel(Text):
-    def __init__(self, fmt):
-        Text.__init__(self, fmt) 
-
-    def __call__(self, extras={}):
-        words = self.data % extras
-        words = [w.lower() for w in words.split(' ')]
-        words = [words[0]] + [w.capitalize() for w in words[1:]]
-        self.typeKeys(''.join(words))
-        
 class Underscore(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)

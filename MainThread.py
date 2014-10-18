@@ -1,149 +1,58 @@
 import os, sys
 import Queue
 from dfly_server import DragonflyThread
-from Actions import Key, Text, Camel, Underscore, Hyphen
+from Actions import Key, Text, Camel, Underscore, Hyphen, Speak
 from DragonflyNode import ConnectedEvent
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent
 from Window import Window
-
-from dfly_parser import ARG_DELIMETER
-
-class Integer(object):
-    def __init__(self, var, lower_bound, upper_bound):
-        self.var = var
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-
-    def __str__(self):
-        return "INTEGER %s %d %d" % (self.var, self.lower_bound, self.upper_bound)
-
-class Dictation(object):
-    def __init__(self, var):
-        self.var = var
-
-    def __str__(self):
-        return "DICTATION %s" % (self.var,)
-
-class ServerMappingRule(object):
-    mapping = {}
-    extras = []
-    defaults = {}
-    serializedType = "ServerMappingRule"
-
-    @classmethod
-    def textSerialize(cls):
-        serializeType = cls.serializedType
-        serializeType = serializeType.split("Server", 1)[1]
-        
-        msg = []
-        msg += [serializeType + ARG_DELIMETER + cls.__name__ + ARG_DELIMETER,
-                ARG_DELIMETER.join(cls.mapping.keys())]
-        msg += [ARG_DELIMETER]
-        msg += ["EXTRAS"]
-        for extra in cls.extras:
-            msg += [ARG_DELIMETER, str(extra)]
-        msg += [ARG_DELIMETER]
-        msg += ["DEFAULTS"]
-        for key, val in cls.defaults.items():
-            msg += [ARG_DELIMETER, str(key), ':', str(val)]
-        msg += [ARG_DELIMETER]
-        return ''.join(msg)
-
-class ServerSeriesMappingRule(ServerMappingRule):
-    serializedType = "ServerSeriesMappingRule"
-
-rules = set()    
-def registerRule(f):
-    global rules
-    rules.add(f)
-    return f
+from rules.Rule import registerRule, registeredRules
+from rules.SeriesMappingRule import SeriesMappingRule
+from rules.Elements import Integer, Dictation
+from rules.Always import AlwaysRule
+from rules.Emacs import EmacsRule
 
 @registerRule
-class EmacsRule(ServerSeriesMappingRule):
-    mapping  = {
-        # general commands
-        "cancel" : Key("c-g"),
-        # file commands
-        "open file" : Key("c-x,c-f"),
-        # buffer commands
-        "switch (buff | buffer)" : Key("c-x, b"),
-        "kill (buff | buffer)" : Key("c-x,k,enter"),
-        # window commands
-        "other window" : Key("c-x, o"),
-        "one window" : Key("c-x, 1"),
-        "new frame" : Key("c-x, 5, 2"),
-        # navigation commands
-        "top" : Key("a-langle"),
-        "bottom" : Key("a-rangle"),
-        # text commands
-        "mark" : Key("c-space"),
-        "copy" : Key("a-w"),
-        "cut" : Key("c-x,c-k"),
-        "yank" : Key("c-y"),
-        "yank pop" : Key("a-y"),
-        "term (yank | paste)" : Key("s-insert"),
-        "select all" : Key("c-a"),
-        "kill" : Key('c-k'),
-        "comp" : Key("a-space"),
-        "undo" : Key("cs-underscore"),
-        "redo" : Key("as-underscore"),
-        "enter" : Key("enter"),
-        "eval" : Key("c-x,c-e"),
-        }
-
-    @classmethod
-    def activeForWindow(cls, window):
-        return "emacs" in window.wmclass or "Emacs" in window.wmclass
-    
-@registerRule
-class AlwaysRule(ServerSeriesMappingRule):
-    mapping = {
-        "camel <text>" : Camel("%(text)s"),
-        "hyphen <text>" : Hyphen("%(text)s"),
-        "underscore <text>" : Underscore("%(text)s"),
-        "caps hyphen <text>" : Hyphen("%(text)s", True),
-        "caps underscore <text>" : Underscore("%(text)s", True),
-        }
-
-    extras = [
-        Dictation("text")
-        ]
-    
-    @classmethod
-    def activeForWindow(cls, window):
-        return True
-
-@registerRule
-class CUARule(ServerSeriesMappingRule):
+class CUARule(SeriesMappingRule):
     mapping = {
         "copy" : Key("c-c"),
         "cut" : Key("c-x"),
         "paste" : Key("c-v"),
         "term paste" : Key("s-insert"),
         "select all" : Key("c-a"),
-        "undo" : Key("c-z"),
-        "redo" : Key("c-y"),
+        "undo [that]" : Key("c-z"),
+        "redo [that]" : Key("c-y"),
         "next form" : Key("tab"),
         "previous form" : Key("s-tab"),
         "escape" : Key("escape"),
+        "find [<search_terms>]" : Key("c-f") + Text("%(search_terms)s"),
+        "find next" : Key("F3"),
+        "enter" : Key("enter"),
+        "page up" : Key("pgup"),
+        "page down" : Key("pgdown"),
         }
 
     extras = [
-        Dictation("text")
+        Dictation("text"),
+        Dictation("search_terms"),
         ]
+
+    defaults = {
+        "search_terms" : "",
+        }
 
     @classmethod
     def activeForWindow(cls, window):
         return not EmacsRule.activeForWindow(window)
 
 @registerRule
-class ChromeRule(ServerSeriesMappingRule):
+class ChromeRule(SeriesMappingRule):
     mapping  = {
         "new tab" : Key("c-t"),
         "close tab" : Key("c-w"),
         "address" : Key("c-l"),
         "next tab" : Key("c-tab"),
         "previous tab" : Key("cs-tab"),
+        "(reopen tab | undo close tab)" : Key("cs-t"),
         "back" : Key("a-left"),
         "forward" : Key("a-right"),
         "refresh" : Key("F5"),
@@ -153,6 +62,8 @@ class ChromeRule(ServerSeriesMappingRule):
         "reload" : Key("c-r"),
         "refresh" : Key("c-r"),
         "search <text>" : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter"),
+        "zoom in [<n>]" : Key("c-plus:%(n)d"),
+        "zoom out [<n>]" : Key("c-minus:%(n)d"),
         # these are provided by the 'tabloid' extension
         "move tab right" : Key("as-l"),
         "move tab left" : Key("as-h"),
@@ -166,18 +77,23 @@ class ChromeRule(ServerSeriesMappingRule):
         }
 
     extras = [
-        Dictation("text")
+        Dictation("text"),
+        Integer("n", 1, 20),
         ]
+
+    defaults = {
+        'n' : 1,
+        }
     
     @classmethod
     def activeForWindow(cls, window):
         return "chrome" in window.wmclass or "chromium" in window.wmclass
 
 @registerRule
-class XMonadRule(ServerSeriesMappingRule):
+class XMonadRule(SeriesMappingRule):
     mapping  = {
-        "left [<n>]" : Key("ca-backspace:%(n)d"),
-        "right [<n>]" : Key("ca-space:%(n)d"),
+        "mon left [<n>]" : Key("ca-backspace:%(n)d"),
+        "mon right [<n>]" : Key("ca-space:%(n)d"),
         "move left" : Key("ca-a"),
         "move right" : Key("ca-t"),
         "next [<n>]" : Key("ca-e:%(n)d"),
@@ -222,15 +138,14 @@ class MainThread(object):
         self.run = True
 
     def determineRules(self, window):
-        global rules
-        for r in rules:
+        for r in registeredRules():
             if r.activeForWindow(window):
                 self.dfly.loadGrammar(r)
             else:
                 self.dfly.unloadGrammar(r)
 
     def __call__(self):
-        class MainRule(ServerMappingRule):
+        class MainRule(SeriesMappingRule):
             mapping = { "restart mandimus" : (lambda x: self.eventQ.put(RestartEvent())),
                         "completely exit mandimus" : (lambda x: self.eventQ.put(ExitEvent())) }
 

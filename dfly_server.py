@@ -5,6 +5,7 @@ import errno
 import os
 import time
 import Queue
+import traceback
 from EventThread import EventThread
 
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER
@@ -102,11 +103,18 @@ class DragonflyThread(EventThread, DragonflyNode):
         
         extras = [g for g in extras if g != '']
         extras = self.parseExtras(extras)
+        extras['grammar'] = grammar
+        extras['words'] = words
 
         # todo replace this with MatchEvent
         for g in self.grammars:
             if grammar in g.mapping:
-                g.mapping[grammar](extras)
+                try:
+                    g.mapping[grammar](extras)
+                except Exception as e:
+                    # don't want the whole thing to crash just because
+                    # of one bad rule
+                    traceback.print_exc()
 
     def parseExtras(self, extras):
         parsed = {}

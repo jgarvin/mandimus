@@ -117,21 +117,25 @@ class DragonflyClient(DragonflyNode):
         self.heartbeat()
 
     def onMessage(self, msg):
-        if msg.startswith("MappingRule"):
-            self.parseMappingRuleMsg(msg, MappingRule)
-        elif msg.startswith("SeriesMappingRule"):
-            self.parseMappingRuleMsg(msg, SeriesMappingRule)
-        elif msg.startswith("unload"):
-            self.parseUnloadMsg(msg)
-        elif msg.startswith("ack"):
-            pass
-            #print 'received ack: ' + msg
-        elif len(msg) == 0:
-            pass
-            #print 'received heartbeat'
-        else:
-            print "Received unknown message type!: " + msg
-            print 'Message length %d' % (len(msg),)
+        try:
+            if msg.startswith("MappingRule"):
+                self.parseMappingRuleMsg(msg, MappingRule)
+            elif msg.startswith("SeriesMappingRule"):
+                self.parseMappingRuleMsg(msg, SeriesMappingRule)
+            elif msg.startswith("unload"):
+                self.parseUnloadMsg(msg)
+            elif msg.startswith("ack"):
+                pass
+                #print 'received ack: ' + msg
+            elif len(msg) == 0:
+                pass
+                #print 'received heartbeat'
+            else:
+                print "Received unknown message type!: " + msg
+                print 'Message length %d' % (len(msg),)
+        except Exception:
+            traceback.print_exc()
+            return
 
     def parseUnloadMsg(self, msg):
         allargs = msg.split(ARG_DELIMETER) 
@@ -197,11 +201,11 @@ class DragonflyClient(DragonflyNode):
         if natlink.getMicState() != 'on':
             return
 
-        # print 'match ' + grammarString
-        # print 'data ' + str(data)
-        # print 'node ' + str(' '.join(data['_node'].words()))
-        # print 'rule ' + str(data['_rule'].name)
-        # print 'grammar ' + str(data['_grammar'].name)
+        print 'match ' + grammarString
+        print 'data ' + unicode(data)
+        print 'node ' + u' '.join(data['_node'].words())
+        print 'rule ' + unicode(data['_rule'].name)
+        print 'grammar ' + unicode(data['_grammar'].name)
         msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
         msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
         if data:
@@ -209,9 +213,11 @@ class DragonflyClient(DragonflyNode):
             # so we can have more elaborate phrases that change meaning
             # based on what was actually said...
             for key, value in data.items():
-                if isinstance(value, int) or isinstance(value, str):
+                assert not isinstance(value, str) # should be unicode
+                if isinstance(value, int) or isinstance(value, unicode):
                     msg += [unicode(key), ":", unicode(value), ARG_DELIMETER]
                 elif isinstance(value, get_engine().DictationContainer):
+                    print 'valuecont',value.words,unicode(value)
                     msg += [unicode(key), ":", unicode(value.format()), ARG_DELIMETER]
         self.sendMsg(u''.join(msg))
 

@@ -17,7 +17,9 @@ import subprocess
 class Window(object):
     FOCUSED = -1
 
-    def __init__(self, winId):
+    def __init__(self, winId=None):
+        if winId is None:
+            winId = self.FOCUSED
         if winId == self.FOCUSED:
             # TODO: pay attention to errors, exit status
             s = subprocess.Popen("xdotool getwindowfocus", shell=True, stdout=subprocess.PIPE)
@@ -42,7 +44,7 @@ class Window(object):
                 continue
             field, value = x[0].strip(), x[1].strip()
             if field == prop:
-                return value
+                return value.strip(',').strip('"')
 
         return "ERROR: NO %s FIELD" % (prop,)        
 
@@ -61,9 +63,13 @@ class Window(object):
         return self.__getXprop("WM_NAME(STRING)")
 
     @property
+    def iconName(self):
+        return self.__getXprop("WM_ICON_NAME(STRING)")    
+
+    @property
     def wmclass(self):
         return self.__getXprop("WM_CLASS(STRING)")    
     
 if __name__ == "__main__":
     w = Window(winId=Window.FOCUSED)
-    print w.size, w.name, w.wmclass
+    print w.size, w.name, w.wmclass, w.iconName
