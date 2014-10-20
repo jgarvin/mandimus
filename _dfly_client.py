@@ -19,7 +19,7 @@ import logging
 logging.basicConfig()
 
 importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIMETER",
-               "MATCH_MSG_START")
+               "MATCH_MSG_START", "KEY_VALUE_SEPARATOR")
 importOrReload("SeriesMappingRule", "SeriesMappingRule")
 importOrReload("DragonflyNode", "DragonflyNode")
 
@@ -190,7 +190,7 @@ class DragonflyClient(DragonflyNode):
     def parseDefaults(self, defaults):
         parsed = {}
         for e in defaults:
-            e = e.split(':')
+            e = e.split(KEY_VALUE_SEPARATOR)
             try:
                 parsed[e[0]] = int(e[1])
             except ValueError:
@@ -215,10 +215,10 @@ class DragonflyClient(DragonflyNode):
             for key, value in data.items():
                 assert not isinstance(value, str) # should be unicode
                 if isinstance(value, int) or isinstance(value, unicode):
-                    msg += [unicode(key), ":", unicode(value), ARG_DELIMETER]
+                    msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value), ARG_DELIMETER]
                 elif isinstance(value, get_engine().DictationContainer):
                     print 'valuecont',value.words,unicode(value)
-                    msg += [unicode(key), ":", unicode(value.format()), ARG_DELIMETER]
+                    msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value.format()), ARG_DELIMETER]
         self.sendMsg(u''.join(msg))
 
     def cleanup(self):

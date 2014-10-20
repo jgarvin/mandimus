@@ -4,6 +4,7 @@ import sys
 # in python code
 MESSAGE_TERMINATOR = '###>>>'                
 ARG_DELIMETER = '$$$%%%'
+KEY_VALUE_SEPARATOR = ':.:'
 MATCH_MSG_START = 'MATCH'
 
 def parseMessages(buf):

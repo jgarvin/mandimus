@@ -1,4 +1,4 @@
-from dfly_parser import ARG_DELIMETER
+from dfly_parser import ARG_DELIMETER, KEY_VALUE_SEPARATOR
 
 class MappingRule(object):
     mapping = {}
@@ -20,6 +20,6 @@ class MappingRule(object):
         msg += [ARG_DELIMETER]
         msg += ["DEFAULTS"]
         for key, val in cls.defaults.items():
-            msg += [ARG_DELIMETER, str(key), ':', str(val)]
+            msg += [ARG_DELIMETER, str(key), KEY_VALUE_SEPARATOR, str(val)]
         msg += [ARG_DELIMETER]
         return ''.join(msg)

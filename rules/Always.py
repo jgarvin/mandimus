@@ -5,12 +5,8 @@ from Elements import Integer, Dictation
 
 import string
 
-# many missing, good enough for now
-possibleKeys = list(set([l.lower() for l in string.letters]))
-possibleKeys += list(string.digits)
-
 # taken from https://github.com/schickm/dragonfly-modules/blob/master/chrome.py
-keymapping = {
+alphamapping = {
     "alpha": "a",
     "bravo": "b",
     "charlie": "c",
@@ -37,6 +33,9 @@ keymapping = {
     "xray": "x",
     "yankee": "y",
     "zulu": "z",
+    }
+
+digitmapping = {
     "zero": "0",
     "one": "1",
     "two": "2",
@@ -47,17 +46,49 @@ keymapping = {
     "seven": "7",
     "eight": "8",
     "niner": "9",
-}
+    }
 
-possibleKeys = '(' + '|'.join(keymapping.keys()) + ')'
-possibleKeyPresses = "[(control|alt|shift)] [(control|alt|shift)] [(control|alt|shift)] " + possibleKeys
-print possibleKeyPresses
+punctuationMapping = {
+    "backslash" : "\\",
+    "slash" : "/",
+    "forward slash" : "/",
+    "exclamation point" : "!",
+    "at sign" : "@",
+    "pound" : "#",
+    "dollar" : "$",
+    "cash" : "$",
+    "percent" : "%",
+    "caret" : "^",
+    "ampersand" : "&",
+    "asterisk" : "*",
+    "colon" : ":",
+    "semicolon" : ";",
+    "period" : ".",
+    "dot" : ".",
+    "comma" : ",",
+    "tilde" : "~",
+    }
+
+directions = ['left', 'right', 'up', 'down']
+
+# TODO: grammar could be much better, 3 controls in a row doesn't make sense
+modifierRule = "[(control|alt|shift)] [(control|alt|shift)] [(control|alt|shift)] "
+possibleLetters = modifierRule + '(' + '|'.join(alphamapping.keys()) + ')'
+possibleDigits = modifierRule + '(' + '|'.join(digitmapping.keys()) + ')'
+possibleDirections = modifierRule + '(' + '|'.join(directions) + ')'
+
+#print possibleKeyPresses
 
 class PressKey(object):
+    def __init__(self, force_shift=False):
+        self.force_shift = force_shift
+    
     def __call__(self, extras):
         words = extras['words']
         words = words.split()
         modifiers = words[:-1]
+        if self.force_shift and "shift" not in modifiers:
+            modifiers.append("shift")
         keystring = []
         for word in modifiers:
             if word == "control":
@@ -70,7 +101,7 @@ class PressKey(object):
             keystring.append('-')
                       
         finalkey = words[-1]
-        for key, val in keymapping.items():
+        for key, val in alphamapping.items() + digitmapping.items():
             finalkey = finalkey.replace(key, val)
         keystring.append(finalkey)
         
@@ -80,10 +111,11 @@ class PressKey(object):
 class AlwaysRule(SeriesMappingRule):
     mapping = {
         "camel <text>" : Camel("%(text)s"),
-        "hyphen <text>" : Hyphen("%(text)s"),
+        "cap camel <text>" : Camel("%(text)s", True),
+        "hype <text>" : Hyphen("%(text)s"),
+        "cap hype <text>" : Hyphen("%(text)s", True),
         "underscore <text>" : Underscore("%(text)s"),
-        "caps hyphen <text>" : Hyphen("%(text)s", True),
-        "caps underscore <text>" : Underscore("%(text)s", True),
+        "cap underscore <text>" : Underscore("%(text)s", True),
         "type <text>" : Text("%(text)s"),
         "command tally" : (lambda x: Speak(str(commandTally()))()),
         "left [<n>]" : Key("left:%(n)d"),
@@ -91,7 +123,12 @@ class AlwaysRule(SeriesMappingRule):
         "up [<n>]" : Key("up:%(n)d"),
         "down [<n>]" : Key("down:%(n)d"),
         "space" : Key("space"),
-        'press ' + possibleKeyPresses : PressKey(),
+        "backspace" : Key("backspace"),
+        "delete" : Key("delete"),
+        'let ' + possibleLetters : PressKey(),
+        'cap let ' + possibleLetters : PressKey(force_shift=True),
+        'num ' + possibleDigits : PressKey(),
+        'dir ' + possibleDirections : PressKey(),
         }
 
     extras = [

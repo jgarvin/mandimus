@@ -8,7 +8,7 @@ import Queue
 import traceback
 from EventThread import EventThread
 
-from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER
+from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER, KEY_VALUE_SEPARATOR
 from DragonflyNode import DragonflyNode, ConnectedEvent
 
 def threadRequest(f):
@@ -119,7 +119,7 @@ class DragonflyThread(EventThread, DragonflyNode):
     def parseExtras(self, extras):
         parsed = {}
         for e in extras:
-            e = e.split(':')
+            e = e.split(KEY_VALUE_SEPARATOR)
             try:
                 parsed[e[0]] = int(e[1])
             except ValueError:
