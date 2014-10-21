@@ -70,6 +70,10 @@ class DragonflyNode(object):
         self.other = None
 
     def sendMsg(self, msg):
+        if self.other is None:
+            print "can't send msg, not connected"
+            return
+        
         if len(msg) and not msg.startswith('ack'): # don't print heartbeats
             print 'sending ' + msg
         try:

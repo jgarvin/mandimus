@@ -20,7 +20,7 @@ class ChromeRule(SeriesMappingRule):
         "tab" : Key("tab"),
         "reload" : Key("c-r"),
         "refresh" : Key("c-r"),
-        "search <text>" : Key("c-l, c-a, backspace") + Text("%(text)s", formatting=False) + Key("enter"),
+        "search <text>" : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter"),
         "zoom in [<n>]" : Key("c-plus:%(n)d"),
         "zoom out [<n>]" : Key("c-minus:%(n)d"),
         # these are provided by the 'tabloid' extension

@@ -12,7 +12,7 @@ class Cmd(Action):
         runCmd(cmd)
 
 @registerRule
-class EmacsRule(SeriesMappingRule)       :
+class EmacsRule(SeriesMappingRule):
     mapping  = {
         # general commands
         "cancel"                         : Key("c-g"),
@@ -32,6 +32,7 @@ class EmacsRule(SeriesMappingRule)       :
         "switch (buff | buffer)"         : Key("c-x, b"),
         "toggle buff"                    : Key("c-x, b") + Key("enter"),
         "buff <text>"                    : Key("c-x, b") + Text("%(text)s") + Key("enter"),
+        "list (buffs | buffers)"         : Key("c-x,c-b"),
         "(kill | close) (buff | buffer)" : Key("c-x,k,enter"),
         "replace buff"                   : Key("c-x,c-v"),
         "replace buff <text>"            : Key("c-x,c-v") + Text("%(text)s") + Key("enter"),

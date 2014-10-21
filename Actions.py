@@ -55,7 +55,6 @@ def parseSingleKeystring(keyStr):
         "pgdown" : "Next",
         "enter" : "Return",
         "backspace" : "BackSpace",
-        "del" : "Delete",
         "delete" : "Delete",
         "insert" : "Insert",
         "backtick" : "grave",
@@ -118,115 +117,174 @@ class Key(Action):
         cmd = "xdotool key " + parseKeyString(self.data % extras)
         runCmd(cmd)    
 
+class FormatState(object):
+    noformatting = {
+        ur"\cap" : ur"cap",
+        ur"\caps-on" : ur"caps on",
+        ur"\caps-off" : ur"caps off",
+        ur"\all-caps" : ur"all caps",
+        ur"\no-space" : ur"no space",
+        ur".\period" : ur"period",
+        ur",\comma" : ur"comma",
+        ur"(\left-parenthesis" : ur"left parenthesis",
+        ur")\right-parenthesis" : ur"right parenthesis",
+        u"\dash" : ur"dash",
+        ur"\hyphen" : ur"hyphen",
+        ur".\point" : ur"point",
+        ur".\dot" : ur"dot",
+        ur"\space-bar" : ur"space bar",
+        ur"\new-line" : ur"new line",
+        ur"?\question-mark" : ur"question mark",
+        ur"!\exclamation-mark" : ur"exclamation mark",
+        ur"@\at-sign" : ur"at sign",
+        ur"#\number-sign" : ur"number sign",
+        ur"$\dollar-sign" : ur"dollar sign",
+        ur"%\percent-sign" : ur"percent sign",
+        ur"~\tilde" : ur"tilde",
+        ur"`\backquote" : ur"backquote",
+        ur"+\plus-sign" : ur"plus sign",
+        u"\x96\\minus-sign" : ur"minus sign",
+        ur"-\minus-sign" : ur"minus sign",
+        ur":\colon" : ur"colon",
+        ur";\semicolon" : ur"semicolon",
+        ur"*\asterisk" : ur"asterisk",
+        u"_\\underscore" : ur"underscore",
+        ur"|\vertical-bar" : ur"vertical bar",
+        ur"/\slash" : ur"slash",
+        ur"\backslash" : ur"backslash",
+        }
+    
+    formatting = {
+        ur".\period" : ur".",
+        ur",\comma" : ur",",
+        ur"(\left-parenthesis" : ur"(",
+        ur")\right-parenthesis" : ur")",
+        u"\x96\\dash" : ur"-",
+        ur"-\hyphen" : ur"-",
+        ur".\point" : ur".",
+        ur".\dot" : ur".",
+        ur"\space-bar" : ur" ",
+        ur"\new-line" : u"\n", # hit enter?
+        ur"?\question-mark" : ur"?",
+        ur"!\exclamation-mark" : ur"!",
+        ur"@\at-sign" : ur"@",
+        ur"#\number-sign" : ur"#",
+        ur"$\dollar-sign" : ur"$",
+        ur"%\percent-sign" : ur"%",
+        ur"~\tilde" : ur"~",
+        ur"`\backquote" : ur"`",
+        ur"+\plus-sign" : ur"+",
+        u"\x96\\minus-sign" : ur"-",
+        ur"-\minus-sign" : ur"-",
+        ur":\colon" : ur":",
+        ur";\semicolon" : ur";",
+        ur"*\asterisk" : ur"*",
+        u"_\\underscore" : ur"_",
+        ur"|\vertical-bar" : ur"|",
+        ur"/\slash" : ur"/",
+        ur"\backslash" : u"\\",
+        }
+
+    def __init__(self, formatting=True, spaces=True):
+        self.no_space_once = False
+        self.cap_once = False
+        self.caps = False
+        self.do_formatting = formatting
+        self.spacesEnabled = spaces
+
+    def format(self, s):
+        new = []
+        first = True
+        for word in s:
+            print 'word ' + word
+            if word == ur"\cap" and self.do_formatting:
+                self.cap_once = True
+            elif word == ur"\caps-on" and self.do_formatting:
+                self.caps = True
+            elif word == ur"\caps-off" and self.do_formatting:
+                self.caps = False
+            elif word == ur"\no-space" and self.do_formatting:
+                self.no_space_once = True
+            else:
+                isCode = word in self.formatting.keys()
+                print 'isCode: ' + str(isCode)
+                newWord = word
+                if isCode:
+                    if self.do_formatting:
+                        replacements = self.formatting
+                    else:
+                        replacements = self.noformatting
+
+                    for key, val in replacements.items():
+                        newWord = newWord.replace(key, val)
+                    new.append(newWord)
+                    print 'newWord: ' + newWord
+                    self.no_space_once = True
+                else:
+                    if self.cap_once:
+                        newWord = word.capitalize()
+                        
+                    if self.caps:
+                        newWord = word.upper()
+                        
+                    if not self.no_space_once:
+                        if not first and self.spacesEnabled:
+                            new.append(u' ')
+                        self.no_space_once = False
+                    
+                    new.append(newWord)
+                    first = False
+        return new
+
+# TODO: multiple formatting options, caps stuff is different than
+# punctuation
 class Text(Action):
-    def __init__(self, data, formatting=True):
+    def __init__(self, data):
         Action.__init__(self, data)
-        self.formatting = formatting
         
     def typeKeys(self, letters):
-        noformatting = {
-            u"\cap" : u"cap",
-            u"\caps-on" : u"caps on",
-            u"\caps-off" : u"caps off",
-            u"\all-caps" : u"all caps",
-            u"\no-space" : u"no space",
-            u".\period" : u"period",
-            u",\comma" : u"comma",
-            u"(\left-parenthesis" : u"left parenthesis",
-            u")\right-parenthesis" : u"right parenthesis",
-            u"\dash" : u"dash",
-            u"\hyphen" : u"hyphen",
-            u".\point" : u"point",
-            u".\dot" : u"dot",
-            u"\space-bar" : u"space bar",
-            u"\new-line" : u"new line",
-            u"?\question-mark" : u"question mark",
-            u"!\exclamation-mark" : u"exclamation mark",
-            u"@\at-sign" : u"at sign",
-            u"#\number-sign" : u"number sign",
-            u"$\dollar-sign" : u"dollar sign",
-            u"%\percent-sign" : u"percent sign",
-            u"~\tilde" : u"tilde",
-            u"`\backquote" : u"backquote",
-            u"+\plus-sign" : u"plus sign",
-            u"\x96\minus-sign" : u"minus sign",
-            u"-\minus-sign" : u"minus sign",
-            u":\colon" : "colon",
-            u";\semicolon" : "semicolon",
-            }
-        
-        formatting = {
-            u".\period" : u".",
-            u",\comma" : u",",
-            u"(\left-parenthesis" : u"(",
-            u")\right-parenthesis" : u")",
-            u"\x96\dash" : u"-",
-            u"-\hyphen" : u"-",
-            u".\point" : u".",
-            u".\dot" : u".",
-            u"\space-bar" : u" ",
-            u"\new-line" : u"\n", # hit enter?
-            u"?\question-mark" : u"?",
-            u"!\exclamation-mark" : u"!",
-            u"@\at-sign" : u"@",
-            u"#\number-sign" : u"#",
-            u"$\dollar-sign" : u"$",
-            u"%\percent-sign" : u"%",
-            u"~\tilde" : u"~",
-            u"`\backquote" : u"`",
-            u"+\plus-sign" : u"+",
-            u"\x96\minus-sign" : u"-",
-            u"-\minus-sign" : u"-",
-            u":\colon" : ":",
-            u";\semicolon" : ";",
-            }
-
-        if self.formatting:
-            replacements = formatting
-        else:
-            replacements = noformatting
-        
-        for key, val in replacements.items():
-            letters = letters.replace(key, val)
-        
         # escape single quotes, we actually close the string
         # add the escape single quote, and reopen the string
         letters = letters.replace("'", "'\\''")
-        cmd = ("xdotool type '" + letters + "'")
+        cmd = ("xdotool type --clearmodifiers '" + letters + "'")
         runCmd(cmd)
 
     def __call__(self, extras={}):
-        self.typeKeys(self.data % extras)        
+        words = (self.data % extras).lower().split(' ')
+        self._execute(words)
+
+    def _execute(self, words):
+        self.typeKeys(''.join(words))
 
 class Camel(Text):
     def __init__(self, fmt, caps=False):
-        Text.__init__(self, fmt, formatting=False)
+        Text.__init__(self, fmt)
         self.caps = unicode.capitalize if caps else unicode.lower
 
-    def __call__(self, extras={}):
-        words = self.data % extras
-        words = [w.lower() for w in words.split(' ')]
+    def _execute(self, words):
+        words = FormatState(formatting=False, spaces=False).format(words)
+        words = [w.lower() for w in words]
         words = [self.caps(words[0])] + [w.capitalize() for w in words[1:]]
         self.typeKeys(''.join(words))
 
 class Underscore(Text):
     def __init__(self, fmt, caps=False):
-        Text.__init__(self, fmt, formatting=False)
+        Text.__init__(self, fmt)
         self.caps = unicode.upper if caps else unicode.lower
 
-    def __call__(self, extras={}):
-        words = self.data % extras
-        words = [self.caps(w) for w in words.split(' ')]
+    def _execute(self, words):
+        words = FormatState(formatting=False, spaces=False).format(words)
+        words = [self.caps(w) for w in words]
         self.typeKeys('_'.join(words))        
 
 class Hyphen(Text):
     def __init__(self, fmt, caps=False):
-        Text.__init__(self, fmt, formatting=False)
+        Text.__init__(self, fmt)
         self.caps = unicode.upper if caps else unicode.lower
 
-    def __call__(self, extras={}):
-        words = self.data % extras
-        words = [self.caps(w) for w in words.split(' ')]
+    def _execute(self, words):
+        words = FormatState(formatting=False, spaces=False).format(words)
+        words = [self.caps(w) for w in words]
         self.typeKeys('-'.join(words))        
 
 class click:
