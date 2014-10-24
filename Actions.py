@@ -1,5 +1,7 @@
 import subprocess
 import re
+import string
+from listHelpers import dictReplace
 
 def runCmd(cmd):
     print 'cmd: [' + cmd + ']'
@@ -78,8 +80,7 @@ def parseSingleKeystring(keyStr):
         "tab" : "Tab",
     }
 
-    for key, val in replacements.items():
-        keys = keys.replace(key, val)
+    keys = dictReplace(keys, replacements)
     
     keys = re.sub("f([0-9])+", "F\\1", keys)
     xdo.append(keys)
@@ -119,11 +120,15 @@ class Key(Action):
 
 class FormatState(object):
     noformatting = {
+        # format state commands
         ur"\cap" : ur"cap",
         ur"\caps-on" : ur"caps on",
         ur"\caps-off" : ur"caps off",
         ur"\all-caps" : ur"all caps",
         ur"\no-space" : ur"no space",
+        ur"\numeral" : ur"numeral",
+
+        # punctuation
         ur".\period" : ur"period",
         ur",\comma" : ur"comma",
         ur"(\left-parenthesis" : ur"left parenthesis",
@@ -185,12 +190,28 @@ class FormatState(object):
         ur"\backslash" : u"\\",
         }
 
+    numeralmap = {
+        "zero" : "0",
+        "one" : "1",
+        "two" : "2",
+        "to" : "2",
+        "too" : "2",
+        "three" : "3",
+        "four" : "4",
+        "five" : "5",
+        "six" : "6",
+        "seven" : "7",
+        "eight" : "8",
+        "nine" : "9",
+    }
+
     def __init__(self, formatting=True, spaces=True):
         self.no_space_once = False
         self.cap_once = False
         self.caps = False
         self.do_formatting = formatting
         self.spacesEnabled = spaces
+        self.next_numeral = False
 
     def format(self, s):
         new = []
@@ -205,6 +226,8 @@ class FormatState(object):
                 self.caps = False
             elif word == ur"\no-space" and self.do_formatting:
                 self.no_space_once = True
+            elif word == ur"\numeral" and self.do_formatting:
+                self.next_numeral = True
             else:
                 isCode = word in self.formatting.keys()
                 print 'isCode: ' + str(isCode)
@@ -231,6 +254,11 @@ class FormatState(object):
                         if not first and self.spacesEnabled:
                             new.append(u' ')
                         self.no_space_once = False
+
+                    if self.next_numeral:
+                        if newWord not in string.digits:
+                            newWord = self.numeralmap[newWord.lower()]
+                        self.next_numeral = False
                     
                     new.append(newWord)
                     first = False
@@ -254,6 +282,7 @@ class Text(Action):
         self._execute(words)
 
     def _execute(self, words):
+        words = FormatState().format(words)
         self.typeKeys(''.join(words))
 
 class Camel(Text):

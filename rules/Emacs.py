@@ -7,9 +7,49 @@ from Window import Window
 class Cmd(Action):
     def __call__(self, extras={}):
         fulldata = (self.data % extras)
+        # escape single quotes, we actually close the string
+        # add the escape single quote, and reopen the string
+        fulldata = fulldata.replace("'", "'\\''")
         cmd = 'emacsclient -e \'(with-current-buffer "%s" %s)\''
         cmd = cmd % (Window().iconName, fulldata)
         runCmd(cmd)
+
+class PairCmd(Cmd):
+    def __init__(self, pair, cmd):
+        x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
+        Cmd.__init__(self, x)
+
+sexpFuncs = {
+    "forward"            : "sp-forward-sexp",
+    "backward"           : "sp-backward-sexp",
+    "in"                 : "sp-down-sexp",
+    "backward in"        : "sp-backward-down-sexp",
+    "out"                : "sp-up-sexp",
+    "backward out"       : "sp-backward-up-sexp",
+    "next"               : "sp-next-sexp",
+    "previous"           : "sp-previous-sexp",
+    "beginning"          : "sp-beginning-of-sexp",
+    "beginning next"     : "sp-beginning-of-next-sexp",
+    "beginning previous" : "sp-beginning-of-previous-sexp",
+    "end next"           : "sp-end-of-next-sexp",
+    "end previous"       : "sp-end-of-previous-sexp",
+    "select [next]"      : "sp-select-next-thing",
+    "select previous"    : "sp-select-previous-thing",
+}
+        
+sexpPairs = {
+    "paren"        : "(",
+    "brace"        : "{",
+    "bracket"      : "[",
+    "quote"        : "\"",
+    "single quote" : "'",
+    "angle"        : "<",
+}
+
+sexpRules = {}
+for words, func in sexpFuncs.items():
+    for pairWord, p in sexpPairs.items():
+        sexpRules[words + ' ' + pairWord] = PairCmd(p, func)
 
 @registerRule
 class EmacsRule(SeriesMappingRule):
@@ -24,6 +64,7 @@ class EmacsRule(SeriesMappingRule):
         "mack"                           : Key("F4"),
         "command"                        : Key("c-x,c-m"),
         "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
+        "exchange"                       : Cmd("(exchange-point-and-mark)"),
         
         # file commands
         "open file"                      : Key("c-x,c-f"),
@@ -62,10 +103,12 @@ class EmacsRule(SeriesMappingRule):
 
         "copy"                           : Key("a-w"),
         "copy line"                      : Cmd('(quick-copy-line)'),
+        "copy word"                      : Cmd('(copy-word)'),
 
         "cut"                            : Key("c-x,c-k"),
         "kill"                           : Key('c-k'),
         "(cut | kill) line"              : Cmd('(quick-cut-line)'),
+        "kill word"                      : Key('a-d'),
 
         "yank"                           : Key("c-y"),
         "yank pop"                       : Key("a-y"),
@@ -78,6 +121,11 @@ class EmacsRule(SeriesMappingRule):
         "redo [that]"                    : Key("as-underscore"),
         "enter"                          : Key("enter"),
         "hit <text>"                     : Text("%(text)s") + Key("enter"),
+
+        "shift right"                    : Cmd("(call-interactively 'python-indent-shift-right)"),
+        "shift left"                     : Cmd("(call-interactively 'python-indent-shift-left)"),
+        "align regexp"                   : Cmd("(call-interactively 'align-regexp)"),
+        "indent"                         : Cmd("(call-interactively 'indent-region)"),
         
         # replacing commands
         "replace"                        : Key('as-percent'),
@@ -89,13 +137,14 @@ class EmacsRule(SeriesMappingRule):
         "capitalize"                     : Key("a-c"),
         "upper case"                     : Key("a-u"),
         "lower case"                     : Key("a-l"),
-        "parens"                         : Text("()") + Key('left'),
-        "braces"                         : Text("{}") + Key('left'),
-        "brackets"                       : Text("[]") + Key('left'),
-        "quotes [<text>]"                : Text("\"\"") + Key('left') + Text("%(text)s"),
-        "single quotes"                  : Text("''") + Key('left'),
-        "angles"                         : Text("<>") + Key('left'),
-        }
+        
+        "parens"                         : Text("("),
+        "braces"                         : Text("{"),
+        "brackets"                       : Text("["),
+        "single quotes"                  : Text("'"),
+        "quotes [<text>]"                : Text("\""),
+        "angles"                         : Text("<"),
+    }
 
     extras = [
         Integer("n", 1, 20),
@@ -106,10 +155,12 @@ class EmacsRule(SeriesMappingRule):
         ]
 
     defaults = {
-        "n"                              : 1,
-        "text"                           : "",
+        "n"    : 1,
+        "text" : "",
         }    
 
     @classmethod
     def activeForWindow(cls, window)     :
         return "emacs" in window.wmclass or "Emacs" in window.wmclass    
+
+EmacsRule.mapping.update(sexpRules)
