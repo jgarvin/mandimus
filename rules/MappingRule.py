@@ -23,3 +23,7 @@ class MappingRule(object):
             msg += [ARG_DELIMETER, str(key), KEY_VALUE_SEPARATOR, str(val)]
         msg += [ARG_DELIMETER]
         return ''.join(msg)
+
+    @classmethod
+    def equals(cls, other):
+        return (cls.mapping == other.mapping and cls.extras == other.extras and cls.defaults == other.defaults)

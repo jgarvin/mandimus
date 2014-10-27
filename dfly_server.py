@@ -21,7 +21,7 @@ class DragonflyThread(EventThread, DragonflyNode):
         self.address = address
         EventThread.__init__(self, pushQ)
         DragonflyNode.__init__(self)
-        self.grammars = set()
+        self.grammars = {}
         self.pullQ = Queue.Queue()
         
     def __call__(self):
@@ -62,33 +62,40 @@ class DragonflyThread(EventThread, DragonflyNode):
         if self.server_socket is not None:
             self.server_socket.close()
 
-    @threadRequest
-    def loadGrammar(self, grammar):
-        if grammar in self.grammars:
-            return
+    def _loadGrammar(self, grammar):
+        if grammar.__name__ in self.grammars:
+            if grammar.equals(self.grammars[grammar.__name__]):
+                return
+            else:
+                self._unloadGrammar(self.grammars[grammar.__name__])
         
         print 'Loading grammar: ' + grammar.__name__
         self.sendMsg(grammar.textSerialize())
-        self.grammars.add(grammar)
+        self.grammars[grammar.__name__] = grammar
 
-    @threadRequest
-    def unloadGrammar(self, grammar):
-        if grammar not in self.grammars:
+    def _unloadGrammar(self, grammar):
+        if grammar.__name__ not in self.grammars:
             return
         
         print 'Unloading grammar: ' + grammar.__name__        
-        if grammar not in self.grammars:
-            return # TODO: do I want this?
         self.sendMsg('unload' + ARG_DELIMETER + grammar.__name__)
-        self.grammars.remove(grammar)
+        del self.grammars[grammar.__name__]        
+        
+    @threadRequest
+    def loadGrammar(self, grammar):
+        self._loadGrammar(grammar)
+
+    @threadRequest
+    def unloadGrammar(self, grammar):
+        self._unloadGrammar(grammar)
         
     def onConnect(self):
         self.pushQ.put(ConnectedEvent())
         oldGrammars = self.grammars
-        self.grammars = set()
-        for g in oldGrammars:
-            self.unloadGrammar(g)
-            self.loadGrammar(g)
+        self.grammars = {}
+        for k, g in oldGrammars.items():
+            self._unloadGrammar(g)
+            self._loadGrammar(g)
 
     def onMessage(self, msg):
         if msg.startswith("MATCH"):
@@ -107,7 +114,7 @@ class DragonflyThread(EventThread, DragonflyNode):
         extras['words'] = words
 
         # todo replace this with MatchEvent
-        for g in self.grammars:
+        for k, g in self.grammars.items():
             if grammar in g.mapping:
                 try:
                     g.mapping[grammar](extras)

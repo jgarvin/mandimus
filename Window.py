@@ -1,4 +1,6 @@
 import subprocess
+from collections import defaultdict
+import string
 
 #################################
 ###
@@ -13,6 +15,9 @@ import subprocess
 ## then back.
 ## after this is working and i have some working per window
 ## commands i can play more with making grammars work.
+
+class XpropException(Exception):
+    pass
 
 class Window(object):
     FOCUSED = -1
@@ -32,21 +37,28 @@ class Window(object):
         else:
             self.winId = winId
 
-    def __getXprop(self, prop):
-        cmd = "xprop -id " + str(self.winId)
-        s = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        (out, err) = s.communicate()
-        out = out.split('\n')
+        self.xpropJob = Xprop(self.winId)
+        self.xpropResult = None
 
-        for line in out:
+    def __eq__(self, other):
+        return self.winId == other.winId
+
+    def __hash__(self):
+        return self.winId
+            
+    def __getXprop(self, prop):
+        if self.xpropResult is None:
+            # force job to finish
+            self.xpropResult = self.xpropJob.result         
+
+        for line in self.xpropResult:
             x = line.split("=")
             if len(x) < 2:
                 continue
             field, value = x[0].strip(), x[1].strip()
             if field == prop:
                 return value.strip(',').strip('"')
-
-        return "ERROR: NO %s FIELD" % (prop,)        
+        return ""
 
     @property
     def size(self):
@@ -60,7 +72,15 @@ class Window(object):
 
     @property
     def name(self):
-        return self.__getXprop("WM_NAME(STRING)")
+        n = self.__getXprop("WM_NAME(STRING)")
+        if n == "":
+            n = self.__getXprop("WM_NAME(COMPOUND_TEXT)")
+            n = ''.join([c for c in n if c in string.printable])
+        return n
+
+    @property
+    def hasIcon(self):
+        return self.__getXprop("_NET_WM_ICON(CARDINAL)") != ''
 
     @property
     def iconName(self):
@@ -68,8 +88,46 @@ class Window(object):
 
     @property
     def wmclass(self):
-        return self.__getXprop("WM_CLASS(STRING)")    
+        return self.__getXprop("WM_CLASS(STRING)")
     
+    @property
+    def role(self):
+        return self.__getXprop("WM_WINDOW_ROLE(STRING)")
+
+class Job(object):
+    def __init__(self, cmd):
+        # async launch command
+        self.s = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    @property
+    def result(self):
+        # force command to finish, return result
+        (out, err) = self.s.communicate()
+        return self._postprocess(out)
+
+    def _postprocess(self, data):
+        return data
+
+class Xprop(Job):
+    def __init__(self, winId):
+        cmd = "xprop -id " + str(winId)
+        Job.__init__(self, cmd)
+
+    def _postprocess(self, data):
+        return data.split('\n')
+
+class getWindowList(Job):
+    def __init__(self):
+        cmd = "xdotool search --onlyvisible '.*'"
+        Job.__init__(self, cmd)
+
+    def _postprocess(self, data):
+        out = data.split()
+        return [Window(int(i)) for i in out]
+        
 if __name__ == "__main__":
     w = Window(winId=Window.FOCUSED)
     print w.size, w.name, w.wmclass, w.iconName
+    print [w.name for w in getWindowList().result if w.name != '']
+    print [w.wmclass for w in getWindowList().result if w.name != '']
+    print [w.hasIcon for w in getWindowList().result if w.name != '']

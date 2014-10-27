@@ -108,6 +108,11 @@ class Action(object):
     def __add__(self, other):
         return ActionList() + self + other
 
+class SelectWindow(Action):
+    def __call__(self, extras={}):
+        cmd = "xdotool windowactivate %d" % (self.data.winId)
+        runCmd(cmd)
+
 class Speak(Action):
     def __call__(self, extras={}):
         cmd = "echo '" + (self.data % extras) + "' | festival --tts"
@@ -271,10 +276,22 @@ class Text(Action):
         Action.__init__(self, data)
         
     def typeKeys(self, letters):
-        # escape single quotes, we actually close the string
-        # add the escape single quote, and reopen the string
-        letters = letters.replace("'", "'\\''")
-        cmd = ("xdotool type --clearmodifiers '" + letters + "'")
+        # we pass each character as a separate argument to xdotool,
+        # this prevents xdotool from interpreting double hyphens and
+        # hyphens followed by words as xdotool flags
+        arglist = []
+        for l in letters:
+            newletter = l
+            # single quotes have to be passed unquoted and escaped
+            # or the shell gets confused
+            if l == '\'':
+                newletter = "\\'"
+            else:
+                newletter = "'" + l + "'"
+            arglist.append(newletter)
+
+        letters = ' '.join(arglist)
+        cmd = ("xdotool type --clearmodifiers " + letters)
         runCmd(cmd)
 
     def __call__(self, extras={}):

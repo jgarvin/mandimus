@@ -7,10 +7,14 @@ from Elements import Integer, Dictation
 @registerRule
 class XMonadRule(SeriesMappingRule):
     mapping  = {
-        "mon left [<n>]" : Key("ca-backspace:%(n)d"),
-        "mon right [<n>]" : Key("ca-space:%(n)d"),
-        "move left" : Key("ca-a"),
-        "move right" : Key("ca-t"),
+        "mon (one | left)" : Key("ca-p"),
+        "mon (two | middle | center)" : Key("ca-f"),
+        "mon (three | right)" : Key("ca-u"),
+        "move mon one" : Key("csa-p"),
+        "move mon two" : Key("csa-f"),
+        "move mon three" : Key("csa-u"),
+        "desktop <d>" : Key("ca-%(d)d"),
+        "move desktop <d>" : Key("csa-%(d)d"),
         "next [<n>]" : Key("ca-e:%(n)d"),
         "previous [<n>]" : Key("ca-o:%(n)d"),
         "move next" : Key("cas-e"),
@@ -28,6 +32,7 @@ class XMonadRule(SeriesMappingRule):
     
     extras = [
         Integer("n", 1, 20),
+        Integer("d", 1, 10),
         Dictation("text"),
         ]
     

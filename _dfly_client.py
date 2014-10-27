@@ -173,9 +173,18 @@ class DragonflyClient(DragonflyNode):
             idx += 1
         defaults = self.parseDefaults(defaults)
 
-        new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
-
-        self.addRule(new_rule, rule_name)
+        try:
+            new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
+            self.addRule(new_rule, rule_name)
+        except SyntaxError:
+            traceback.print_exc()
+            print "Mapping rule: "
+            print rules
+            print "Extras:"
+            print extras
+            print "Defaults:"
+            print defaults
+            return
         
     def parseExtras(self, extras):
         parsed = []

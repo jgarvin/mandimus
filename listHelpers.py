@@ -1,4 +1,5 @@
 from itertools import dropwhile, chain
+import string
 
 def dictReplace(s, dic):
     "Whole word replace keys with values in s"
@@ -30,3 +31,24 @@ def rindex(lst, item):
 def flattenList(l):
     return list(chain.from_iterable(l))
     
+def splitFlatten(slist, s=' '):
+    x = []
+    for i in slist:
+        x.extend(i.split(s))
+    return x
+
+def deCamelize(word):
+    upper = None
+    wordList = []
+    buildingWord = []
+    for i, c in enumerate(word):
+        newUpper = c in string.ascii_uppercase
+        isLast = i == len(word)-1
+        if isLast:
+            buildingWord.append(c)
+        if (upper == False and newUpper == True) or isLast: 
+            wordList.append(''.join(buildingWord))
+            buildingWord = []
+        upper = newUpper
+        buildingWord.append(c)
+    return wordList
