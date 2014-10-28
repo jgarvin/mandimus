@@ -1,7 +1,9 @@
 import subprocess
 import re
 import string
+import operator
 from listHelpers import dictReplace
+from Window import Window
 
 def runCmd(cmd):
     print 'cmd: [' + cmd + ']'
@@ -109,8 +111,71 @@ class Action(object):
         return ActionList() + self + other
 
 class SelectWindow(Action):
+    def __init__(self, data):
+        Action.__init__(self, data)
+        self.history = []
+        
     def __call__(self, extras={}):
-        cmd = "xdotool windowactivate %d" % (self.data.winId)
+        words = extras["words"].split()
+        print 'select words: ' + str(words)
+
+        print self.data
+
+        # whichever window title matches the most words, choose
+        # TODO: would be better if it regarded order
+        counter = {}
+        for word in words:
+            if word not in self.data:
+                continue
+            for win in self.data[word]:
+                if win not in counter:
+                    counter[win] = 0    
+                counter[win] += 1
+
+        # get windows that tied on number of words
+        counter = counter.items()
+        counter.sort(key=lambda x: x[1], reverse=True)
+        print [(k.name, v) for k,v in counter]
+        first = counter[0]
+        ties = []
+        for c in counter:
+            if c[1] == first[1]:
+                ties.append(c)
+            else:
+                break
+
+        bestpick = None
+        
+        # if there are mulitple equally suitable windows,
+        # and one of them is already selected,
+        # pick the one with the next highest win ID
+        # modulo the number of ties, effectively
+        # cycling the windows
+        ties.sort(key=lambda x: x[0].winId)
+        currentFocus = Window()
+        for i, t in enumerate(ties):
+            if t[0] == currentFocus:
+                bestpick = ties[(i+1) % len(ties)][0]
+
+        # if none is selected, then rely on history
+        if bestpick is None:
+            print 'hist'
+            for h in reversed(self.history):
+                print 'in hist'
+                for t in ties:
+                    print h,t[0]
+                    if h == t[0]:
+                        bestpick = h
+                        break
+                if bestpick is not None:
+                    break
+
+        # if all else fails then just pick the first
+        if bestpick is None:
+            bestpick = ties[0][0]
+
+        self.history.append(bestpick)
+        cmd = "xdotool windowactivate %d" % (bestpick.winId)
         runCmd(cmd)
 
 class Speak(Action):

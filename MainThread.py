@@ -172,6 +172,7 @@ class MainThread(object):
     # in the list
     def buildWindowGrammar(self, spokenWindows):
         omapping = {}
+        word2Windows = {}
         for w, spokenForms in spokenWindows.items():
             if not spokenForms:
                 continue
@@ -183,11 +184,14 @@ class MainThread(object):
                 if not first:
                     grammar += ["|"]
                 for word in form:
+                    if word not in word2Windows:
+                        word2Windows[word] = set()
+                    word2Windows[word].add(w)
                     grammar.append("[%s]" % word)
                 first = False
             grammar += [")"]
             grammar = ' '.join(grammar)
-            omapping[grammar] = SelectWindow(w)
+            omapping[grammar] = SelectWindow(word2Windows)
 
         print omapping.keys()
         class WindowRule(MappingRule):

@@ -75,7 +75,8 @@ class Window(object):
         n = self.__getXprop("WM_NAME(STRING)")
         if n == "":
             n = self.__getXprop("WM_NAME(COMPOUND_TEXT)")
-            n = ''.join([c for c in n if c in string.printable])
+        # filter unicode crap
+        n = ''.join([c for c in n if c in string.printable])
         return n
 
     @property

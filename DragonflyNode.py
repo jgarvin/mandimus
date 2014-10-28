@@ -76,7 +76,7 @@ class DragonflyNode(object):
         
         if len(msg) and not msg.startswith('ack'): # don't print heartbeats
             pass
-            #print 'sending ' + msg
+
         try:
             self.other.settimeout(None)
             self.other.sendall((msg + MESSAGE_TERMINATOR).encode('utf-8'))
