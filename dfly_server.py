@@ -10,6 +10,10 @@ from EventThread import EventThread
 
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER, KEY_VALUE_SEPARATOR
 from DragonflyNode import DragonflyNode, ConnectedEvent
+from namedtuple import namedtuple
+from Actions import Repeat
+
+GrammarMatchEvent = namedtuple("GrammarMatchEvent", "grammar, extras")
 
 def threadRequest(f):
     def wrapper(self, *args, **kwargs):
@@ -23,6 +27,7 @@ class DragonflyThread(EventThread, DragonflyNode):
         DragonflyNode.__init__(self)
         self.grammars = {}
         self.pullQ = Queue.Queue()
+        self.history = []
         
     def __call__(self):
         self.server_socket = self.makeSocket()
@@ -113,11 +118,24 @@ class DragonflyThread(EventThread, DragonflyNode):
         extras['grammar'] = grammar
         extras['words'] = words
 
+        self.onMatch(grammar, extras)
+
+    def onMatch(self, grammar, extras):
         # todo replace this with MatchEvent
         for k, g in self.grammars.items():
             if grammar in g.mapping:
                 try:
-                    g.mapping[grammar](extras)
+                    cb = g.mapping[grammar]
+
+                    if isinstance(cb, Repeat):
+                        if len(self.history) >= 1:
+                            grammar, extras = self.history[-1]
+                            self.onMatch(grammar, extras)
+                            return
+                    else:
+                        self.history.append(GrammarMatchEvent(grammar, extras))
+                        
+                    cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because
                     # of one bad rule

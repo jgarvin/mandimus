@@ -1,4 +1,4 @@
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action
+from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, Repeat
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
 from Elements import Integer, Dictation
@@ -31,7 +31,7 @@ alphamapping = OrderedDict([
     ("tango", "t"),
     ("uniform", "u"),
     ("victor", "v"),
-    ("key", "w"),
+    ("whiskey", "w"),
     ("xray", "x"),
     ("yankee", "y"),
     ("zulu", "z"),
@@ -137,6 +137,9 @@ class PressKey(object):
         print keystring
         Key(''.join(keystring))()
 
+# TODO: 'blend' all the active grammars including this one together
+# so we always have one nice big series mapping rule and commands
+# can chain across grammars
 @registerRule
 class AlwaysRule(SeriesMappingRule):
     mapping = {
@@ -159,6 +162,7 @@ class AlwaysRule(SeriesMappingRule):
         'num ' + possibleDigits : PressKey(),
         'dir ' + possibleDirections : PressKey(),
         'sym ' + possiblePunctuation : PressKey(),
+        'rep' : Repeat(),
         }
 
     extras = [

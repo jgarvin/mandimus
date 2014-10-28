@@ -48,7 +48,7 @@ def spokenWindowRule(f):
 @spokenWindowRule
 def weechat(w):
     if "terminal" in w.wmclass.lower() and "weechat" in w.name:
-        return ["wee", "chat"]
+        return ["we", "chat"]
     return []
     
 # so write rules for specific window types

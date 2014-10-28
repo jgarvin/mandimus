@@ -104,11 +104,14 @@ class ActionList(object):
             f(extras)
 
 class Action(object):
-    def __init__(self, data):
+    def __init__(self, data=None):
         self.data = data
 
     def __add__(self, other):
         return ActionList() + self + other
+
+class Repeat(Action):
+    pass
 
 class SelectWindow(Action):
     def __init__(self, data):
