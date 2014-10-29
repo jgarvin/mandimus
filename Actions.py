@@ -113,29 +113,30 @@ class Action(object):
 class Repeat(Action):
     pass
 
-class SelectWindow(Action):
+class SelectChoice(Action):
     def __init__(self, data):
         Action.__init__(self, data)
         self.history = []
         
     def __call__(self, extras={}):
         words = extras["words"].split()
-        print 'select words: ' + str(words)
 
-        print self.data
+        # TODO: until we get rule references words is going
+        # to contain the word for activating the rule, which
+        # is not what we want
 
-        # whichever window title matches the most words, choose
+        # whichever choice matches the most words, choose
         # TODO: would be better if it regarded order
         counter = {}
         for word in words:
             if word not in self.data:
                 continue
-            for win in self.data[word]:
-                if win not in counter:
-                    counter[win] = 0    
-                counter[win] += 1
+            for choice in self.data[word]:
+                if choice not in counter:
+                    counter[choice] = 0    
+                counter[choice] += 1
 
-        # get windows that tied on number of words
+        # get choice that tied on number of words
         counter = counter.items()
         counter.sort(key=lambda x: x[1], reverse=True)
         print [(k.name, v) for k,v in counter]
@@ -149,15 +150,15 @@ class SelectWindow(Action):
 
         bestpick = None
         
-        # if there are mulitple equally suitable windows,
-        # and one of them is already selected,
-        # pick the one with the next highest win ID
+        # if there are mulitple equally suitable choices,
+        # and one of them is already chosen,
+        # pick the one with the next highest ID
         # modulo the number of ties, effectively
-        # cycling the windows
-        ties.sort(key=lambda x: x[0].winId)
-        currentFocus = Window()
+        # cycling the choices
+        ties.sort(key=self._tieSorter())
+        currentChoice = self._currentChoice()
         for i, t in enumerate(ties):
-            if t[0] == currentFocus:
+            if t[0] == currentChoice:
                 bestpick = ties[(i+1) % len(ties)][0]
 
         # if none is selected, then rely on history
@@ -178,7 +179,26 @@ class SelectWindow(Action):
             bestpick = ties[0][0]
 
         self.history.append(bestpick)
-        cmd = "xdotool windowactivate %d" % (bestpick.winId)
+        self._select(bestpick)
+
+    def _tieSorter(self):
+        return lambda x: x   
+
+    def _currentChoice(self):
+        return None
+
+    def _select(self, choice):
+        pass
+
+class SelectWindow(SelectChoice):
+    def _tieSorter(self):
+        return lambda x: x[0].winId
+
+    def _currentChoice(self):
+        return Window()
+
+    def _select(self, choice):
+        cmd = "xdotool windowactivate %d" % (choice.winId)
         runCmd(cmd)
 
 class Speak(Action):
@@ -230,6 +250,8 @@ class FormatState(object):
         ur"|\vertical-bar" : ur"vertical bar",
         ur"/\slash" : ur"slash",
         ur"\backslash" : ur"backslash",
+        ur"<\less-than-sign" : ur"less than sign",
+        ur">\greater-than-sign" : ur"greater than sign", 
         }
     
     formatting = {
@@ -261,6 +283,8 @@ class FormatState(object):
         ur"|\vertical-bar" : ur"|",
         ur"/\slash" : ur"/",
         ur"\backslash" : u"\\",
+        ur"<\less-than-sign" : ur"<",
+        ur">\greater-than-sign" : ur">", 
         }
 
     numeralmap = {
@@ -332,7 +356,15 @@ class FormatState(object):
                         if newWord not in string.digits:
                             newWord = self.numeralmap[newWord.lower()]
                         self.next_numeral = False
-                    
+
+                    # dragonfly doesn't properly filter slashes when
+                    # the written and spoken form of a word differ
+                    # and the spoken form has spaces in it, e.g.
+                    # xdotool -> "ex do tool"
+                    # reported: https://github.com/t4ngo/dragonfly/issues/14
+                    if newWord.endswith("\\"):
+                        newWord = newWord.rstrip("\\")
+                        
                     new.append(newWord)
                     first = False
         return new

@@ -129,8 +129,10 @@ class DragonflyThread(EventThread, DragonflyNode):
 
                     if isinstance(cb, Repeat):
                         if len(self.history) >= 1:
+                            repetitions = extras['n']
                             grammar, extras = self.history[-1]
-                            self.onMatch(grammar, extras)
+                            for i in range(repetitions):
+                                self.onMatch(grammar, extras)
                             return
                     else:
                         self.history.append(GrammarMatchEvent(grammar, extras))

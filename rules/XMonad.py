@@ -32,7 +32,7 @@ class XMonadRule(SeriesMappingRule):
     
     extras = [
         Integer("n", 1, 20),
-        Integer("d", 1, 10),
+        Integer("d", 0, 10),
         Dictation("text"),
         ]
     

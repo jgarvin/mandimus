@@ -1,8 +1,11 @@
 from Rule import registerRule
 from SeriesMappingRule import SeriesMappingRule
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd
+from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice
 from Elements import Integer, Dictation
 from Window import Window
+import re
+import subprocess
+
 
 class Cmd(Action):
     def __call__(self, extras={}):
@@ -18,6 +21,9 @@ class PairCmd(Cmd):
     def __init__(self, pair, cmd):
         x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
         Cmd.__init__(self, x)
+
+def bufferList():
+    Cmd("(mapcar 'buffer-name (buffer-list)')")()
 
 sexpFuncs = {
     "forward"            : "sp-forward-sexp",
@@ -50,6 +56,17 @@ sexpRules = {}
 for words, func in sexpFuncs.items():
     for pairWord, p in sexpPairs.items():
         sexpRules[words + ' ' + pairWord] = PairCmd(p, func)
+
+class SelectBuffer(SelectChoice):
+    def _tieSorter(self):
+        return lambda x: x[0].winId
+
+    def _currentChoice(self):
+        return Window()
+
+    def _select(self, choice):
+        cmd = "xdotool windowactivate %d" % (choice.winId)
+        runCmd(cmd)    
 
 @registerRule
 class EmacsRule(SeriesMappingRule):

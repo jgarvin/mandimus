@@ -162,8 +162,9 @@ class AlwaysRule(SeriesMappingRule):
         'num ' + possibleDigits : PressKey(),
         'dir ' + possibleDirections : PressKey(),
         'sym ' + possiblePunctuation : PressKey(),
-        'rep' : Repeat(),
-        }
+        'rep [<n>]' : Repeat(),
+        'tab' : Key("tab"),
+    }
 
     extras = [
         Integer("n", 1, 20),
