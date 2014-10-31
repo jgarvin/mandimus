@@ -4,81 +4,66 @@ import inspect
 import errno
 import os
 import time
-import Queue
 import traceback
-from EventThread import EventThread
 
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER, KEY_VALUE_SEPARATOR
 from DragonflyNode import DragonflyNode, ConnectedEvent
 from namedtuple import namedtuple
 from Actions import Repeat
+from EventLoop import getLoop
 
 GrammarMatchEvent = namedtuple("GrammarMatchEvent", "grammar, extras")
 
-def threadRequest(f):
-    def wrapper(self, *args, **kwargs):
-        self.pullQ.put((f, args, kwargs))
-    return wrapper
+BLOCK_TIME = 0.05
 
-class DragonflyThread(EventThread, DragonflyNode):
+class DragonflyThread(DragonflyNode):
     def __init__(self, address, pushQ):
         self.address = address
-        EventThread.__init__(self, pushQ)
+        self.pushQ = pushQ
         DragonflyNode.__init__(self)
         self.grammars = {}
-        self.pullQ = Queue.Queue()
         self.history = []
         
-    def __call__(self):
         self.server_socket = self.makeSocket()
         self.server_socket.bind(self.address)
         self.server_socket.listen(1)
         self.other = None
         self.buf = ''
 
-        while self.run:
-            if not self.other:
-                # we use a timeout so ctrl-c will work
-                self.server_socket.settimeout(0.25)
-                try:
-                    print 'waiting for connection'
-                    self.other, addr = self.server_socket.accept()
-                    print 'connected'
-                    self.onConnect()
-                except socket.timeout:
-                    continue
-                
-            self.runRequests()
-            self.retrieveMessages()
-            self.heartbeat()
-            
-        self.cleanup()
+        getLoop().subscribeTimer(BLOCK_TIME, self)
 
-    def runRequests(self):
-        while True:
+    def __call__(self):
+        if not self.other:
+            # we use a timeout so ctrl-c will work
+            self.server_socket.settimeout(BLOCK_TIME)
             try:
-                request = self.pullQ.get(False)
-            except Queue.Empty:
-                break
-            request[0](self, *request[1], **request[2])
+                print 'waiting for connection'
+                self.other, addr = self.server_socket.accept()
+                print 'connected'
+                self.onConnect()
+            except socket.timeout:
+                return
+
+        self.retrieveMessages()
+        self.heartbeat()
 
     def cleanup(self):
         DragonflyNode.cleanup(self)
         if self.server_socket is not None:
             self.server_socket.close()
 
-    def _loadGrammar(self, grammar):
+    def loadGrammar(self, grammar):
         if grammar.__name__ in self.grammars:
             if grammar.equals(self.grammars[grammar.__name__]):
                 return
             else:
-                self._unloadGrammar(self.grammars[grammar.__name__])
+                self.unloadGrammar(self.grammars[grammar.__name__])
         
         print 'Loading grammar: ' + grammar.__name__
         self.sendMsg(grammar.textSerialize())
         self.grammars[grammar.__name__] = grammar
 
-    def _unloadGrammar(self, grammar):
+    def unloadGrammar(self, grammar):
         if grammar.__name__ not in self.grammars:
             return
         
@@ -86,21 +71,13 @@ class DragonflyThread(EventThread, DragonflyNode):
         self.sendMsg('unload' + ARG_DELIMETER + grammar.__name__)
         del self.grammars[grammar.__name__]        
         
-    @threadRequest
-    def loadGrammar(self, grammar):
-        self._loadGrammar(grammar)
-
-    @threadRequest
-    def unloadGrammar(self, grammar):
-        self._unloadGrammar(grammar)
-        
     def onConnect(self):
         self.pushQ.put(ConnectedEvent())
         oldGrammars = self.grammars
         self.grammars = {}
         for k, g in oldGrammars.items():
-            self._unloadGrammar(g)
-            self._loadGrammar(g)
+            self.unloadGrammar(g)
+            self.loadGrammar(g)
 
     def onMessage(self, msg):
         if msg.startswith("MATCH"):

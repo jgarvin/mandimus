@@ -49,7 +49,7 @@ class DragonflyNode(object):
 
     def recv(self):
         #print 'receiving...'
-        self.other.settimeout(0.2)
+        self.other.settimeout(0.05)
         return unicode(self.other.recv(4096), 'utf-8')            
 
     def cleanup(self):

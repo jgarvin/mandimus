@@ -1,5 +1,5 @@
+from EventLoop import getLoop
 from Window import Window, getWindowList
-from EventThread import EventThread
 from namedtuple import namedtuple
 from copy import copy
 import time
@@ -8,32 +8,30 @@ import re
 FocusChangeEvent = namedtuple("FocusChangeEvent", "window") 
 WindowListEvent = namedtuple("WindowListEvent", "windows") 
 
-class WindowEventWatcher(EventThread):
+class WindowEventWatcher(object):
     def __init__(self, eventQ, filterFunc=lambda x: False):
         self.filterFunc = filterFunc
-        EventThread.__init__(self, eventQ)
+        self.pushQ = eventQ
 
+        self.previousWindowId = Window(winId=Window.FOCUSED).winId
+        self.nextWindowList = getWindowList() # start async
+        self.previousWindowList = None
+
+        getLoop().subscribeTimer(0.05, self)
+        
     def __call__(self):
-        previousWindowId = Window(winId=Window.FOCUSED).winId
-        nextWindowList = getWindowList() # start async
-        previousWindowList = None
+        newWindow = Window(winId=Window.FOCUSED)
+        if self.previousWindowId != newWindow.winId:
+            self.pushQ.put(FocusChangeEvent(newWindow))
+        self.previousWindowId = newWindow.winId
 
-        while self.run:
-            newWindow = Window(winId=Window.FOCUSED)
-            if previousWindowId != newWindow.winId:
-                event = FocusChangeEvent(newWindow)
-                self.pushQ.put(event)
-            previousWindowId = newWindow.winId
+        windowList = self.nextWindowList.result # force finishing
+        windowList = filter(self.filterFunc, windowList)
+        if self.previousWindowList is None or self.previousWindowList != windowList:
+            self.pushQ.put(WindowListEvent(copy(windowList)))
+        self.previousWindowList = windowList
 
-            windowList = nextWindowList.result # force finishing
-            windowList = filter(self.filterFunc, windowList)
-            if previousWindowList is None or previousWindowList != windowList:
-                event = WindowListEvent(copy(windowList))
-                self.pushQ.put(event)
-            previousWindowList = windowList
-            
-            nextWindowList = getWindowList() # start async
-            time.sleep(0.05) # 20fps 
+        self.nextWindowList = getWindowList() # start async
 
 if __name__ == "__main__":
     import sys

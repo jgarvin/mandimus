@@ -1,29 +1,51 @@
 from Rule import registerRule
 from SeriesMappingRule import SeriesMappingRule
+from MappingRule import MappingRule
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice
 from Elements import Integer, Dictation
 from Window import Window
+from EventLoop import getLoop
+from wordUtils import extractWords, buildSelectMapping
 import re
 import subprocess
 
+# TODO: fix this apparent POS by getting rid of the
+# shell. not sure why it randomly fails....
+def runEmacsCmd(command, inFrame=True):
+    # escape single quotes, we actually close the string
+    # add the escape single quote, and reopen the string
+    args = []
+    # args += ['echo']
+    args += ['emacsclient']
+    args += ['-e']
+    if inFrame:
+        command = '(with-current-buffer "%s" %s)'
+        command = cmd % (Window().iconName, command)
+    args += [command]
+    print 'Running: [' + ' '.join(args) + ']'
+    # doesn't work:
+    # -disabling shell
+    # -passing args as list
+    # -0/-1 bufsize
+    # close fds
+    s = subprocess.Popen(args, bufsize=-1, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
+    s.wait()
+    print s.returncode
+    (out, err) = s.communicate()
+    print type(out), type(err)
+    if err:
+        print "Emacs error!: " + err
+    return out
 
 class Cmd(Action):
     def __call__(self, extras={}):
         fulldata = (self.data % extras)
-        # escape single quotes, we actually close the string
-        # add the escape single quote, and reopen the string
-        fulldata = fulldata.replace("'", "'\\''")
-        cmd = 'emacsclient -e \'(with-current-buffer "%s" %s)\''
-        cmd = cmd % (Window().iconName, fulldata)
-        runCmd(cmd)
+        runEmacsCmd(fulldata)
 
 class PairCmd(Cmd):
     def __init__(self, pair, cmd):
         x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
         Cmd.__init__(self, x)
-
-def bufferList():
-    Cmd("(mapcar 'buffer-name (buffer-list)')")()
 
 sexpFuncs = {
     "forward"            : "sp-forward-sexp",
@@ -57,16 +79,44 @@ for words, func in sexpFuncs.items():
     for pairWord, p in sexpPairs.items():
         sexpRules[words + ' ' + pairWord] = PairCmd(p, func)
 
+def bufferList():
+    buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
+    print 't', buffs
+    # buffs = re.findall('"[^"]*"', buffs)
+    # # print 'e', buffs
+    # buffs = [x.strip('"') for x in buffs]
+    # print 'x', buffs
+    return buffs
+
+def currentBuffer():
+    buf = runEmacsCmd("(buffer-name (current-buffer))")
+    return buf.strip('"')
+
+def showBuffer(buf):
+    runEmacsCmd("(switch-to-buffer \"%s\")" % buf)        
+
 class SelectBuffer(SelectChoice):
     def _tieSorter(self):
-        return lambda x: x[0].winId
+        return lambda x: x[0]
 
     def _currentChoice(self):
-        return Window()
+        return currentBuffer()
 
     def _select(self, choice):
-        cmd = "xdotool windowactivate %d" % (choice.winId)
-        runCmd(cmd)    
+        showBuffer(choice)
+
+def updateBufferGrammar():
+    bufs = bufferList()
+    # print 'bufs: ' + str(bufs)
+    # spokenForms = {}
+    # for b in bufs:
+    #     spokenForms[b] = [set(extractWords(b))] 
+    # omapping = buildSelectMapping('buff', spokenForms, SelectBuffer)
+    # class BufferMapping(MappingRule):
+    #     mapping = omapping
+    #print omapping
+    
+getLoop().subscribeTimer(1, updateBufferGrammar)
 
 @registerRule
 class EmacsRule(SeriesMappingRule):
@@ -88,7 +138,7 @@ class EmacsRule(SeriesMappingRule):
         
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
-        "toggle buff"                    : Key("c-x, b") + Key("enter"),
+        "buff"                    : Key("c-x, b") + Key("enter"),
         "buff <text>"                    : Key("c-x, b") + Text("%(text)s") + Key("enter"),
         "list (buffs | buffers)"         : Key("c-x,c-b"),
         "(kill | close) (buff | buffer)" : Key("c-x,k,enter"),
@@ -137,6 +187,7 @@ class EmacsRule(SeriesMappingRule):
         "undo [that]"                    : Key("cs-underscore"),
         "redo [that]"                    : Key("as-underscore"),
         "enter"                          : Key("enter"),
+        "open line"                      : Key("c-o"),
         "hit <text>"                     : Text("%(text)s") + Key("enter"),
 
         "shift right"                    : Cmd("(call-interactively 'python-indent-shift-right)"),
