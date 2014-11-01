@@ -79,9 +79,12 @@ for words, func in sexpFuncs.items():
 
 def bufferList():
     buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
-    buffs = re.findall('"[^"]*"', buffs)
-    buffs = [x.strip().strip('"') for x in buffs]
-    return buffs
+    return getStringList(buffs)
+
+def getStringList(output):
+    output = re.findall('"[^"]*"', output)
+    output = [x.strip().strip('"') for x in output]
+    return output    
 
 def currentBuffer():
     buf = runEmacsCmd("(buffer-name (current-buffer))")
@@ -91,9 +94,6 @@ def showBuffer(buf):
     runEmacsCmd("(switch-to-buffer \"%s\")" % buf)        
 
 class SelectBuffer(SelectChoice):
-    def _tieSorter(self):
-        return lambda x: x[0]
-
     def _currentChoice(self):
         return currentBuffer()
 
@@ -101,22 +101,69 @@ class SelectBuffer(SelectChoice):
         showBuffer(choice)
 
     def _noChoice(self):
-        runEmacsCmd("(switch-to-buffer nil)")        
-        
-def updateBufferGrammar():
-    bufs = bufferList()
-    # print 'bufs: ' + str(bufs)
+        runEmacsCmd("(switch-to-buffer nil)")                
+
+class SelectCommand(SelectChoice):
+    def _currentChoice(self):
+        return None
+
+    def _select(self, choice):
+        runEmacsCmd("(call-interactively '%s)" % choice)
+
+    def _noChoice(self):
+        Key("c-x,c-m")()
+
+def updateListGrammar(lst, leadingTerm, translate, action, clsname):
+    bufs = lst
     spokenForms = {}
     for b in bufs:
-        spokenForms[b] = [set(extractWords(b, translate={'*'}))] 
-    # print spokenForms
-    omapping = buildSelectMapping('buff', spokenForms, SelectBuffer)
-    class BufferMapping(MappingRule):
+        spokenForms[b] = [set(extractWords(b, translate=translate))] 
+    omapping = buildSelectMapping(leadingTerm, spokenForms, action)
+    class LocalMapping(MappingRule):
         mapping = omapping
-    # print omapping
-    getLoop().put(GrammarEvent(True, BufferMapping))
-    
+    LocalMapping.__name__ = clsname
+    print omapping.keys()
+    getLoop().put(GrammarEvent(True, LocalMapping))
+
+getCommandsEl = """
+(let ((y '()))
+  (mapatoms 
+   (lambda (x)
+     (and (fboundp x)                    ; does x name a function?
+	  (commandp (symbol-function x)) ; is it interactive?
+	  (setq y (cons (symbol-name x) y))))) y)
+"""
+
+# TODO: this ended up being harder than I thought!
+# there are over 1000 unique words in the list, so natlink
+# complains that the grammar is too complex. I don't know
+# where the threshold is but it will be hard to trim, may
+# just need to go with a manual list, or some categories
+# like anything with 'python' in the name, maybe have
+# a separate "python command" vs. "buffer command" etc.
+# for pulling out subsets...
+def updateCommandGrammar():
+    pass
+    # commandlist = getStringList(runEmacsCmd(getCommandsEl))
+    # all_words = set()
+    # for c in commandlist:
+    #     all_words.update(extractWords(c))
+    # grammar = []
+    # for reps in range(4):
+    #     grammar += ['[(']
+    #     grammar += ['|'.join(all_words)]
+    #     grammar += [')]']
+    #     grammar += [' ']
+    # updateListGrammar(commandlist, 'command', set(),
+    #                   SelectCommand, "EmacsCommandMapping")
+
+def updateBufferGrammar():
+    updateListGrammar(bufferList(), 'buff', {'*'},
+                      SelectBuffer, "EmacsBufferMapping")    
+
 getLoop().subscribeTimer(1, updateBufferGrammar)
+getLoop().subscribeTimer(10, updateCommandGrammar)
+updateCommandGrammar()
 
 @registerRule
 class EmacsRule(SeriesMappingRule):
@@ -129,8 +176,8 @@ class EmacsRule(SeriesMappingRule):
         "reverse search"                 : Key('c-r'),
         "start macro"                    : Key("F3"),
         "mack"                           : Key("F4"),
-        "command"                        : Key("c-x,c-m"),
-        "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
+        # "command"                        : Key("c-x,c-m"),
+        # "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
         "exchange"                       : Cmd("(exchange-point-and-mark)"),
         
         # file commands
@@ -138,14 +185,13 @@ class EmacsRule(SeriesMappingRule):
         
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
-        # "buff"                    : Key("c-x, b") + Key("enter"),
-        # "buff <text>"                    : Key("c-x, b") + Text("%(text)s") + Key("enter"),
-        "list (buffs | buffers)"         : Key("c-x,c-b"),
+        "list (buffs | buffers)"         : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
         "(kill | close) (buff | buffer)" : Key("c-x,k,enter"),
         "replace buff"                   : Key("c-x,c-v"),
         "replace buff <text>"            : Key("c-x,c-v") + Text("%(text)s") + Key("enter"),
         
         # window commands
+        "kill window"                    : Cmd("(delete-window)"),
         "other window"                   : Key("c-x, o"),
         "one window"                     : Key("c-x, 1"),
         "new frame"                      : Key("c-x, 5, 2"),

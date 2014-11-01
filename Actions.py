@@ -202,7 +202,7 @@ class SelectChoice(Action):
         self._select(bestpick)
 
     def _tieSorter(self):
-        return lambda x: x   
+        return lambda x: x[0]   
 
     def _currentChoice(self):
         return None

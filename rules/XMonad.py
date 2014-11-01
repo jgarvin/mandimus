@@ -22,7 +22,7 @@ class XMonadRule(SeriesMappingRule):
         "expand [<n>]" : Key("ca-i:%(n)d"),
         "shrink [<n>]" : Key("ca-n:%(n)d"),
         "cycle" : Key("ca-y"),
-        "kill window" : Key("ca-x"),
+        "destroy window" : Key("ca-x"),
         "make master" : Key("ca-enter"),
         "editor" : Key("ca-w"),
         "browser" : Key("ca-b"),

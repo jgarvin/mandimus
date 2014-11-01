@@ -25,21 +25,25 @@ def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate=s
     splitters = splitters - translate
     all_words = []
     word = []
-    strlen = len(wordstr) 
-    for c in wordstr.lower():
+    strlen = len(wordstr)
+
+    def finish(w):
+        all_words.extend([i.lower() for i in deCamelize(''.join(w))])        
+    
+    for c in wordstr:
         if c in splitters:
             if word:
-                all_words.append(''.join(word))
+                finish(word)
                 word = []
         elif c in translate:
             if word:
-                all_words.append(''.join(word))
+                finish(word)
                 word = []
             all_words.extend(punc2Words[c])
         else:
             word.append(c)
     if word:
-        all_words.append(''.join(word))
+        finish(word)
     return all_words
 
 def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
