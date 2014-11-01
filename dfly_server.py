@@ -57,6 +57,7 @@ class DragonflyThread(DragonflyNode):
             if grammar.equals(self.grammars[grammar.__name__]):
                 return
             else:
+                print 'grammar changed'
                 self.unloadGrammar(self.grammars[grammar.__name__])
         
         print 'Loading grammar: ' + grammar.__name__
@@ -114,6 +115,7 @@ class DragonflyThread(DragonflyNode):
                     else:
                         self.history.append(GrammarMatchEvent(grammar, extras))
                         
+                    print 'match %s -- %s' % (str(grammar), str(extras['words']))
                     cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because

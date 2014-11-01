@@ -1,27 +1,53 @@
 from listHelpers import splitFlatten, deCamelize
 import re, string
+import collections
+from Actions import Noop
 
-def extractWords(wordstr):
-    words = [wordstr.strip()]
-    words = [s.strip() for s in splitFlatten(words, ' ')]
-    words = [s.strip() for s in splitFlatten(words, '-')]
-    words = [s.strip() for s in splitFlatten(words, '_')]
-    
-    newWords = []
-    for w in words:
-        newWords.extend(filter(None, re.split("[" + string.punctuation + "]+", w)))
-    words = newWords
+punc2Words = {
+    "*" : ["star", "asterisk"],
+}
 
-    newWords = []
-    for w in words:
-        newWords.extend(deCamelize(w))
-    words = newWords
-    
-    return [w.lower() for w in words]
+def deepEmpty(x):
+    if not isinstance(x, collections.Iterable):
+        return True
+    elif not x:
+        return True
+    elif type(x) == str or type(x) == unicode:
+        # this has to be its own case because python
+        # doesn't distinguish strings from characters
+        return len(x) == 0
+    else:
+        return all([deepEmpty(i) for i in x])
+
+def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate=set()):
+    """Split a string into a list using multiple delimeters, and optionally
+    translating some characters to one or more words. Also lowercase everything."""
+    splitters = splitters - translate
+    all_words = []
+    word = []
+    strlen = len(wordstr) 
+    for c in wordstr.lower():
+        if c in splitters:
+            if word:
+                all_words.append(''.join(word))
+                word = []
+        elif c in translate:
+            if word:
+                all_words.append(''.join(word))
+                word = []
+            all_words.extend(punc2Words[c])
+        else:
+            word.append(c)
+    if word:
+        all_words.append(''.join(word))
+    return all_words
 
 def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
     """
     Builds a mapping that can be used by a MappingRule.
+
+    leadingTerm is the prefix for each command that will
+    be generated.
     
     spokenSelects is a dictionary that maps choices to a list
     of sets of words that correspond to that choice.
@@ -31,7 +57,7 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
     omapping = {}
     word2Selects = {}
     for w, spokenForms in spokenSelects.items():
-        if not spokenForms:
+        if deepEmpty(spokenForms):
             continue
 
         grammar = [leadingTerm]
@@ -48,6 +74,6 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
             first = False
         grammar += [")"]
         grammar = ' '.join(grammar)
-        omapping[grammar] = selectAction(word2Selects)
+        omapping[grammar] = selectAction(word2Selects, leadingTerm)
 
     return omapping

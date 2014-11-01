@@ -1,15 +1,26 @@
-class Integer(object):
-    def __init__(self, var, lower_bound, upper_bound):
-        self.var = var
+from util import EqualityMixin
+
+class Integer(EqualityMixin):
+    def __init__(self, name, lower_bound, upper_bound):
+        self.name = name
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
     def __str__(self):
-        return "INTEGER %s %d %d" % (self.var, self.lower_bound, self.upper_bound)
+        return "INTEGER %s %d %d" % (self.name, self.lower_bound, self.upper_bound)
 
-class Dictation(object):
-    def __init__(self, var):
-        self.var = var
+class Dictation(EqualityMixin):
+    def __init__(self, name):
+        self.name = name
 
     def __str__(self):
-        return "DICTATION %s" % (self.var,)
+        return "DICTATION %s" % (self.name,)
+
+class Repetition(EqualityMixin):
+    def __init__(self, min=1, max=None, name=None):
+        self.min = min
+        self.max = max
+        self.name = name
+        
+    def __str__(self):
+        return "REPETITION %s" % (self.name, self.min, self.max)

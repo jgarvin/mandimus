@@ -8,6 +8,7 @@ from wordUtils import extractWords, buildSelectMapping
 import EventLoop
 import re
 import time
+from Events import GrammarEvent
 
 from rules.Rule import registerRule, registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
@@ -68,11 +69,10 @@ class MainThread(object):
         self.timers = []
         EventLoop.event_loop = self        
 
-        # self.eventQ = Queue.Queue()
         self.dfly = DragonflyThread(('', 23133), self)
         self.win = WindowEventWatcher(self, filterWindows)
         self.run = True
-
+        
         self.events = []
 
     def subscribeTimer(self, seconds, cb):
@@ -138,9 +138,17 @@ class MainThread(object):
                     self.determineRules(ev.window)
                 elif isinstance(ev, WindowListEvent):
                     self.handleWindowList(ev)
+                elif isinstance(ev, GrammarEvent):
+                    self.handleGrammarEvent(ev)
         except KeyboardInterrupt:
             self.stop()
             sys.exit()
+
+    def handleGrammarEvent(self, ev):
+        if ev.load:
+            self.dfly.loadGrammar(ev.grammar)
+        else:
+            self.dfly.unloadGrammar(ev.grammar)
 
     def handleWindowList(self, ev):
         # sometimes at startup list is empty

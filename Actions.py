@@ -110,16 +110,38 @@ class Action(object):
     def __add__(self, other):
         return ActionList() + self + other
 
+    def __eq__(self, other):
+        return type(self) == type(other) and self.data == other.data
+
 class Repeat(Action):
     pass
 
+class Noop(Action):
+    def __call__(self, extras={}):
+        pass
+
 class SelectChoice(Action):
-    def __init__(self, data):
+    hist = {}
+    
+    def __init__(self, data, leadingTerm):
         Action.__init__(self, data)
-        self.history = []
+        self.leadingTerm = leadingTerm
+
+    @classmethod
+    def history(cls):
+        if cls not in cls.hist:
+            cls.hist[cls] = []
+        return cls.hist[cls]
+
+    def __eq__(self, other):
+        return type(self) == type(other) and self.data == other.data
         
     def __call__(self, extras={}):
         words = extras["words"].split()
+
+        if len(words) == 1 and words[0] == self.leadingTerm:
+            self._noChoice()
+            return
 
         # TODO: until we get rule references words is going
         # to contain the word for activating the rule, which
@@ -139,7 +161,6 @@ class SelectChoice(Action):
         # get choice that tied on number of words
         counter = counter.items()
         counter.sort(key=lambda x: x[1], reverse=True)
-        print [(k.name, v) for k,v in counter]
         first = counter[0]
         ties = []
         for c in counter:
@@ -160,12 +181,11 @@ class SelectChoice(Action):
         for i, t in enumerate(ties):
             if t[0] == currentChoice:
                 bestpick = ties[(i+1) % len(ties)][0]
+                break
 
         # if none is selected, then rely on history
         if bestpick is None:
-            print 'hist'
-            for h in reversed(self.history):
-                print 'in hist'
+            for h in reversed(self.history()):
                 for t in ties:
                     print h,t[0]
                     if h == t[0]:
@@ -178,7 +198,7 @@ class SelectChoice(Action):
         if bestpick is None:
             bestpick = ties[0][0]
 
-        self.history.append(bestpick)
+        self.history().append(bestpick)
         self._select(bestpick)
 
     def _tieSorter(self):
@@ -189,6 +209,14 @@ class SelectChoice(Action):
 
     def _select(self, choice):
         pass
+
+    def _noChoice(self):
+        search_max = 10
+        curChoice = self._currentChoice()
+        for h in list(reversed(self.history()))[:search_max]:
+            if h != curChoice:
+                self._select(h)
+                break
 
 class SelectWindow(SelectChoice):
     def _tieSorter(self):

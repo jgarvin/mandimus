@@ -6,33 +6,31 @@ from Elements import Integer, Dictation
 from Window import Window
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
+from Events import GrammarEvent
 import re
 import subprocess
+import os
+import os.path as op
 
-# TODO: fix this apparent POS by getting rid of the
-# shell. not sure why it randomly fails....
+EMACSCLIENT = "emacsclient"
+alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
+print alternative
+if op.exists(alternative):
+    EMACSCLIENT = alternative
+
 def runEmacsCmd(command, inFrame=True):
-    # escape single quotes, we actually close the string
-    # add the escape single quote, and reopen the string
     args = []
-    # args += ['echo']
-    args += ['emacsclient']
+    args += [EMACSCLIENT]
     args += ['-e']
     if inFrame:
-        command = '(with-current-buffer "%s" %s)'
+        cmd = '(with-current-buffer "%s" %s)'
         command = cmd % (Window().iconName, command)
     args += [command]
-    print 'Running: [' + ' '.join(args) + ']'
-    # doesn't work:
-    # -disabling shell
-    # -passing args as list
-    # -0/-1 bufsize
-    # close fds
-    s = subprocess.Popen(args, bufsize=-1, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
-    s.wait()
-    print s.returncode
+    s = subprocess.Popen(args, shell=False,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
     (out, err) = s.communicate()
-    print type(out), type(err)
     if err:
         print "Emacs error!: " + err
     return out
@@ -81,16 +79,13 @@ for words, func in sexpFuncs.items():
 
 def bufferList():
     buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
-    print 't', buffs
-    # buffs = re.findall('"[^"]*"', buffs)
-    # # print 'e', buffs
-    # buffs = [x.strip('"') for x in buffs]
-    # print 'x', buffs
+    buffs = re.findall('"[^"]*"', buffs)
+    buffs = [x.strip().strip('"') for x in buffs]
     return buffs
 
 def currentBuffer():
     buf = runEmacsCmd("(buffer-name (current-buffer))")
-    return buf.strip('"')
+    return buf.strip().strip('"')
 
 def showBuffer(buf):
     runEmacsCmd("(switch-to-buffer \"%s\")" % buf)        
@@ -105,16 +100,21 @@ class SelectBuffer(SelectChoice):
     def _select(self, choice):
         showBuffer(choice)
 
+    def _noChoice(self):
+        runEmacsCmd("(switch-to-buffer nil)")        
+        
 def updateBufferGrammar():
     bufs = bufferList()
     # print 'bufs: ' + str(bufs)
-    # spokenForms = {}
-    # for b in bufs:
-    #     spokenForms[b] = [set(extractWords(b))] 
-    # omapping = buildSelectMapping('buff', spokenForms, SelectBuffer)
-    # class BufferMapping(MappingRule):
-    #     mapping = omapping
-    #print omapping
+    spokenForms = {}
+    for b in bufs:
+        spokenForms[b] = [set(extractWords(b, translate={'*'}))] 
+    # print spokenForms
+    omapping = buildSelectMapping('buff', spokenForms, SelectBuffer)
+    class BufferMapping(MappingRule):
+        mapping = omapping
+    # print omapping
+    getLoop().put(GrammarEvent(True, BufferMapping))
     
 getLoop().subscribeTimer(1, updateBufferGrammar)
 
@@ -138,8 +138,8 @@ class EmacsRule(SeriesMappingRule):
         
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
-        "buff"                    : Key("c-x, b") + Key("enter"),
-        "buff <text>"                    : Key("c-x, b") + Text("%(text)s") + Key("enter"),
+        # "buff"                    : Key("c-x, b") + Key("enter"),
+        # "buff <text>"                    : Key("c-x, b") + Text("%(text)s") + Key("enter"),
         "list (buffs | buffers)"         : Key("c-x,c-b"),
         "(kill | close) (buff | buffer)" : Key("c-x,k,enter"),
         "replace buff"                   : Key("c-x,c-v"),
