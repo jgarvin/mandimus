@@ -4,6 +4,7 @@ import string
 import operator
 from listHelpers import dictReplace
 from Window import Window
+from util import deepEmpty
 
 def runCmd(cmd):
     print 'cmd: [' + cmd + ']'
@@ -114,6 +115,11 @@ class Action(object):
         return type(self) == type(other) and self.data == other.data
 
 class Repeat(Action):
+    # Logic in server
+    pass
+
+class Mimic(Action):
+    # Logic in server
     pass
 
 class Noop(Action):
@@ -187,7 +193,7 @@ class SelectChoice(Action):
         if bestpick is None:
             for h in reversed(self.history()):
                 for t in ties:
-                    print h,t[0]
+                    #print h,t[0]
                     if h == t[0]:
                         bestpick = h
                         break
@@ -342,7 +348,7 @@ class FormatState(object):
         new = []
         first = True
         for word in s:
-            print 'word ' + word
+            #print 'word ' + word
             if word == ur"\cap" and self.do_formatting:
                 self.cap_once = True
             elif word == ur"\caps-on" and self.do_formatting:
@@ -355,7 +361,7 @@ class FormatState(object):
                 self.next_numeral = True
             else:
                 isCode = word in self.formatting.keys()
-                print 'isCode: ' + str(isCode)
+                #print 'isCode: ' + str(isCode)
                 newWord = word
                 if isCode:
                     if self.do_formatting:
@@ -366,7 +372,7 @@ class FormatState(object):
                     for key, val in replacements.items():
                         newWord = newWord.replace(key, val)
                     new.append(newWord)
-                    print 'newWord: ' + newWord
+                    #print 'newWord: ' + newWord
                     self.no_space_once = True
                 else:
                     if self.cap_once:
@@ -424,6 +430,8 @@ class Text(Action):
 
     def __call__(self, extras={}):
         words = (self.data % extras).lower().split(' ')
+        if deepEmpty(words):
+            return
         self._execute(words)
 
     def _execute(self, words):

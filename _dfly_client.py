@@ -31,7 +31,7 @@ def reloadClient():
 class GlobalRules(MappingRule):
     mapping = {
         "reload client code" : Function(reloadClient),
-        "go to sleep" : Function(lambda: natlink.setMicState('sleeping')),
+        "snore" : Function(lambda: natlink.setMicState('sleeping')),
         }
     extras = []
     defaults = {}

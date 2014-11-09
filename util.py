@@ -1,3 +1,17 @@
+import collections
+
+def deepEmpty(x):
+    if not isinstance(x, collections.Iterable):
+        return True
+    elif not x:
+        return True
+    elif type(x) == str or type(x) == unicode:
+        # this has to be its own case because python
+        # doesn't distinguish strings from characters
+        return len(x) == 0
+    else:
+        return all([deepEmpty(i) for i in x])
+
 class EqualityMixin(object):
     "Without this python equality is bonkers"
 

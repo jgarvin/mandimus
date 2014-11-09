@@ -1,23 +1,11 @@
 from listHelpers import splitFlatten, deCamelize
 import re, string
-import collections
 from Actions import Noop
+from util import deepEmpty
 
 punc2Words = {
     "*" : ["star", "asterisk"],
 }
-
-def deepEmpty(x):
-    if not isinstance(x, collections.Iterable):
-        return True
-    elif not x:
-        return True
-    elif type(x) == str or type(x) == unicode:
-        # this has to be its own case because python
-        # doesn't distinguish strings from characters
-        return len(x) == 0
-    else:
-        return all([deepEmpty(i) for i in x])
 
 def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate=set()):
     """Split a string into a list using multiple delimeters, and optionally

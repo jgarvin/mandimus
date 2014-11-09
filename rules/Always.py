@@ -97,7 +97,7 @@ punctuationMapping = OrderedDict([
 directions = ['left', 'right', 'up', 'down']
 
 # TODO: grammar could be much better, 3 controls in a row doesn't make sense
-modifierRule = "[(control|alt|shift)] [(control|alt|shift)] [(control|alt|shift)] "
+modifierRule = "[control] [alt] [shift]"
 possibleLetters = modifierRule + '(' + '|'.join(alphamapping.keys()) + ')'
 possibleDigits = modifierRule + '(' + '|'.join(digitmapping.keys()) + ')'
 possibleDirections = modifierRule + '(' + '|'.join(directions) + ')'
@@ -147,8 +147,8 @@ class AlwaysRule(SeriesMappingRule):
         "cap camel <text>" : Camel("%(text)s", True),
         "fen <text>" : Hyphen("%(text)s"),
         "cap fen <text>" : Hyphen("%(text)s", True),
-        "underbar <text>" : Underscore("%(text)s"),
-        "cap underbar <text>" : Underscore("%(text)s", True),
+        "score <text>" : Underscore("%(text)s"),
+        "cap score <text>" : Underscore("%(text)s", True),
         "type <text>" : Text("%(text)s"),
         "command tally" : (lambda x: Speak(str(commandTally()))()),
         "left [<n>]" : Key("left:%(n)d"),
@@ -156,6 +156,8 @@ class AlwaysRule(SeriesMappingRule):
         "up [<n>]" : Key("up:%(n)d"),
         "down [<n>]" : Key("down:%(n)d"),
         "backspace" : Key("backspace"),
+        "pa" : Key("space"),
+        "slap" : Key("enter"),
         "delete" : Key("delete"),
         'let ' + possibleLetters : PressKey(),
         'caplet ' + possibleLetters : PressKey(force_shift=True),

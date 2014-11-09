@@ -1,7 +1,7 @@
 from Rule import registerRule
 from SeriesMappingRule import SeriesMappingRule
 from MappingRule import MappingRule
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice
+from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic
 from Elements import Integer, Dictation
 from Window import Window
 from EventLoop import getLoop
@@ -12,7 +12,7 @@ import subprocess
 import os
 import os.path as op
 
-EMACSCLIENT = "emacsclient"
+EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
 print alternative
 if op.exists(alternative):
@@ -24,8 +24,9 @@ def runEmacsCmd(command, inFrame=True):
     args += ['-e']
     if inFrame:
         cmd = '(with-current-buffer "%s" %s)'
-        command = cmd % (Window().iconName, command)
+        command = cmd % (Window().name, command)
     args += [command]
+    # print 'emacs cmd: ' + str(args)
     s = subprocess.Popen(args, shell=False,
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
@@ -122,7 +123,7 @@ def updateListGrammar(lst, leadingTerm, translate, action, clsname):
     class LocalMapping(MappingRule):
         mapping = omapping
     LocalMapping.__name__ = clsname
-    print omapping.keys()
+    #print omapping.keys()
     getLoop().put(GrammarEvent(True, LocalMapping))
 
 getCommandsEl = """
@@ -149,7 +150,7 @@ def updateCommandGrammar():
     # for c in commandlist:
     #     all_words.update(extractWords(c))
     # grammar = []
-    # for reps in range(4):
+    # for reps in range(1):
     #     grammar += ['[(']
     #     grammar += ['|'.join(all_words)]
     #     grammar += [')]']
@@ -165,6 +166,17 @@ getLoop().subscribeTimer(1, updateBufferGrammar)
 getLoop().subscribeTimer(10, updateCommandGrammar)
 updateCommandGrammar()
 
+class AlignRegexp(Cmd):
+    """Emacs inserts a special whitespace regex when called
+    interactively that it doesn't if you call it manually.
+    Also for some reason align-regexp blocks when called
+    interactively."""
+    def __init__(self, data):
+        command = "(align-regexp (region-beginning) (region-end) \"%s\")"
+        whitespace = "\\\(\\\s-*\\\)%s"
+        command = command % (whitespace % data)
+        Cmd.__init__(self, command)
+
 @registerRule
 class EmacsRule(SeriesMappingRule):
     mapping  = {
@@ -176,9 +188,8 @@ class EmacsRule(SeriesMappingRule):
         "reverse search"                 : Key('c-r'),
         "start macro"                    : Key("F3"),
         "mack"                           : Key("F4"),
-        # "command"                        : Key("c-x,c-m"),
-        # "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
-        "exchange"                       : Cmd("(exchange-point-and-mark)"),
+        "command"                        : Key("c-x,c-m"),
+        "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
         
         # file commands
         "open file"                      : Key("c-x,c-f"),
@@ -213,7 +224,7 @@ class EmacsRule(SeriesMappingRule):
         
         # text manip commands
         "mark"                           : Key("c-space"),
-
+        "tark"                           : Cmd("(exchange-point-and-mark)"),
         "copy"                           : Key("a-w"),
         "copy line"                      : Cmd('(quick-copy-line)'),
         "copy word"                      : Cmd('(copy-word)'),
@@ -232,14 +243,19 @@ class EmacsRule(SeriesMappingRule):
         "toke <text>"                    : Text("%(text)s") + Key("a-space"),
         "undo [that]"                    : Key("cs-underscore"),
         "redo [that]"                    : Key("as-underscore"),
-        "enter"                          : Key("enter"),
         "open line"                      : Key("c-o"),
         "hit <text>"                     : Text("%(text)s") + Key("enter"),
 
         "shift right"                    : Cmd("(call-interactively 'python-indent-shift-right)"),
         "shift left"                     : Cmd("(call-interactively 'python-indent-shift-left)"),
         "align regexp"                   : Cmd("(call-interactively 'align-regexp)"),
+
+        # TODO python only
+        "align (dict | set)"             : PairCmd("{", "sp-select-next-thing") + AlignRegexp(":"),
+        
         "indent"                         : Cmd("(call-interactively 'indent-region)"),
+
+        "comment"                        : Cmd("(call-interactively 'comment-or-uncomment-region)"),
         
         # replacing commands
         "replace"                        : Key('as-percent'),
