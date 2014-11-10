@@ -193,9 +193,7 @@ class EmacsPython(SeriesMappingRule):
         isemacs = EmacsRule.activeForWindow(window)
         if not isemacs:
             return False
-        print 'is emacs!'
         out = runEmacsCmd("major-mode", inFrame=window.iconName).strip()
-        print 'out: [' + out + ']'
         return out == "python-mode"
             
 @registerRule

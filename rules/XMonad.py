@@ -24,6 +24,8 @@ class XMonadRule(SeriesMappingRule):
         "cycle" : Key("ca-y"),
         "destroy window" : Key("ca-x"),
         "make master" : Key("ca-enter"),
+        "add master" : Key("ca-comma"),
+        "remove master" : Key("ca-period"),
         "editor" : Key("ca-w"),
         "browser" : Key("ca-b"),
         "new terminal" : Key("csa-t"),

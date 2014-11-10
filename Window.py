@@ -1,6 +1,7 @@
 import subprocess
 from collections import defaultdict
 import string
+import time
 
 #################################
 ###
@@ -38,16 +39,20 @@ class Window(object):
         else:
             self.winId = winId
 
+        self.refreshInfo()
+
+    def refreshInfo(self):
         properties = [
             "WM_NAME",
             "_NET_WM_ICON",
             "WM_ICON_NAME",
             "WM_CLASS",
             "WM_WINDOW_ROLE"
-        ]            
+        ]                    
 
         self.xpropJob = Xprop(self.winId, properties)
         self.xpropResult = None
+        self.lastXpropTime = time.time()
 
     def __eq__(self, other):
         return self.winId == other.winId
