@@ -23,6 +23,7 @@ class Window(object):
     FOCUSED = -1
 
     def __init__(self, winId=None):
+        print 'creating window'
         if winId is None:
             winId = self.FOCUSED
         if winId == self.FOCUSED:
@@ -37,7 +38,15 @@ class Window(object):
         else:
             self.winId = winId
 
-        self.xpropJob = Xprop(self.winId)
+        properties = [
+            "WM_NAME",
+            "_NET_WM_ICON",
+            "WM_ICON_NAME",
+            "WM_CLASS",
+            "WM_WINDOW_ROLE"
+        ]            
+
+        self.xpropJob = Xprop(self.winId, properties)
         self.xpropResult = None
 
     def __eq__(self, other):
@@ -113,12 +122,15 @@ class Job(object):
         return data
 
 class Xprop(Job):
-    def __init__(self, winId):
-        cmd = "xprop -id " + str(winId)
+    def __init__(self, winId, properties):
+        cmd = "xprop -id " + str(winId) + ' ' + ' '.join(properties)
         Job.__init__(self, cmd)
 
     def _postprocess(self, data):
         return data.split('\n')
+
+global masterWindowList
+masterWindowList = {}
 
 class getWindowList(Job):
     def __init__(self):
@@ -127,8 +139,24 @@ class getWindowList(Job):
 
     def _postprocess(self, data):
         out = data.split()
-        return [Window(int(i)) for i in out]
-        
+        return [getWindow(int(i)) for i in out]
+
+def getWindow(winId):
+    global masterWindowList
+    if winId not in masterWindowList:
+        masterWindowList[winId] = Window(winId)
+    return masterWindowList[winId]
+
+def getFocusedWindow():
+    # TODO: pay attention to errors, exit status
+    s = subprocess.Popen("xdotool getwindowfocus", shell=True, stdout=subprocess.PIPE)
+    (out, err) = s.communicate()
+    try:
+        return getWindow(int(out))
+    except ValueError:
+        # no window currently selected!
+        return None
+    
 if __name__ == "__main__":
     w = Window(winId=Window.FOCUSED)
     print w.size, w.name, w.wmclass, w.iconName

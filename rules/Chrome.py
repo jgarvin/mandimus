@@ -16,7 +16,6 @@ class ChromeRule(SeriesMappingRule):
         "forward" : Key("a-right"),
         "refresh" : Key("F5"),
         "reopen tab" : Key("cs-t"),
-        "enter" : Key("enter"),
         "tab" : Key("tab"),
         "reload" : Key("c-r"),
         "refresh" : Key("c-r"),

@@ -3,7 +3,7 @@ from SeriesMappingRule import SeriesMappingRule
 from MappingRule import MappingRule
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic
 from Elements import Integer, Dictation
-from Window import Window
+from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
@@ -19,12 +19,17 @@ if op.exists(alternative):
     EMACSCLIENT = alternative
 
 def runEmacsCmd(command, inFrame=True):
+    """Run command optionally in particular frame,
+    set True for active frame."""
     args = []
     args += [EMACSCLIENT]
     args += ['-e']
     if inFrame:
         cmd = '(with-current-buffer "%s" %s)'
-        command = cmd % (Window().name, command)
+        if inFrame is True:
+            command = cmd % (getFocusedWindow().name, command)
+        else:
+            command = cmd % (inFrame, command)
     args += [command]
     # print 'emacs cmd: ' + str(args)
     s = subprocess.Popen(args, shell=False,
@@ -178,6 +183,22 @@ class AlignRegexp(Cmd):
         Cmd.__init__(self, command)
 
 @registerRule
+class EmacsPython(SeriesMappingRule):
+    mapping = {
+        "align dict"                     : Cmd("(align-dict)"),
+    }
+
+    @classmethod
+    def activeForWindow(cls, window):
+        isemacs = EmacsRule.activeForWindow(window)
+        if not isemacs:
+            return False
+        print 'is emacs!'
+        out = runEmacsCmd("major-mode", inFrame=window.iconName).strip()
+        print 'out: [' + out + ']'
+        return out == "python-mode"
+            
+@registerRule
 class EmacsRule(SeriesMappingRule):
     mapping  = {
         # general commands
@@ -190,6 +211,10 @@ class EmacsRule(SeriesMappingRule):
         "mack"                           : Key("F4"),
         "command"                        : Key("c-x,c-m"),
         "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
+        "help function"                  : Key("c-h,f"),
+        "help variable"                  : Key("c-h,v"),
+        "help key"                       : Key("c-h,k"),
+
         
         # file commands
         "open file"                      : Key("c-x,c-f"),
@@ -237,22 +262,19 @@ class EmacsRule(SeriesMappingRule):
         "yank"                           : Key("c-y"),
         "yank pop"                       : Key("a-y"),
         "term (yank | paste)"            : Key("s-insert"),
-
+        
         "select all"                     : Key("c-a"),
         "comp"                           : Key("a-space"),
         "toke <text>"                    : Text("%(text)s") + Key("a-space"),
         "undo [that]"                    : Key("cs-underscore"),
         "redo [that]"                    : Key("as-underscore"),
-        "open line"                      : Key("c-o"),
+        "pre slap"                       : Key("c-o"),
         "hit <text>"                     : Text("%(text)s") + Key("enter"),
 
         "shift right"                    : Cmd("(call-interactively 'python-indent-shift-right)"),
         "shift left"                     : Cmd("(call-interactively 'python-indent-shift-left)"),
         "align regexp"                   : Cmd("(call-interactively 'align-regexp)"),
 
-        # TODO python only
-        "align (dict | set)"             : PairCmd("{", "sp-select-next-thing") + AlignRegexp(":"),
-        
         "indent"                         : Cmd("(call-interactively 'indent-region)"),
 
         "comment"                        : Cmd("(call-interactively 'comment-or-uncomment-region)"),

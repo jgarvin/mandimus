@@ -1,5 +1,5 @@
 from EventLoop import getLoop
-from Window import Window, getWindowList
+from Window import Window, getWindowList, getFocusedWindow
 from namedtuple import namedtuple
 from copy import copy
 import time
@@ -13,14 +13,17 @@ class WindowEventWatcher(object):
         self.filterFunc = filterFunc
         self.pushQ = eventQ
 
-        self.previousWindowId = Window(winId=Window.FOCUSED).winId
+        self.previousWindowId = getFocusedWindow().winId
         self.nextWindowList = getWindowList() # start async
         self.previousWindowList = None
 
-        getLoop().subscribeTimer(0.05, self)
+        # this is still too much of a perf hog
+        # TODO: getWindowList should reuse window objects, or
+        # Window should be smart enough to.
+        getLoop().subscribeTimer(0.25, self)
         
     def __call__(self):
-        newWindow = Window(winId=Window.FOCUSED)
+        newWindow = getFocusedWindow()
         if self.previousWindowId != newWindow.winId:
             self.pushQ.put(FocusChangeEvent(newWindow))
         self.previousWindowId = newWindow.winId

@@ -3,7 +3,7 @@ import re
 import string
 import operator
 from listHelpers import dictReplace
-from Window import Window
+from Window import Window, getFocusedWindow
 from util import deepEmpty
 
 def runCmd(cmd):
@@ -229,7 +229,7 @@ class SelectWindow(SelectChoice):
         return lambda x: x[0].winId
 
     def _currentChoice(self):
-        return Window()
+        return getFocusedWindow()
 
     def _select(self, choice):
         cmd = "xdotool windowactivate %d" % (choice.winId)

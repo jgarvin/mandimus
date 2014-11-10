@@ -3,7 +3,7 @@ from dfly_server import DragonflyThread
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, SelectWindow
 from DragonflyNode import ConnectedEvent
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent, WindowListEvent
-from Window import Window
+from Window import Window, getFocusedWindow
 from wordUtils import extractWords, buildSelectMapping
 import EventLoop
 import re
@@ -128,7 +128,7 @@ class MainThread(object):
                     self.dfly.loadGrammar(MainRule)
 
                     # so that rules apply for whatever is focused on startup
-                    self.determineRules(Window(winId=Window.FOCUSED))
+                    self.determineRules(getFocusedWindow())
                 elif isinstance(ev, RestartEvent):
                     self.restart()
                 elif isinstance(ev, ExitEvent):

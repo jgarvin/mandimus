@@ -155,7 +155,7 @@ class AlwaysRule(SeriesMappingRule):
         "right [<n>]" : Key("right:%(n)d"),
         "up [<n>]" : Key("up:%(n)d"),
         "down [<n>]" : Key("down:%(n)d"),
-        "backspace" : Key("backspace"),
+        "spit" : Key("backspace"),
         "pa" : Key("space"),
         "slap" : Key("enter"),
         "delete" : Key("delete"),
