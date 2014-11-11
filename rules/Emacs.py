@@ -1,12 +1,17 @@
 from Rule import registerRule
 from SeriesMappingRule import SeriesMappingRule
 from MappingRule import MappingRule
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic
+from Actions import (
+    Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic,
+    splitKeyString, FormatState, ActionList)
 from Elements import Integer, Dictation
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
+from util import deepEmpty
+
+from copy import copy
 import re
 import subprocess
 import os
@@ -41,16 +46,6 @@ def runEmacsCmd(command, inFrame=True):
         print "Emacs error!: " + err
     return out
 
-class Cmd(Action):
-    def __call__(self, extras={}):
-        fulldata = (self.data % extras)
-        runEmacsCmd(fulldata)
-
-class PairCmd(Cmd):
-    def __init__(self, pair, cmd):
-        x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
-        Cmd.__init__(self, x)
-
 sexpFuncs = {
     "forward"            : "sp-forward-sexp",
     "backward"           : "sp-backward-sexp",
@@ -78,10 +73,6 @@ sexpPairs = {
     "angle"        : "<",
 }
 
-sexpRules = {}
-for words, func in sexpFuncs.items():
-    for pairWord, p in sexpPairs.items():
-        sexpRules[words + ' ' + pairWord] = PairCmd(p, func)
 
 def bufferList():
     buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
@@ -171,6 +162,134 @@ getLoop().subscribeTimer(1, updateBufferGrammar)
 getLoop().subscribeTimer(10, updateCommandGrammar)
 updateCommandGrammar()
 
+#
+
+# We make an interactive function that does the combination of commands
+
+"""
+(defun test-ohtse ()
+  (interactive)
+  (execute-kbd-macro (kbd "jj"))
+  (execute-kbd-macro (kbd "kk")))
+(test-ohtse)
+"""
+
+class Cmd(Action):
+    # def __add__(self, other):
+    #     return CmdList() + self + other
+
+    def _lisp(self, extras={}):
+        fulldata = (self.data % extras)
+        print fulldata
+        return fulldata    
+
+    def __call__(self, extras={}):
+        runEmacsCmd(self._lisp(extras))
+
+actionFunc = """
+(defun mandimus-temp-function ()
+  (interactive)
+  %s
+  )
+(mandimus-temp-function)
+"""            
+
+class CmdList(ActionList):
+    def __call__(self, extras={}):
+        """By generating one big temporary function that does all the actions together, we
+        get the intuitive behavior. If emacs and non-emacs actions are mixed, we only group
+        consecutive emacs actions, since executing the actions out of order could have
+        unknown consequences."""
+
+        lstcopy = copy(self.lst)
+        actions = []
+
+        def publish():
+            if not actions:
+                return
+
+            lisp = "\n  ".join([f._lisp(extras) for f in actions])
+            cmd = actionFunc % lisp
+            actions[:] = []
+            print cmd
+            runEmacsCmd(cmd)
+        
+        while lstcopy:
+            f = lstcopy.pop(0)
+            
+            if isinstance(f, Cmd):
+                actions.append(f)
+                continue
+            else:
+                publish()
+                f(extras)
+        publish()
+        
+class PairCmd(Cmd):
+    def __init__(self, pair, cmd):
+        x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
+        Cmd.__init__(self, x)        
+
+class EmacsKey(Cmd):
+    replacements = {
+        "underscore" : "_",
+        "comma"      : ",",
+        "enter"      : "<return>",
+        "percent"    : "%",
+        "langle"     : "<",
+        "rangle"     : ">",
+        "space"      : "SPC",
+        "up"         : "<up>",
+        "down"       : "<down>",
+        "left"       : "<left>",
+        "right"      : "<right>",
+        "F0"         : "<f0>",
+        "F1"         : "<f1>",
+        "F2"         : "<f2>",
+        "F3"         : "<f3>",
+        "F4"         : "<f4>",
+        "F5"         : "<f5>",
+        "F6"         : "<f6>",
+        "F7"         : "<f7>",
+        "F8"         : "<f8>",
+        "F9"         : "<f9>",
+        "F10"        : "<f10>",
+        "F11"        : "<f11>",
+        "F12"        : "<f12>",
+        "F13"        : "<f13>",
+        "F14"        : "<f14>",
+        "F15"        : "<f15>",
+    }
+    
+    def dfly2emacsKey(self, keystr):
+        keys = keystr.split('-')
+        keys = [k.strip() for k in keys]
+        modifiers = [] 
+        if len(keys) > 1:
+            modifiers = [k.upper() for k in keys[0]]
+            modifiers = ['M' if k == 'A' else k for k in modifiers]
+            del keys[0]
+        keys = [self.replacements[k] if k in self.replacements else k for k in keys]
+        modifiers.extend(keys)
+        return '-'.join(modifiers)
+    
+    def _lisp(self, extras={}):
+        keys = []
+        cmd = "(execute-kbd-macro (kbd \"%s\"))"
+        keys = [self.dfly2emacsKey(k) for k in splitKeyString(self.data % extras)]
+        cmd %= ' '.join(keys)
+        return cmd
+
+class EmacsText(Cmd):
+    def _lisp(self, extras={}):
+        words = (self.data % extras).lower().split(' ')
+        if deepEmpty(words):
+            return
+        
+        words = FormatState().format(words)
+        cmd = "(insert \"%s\")" % (' '.join(words))
+        return cmd
+        
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
     interactively that it doesn't if you call it manually.
@@ -179,23 +298,14 @@ class AlignRegexp(Cmd):
     def __init__(self, data):
         command = "(align-regexp (region-beginning) (region-end) \"%s\")"
         whitespace = "\\\(\\\s-*\\\)%s"
-        command = command % (whitespace % data)
+        command %= (whitespace % data)
         Cmd.__init__(self, command)
-
-@registerRule
-class EmacsPython(SeriesMappingRule):
-    mapping = {
-        "align dict"                     : Cmd("(align-dict)"),
-    }
-
-    @classmethod
-    def activeForWindow(cls, window):
-        isemacs = EmacsRule.activeForWindow(window)
-        if not isemacs:
-            return False
-        out = runEmacsCmd("major-mode", inFrame=window.iconName).strip()
-        return out == "python-mode"
             
+sexpRules = {}
+for words, func in sexpFuncs.items():
+    for pairWord, p in sexpPairs.items():
+        sexpRules[words + ' ' + pairWord] = PairCmd(p, func)    
+
 @registerRule
 class EmacsRule(SeriesMappingRule):
     mapping  = {
@@ -204,7 +314,7 @@ class EmacsRule(SeriesMappingRule):
         "eval"                           : Key("c-x,c-e"),
         "(start search | search)"        : Key('c-s'),
         "search [<text>]"                : Key('c-s') + Text("%(text)s"),
-        "reverse search"                 : Key('c-r'),
+        "reverse search [<text>]"        : Key('c-r') + Text("%(text)s"),
         "start macro"                    : Key("F3"),
         "mack"                           : Key("F4"),
         "command"                        : Key("c-x,c-m"),
@@ -223,6 +333,7 @@ class EmacsRule(SeriesMappingRule):
         "(kill | close) (buff | buffer)" : Key("c-x,k,enter"),
         "replace buff"                   : Key("c-x,c-v"),
         "replace buff <text>"            : Key("c-x,c-v") + Text("%(text)s") + Key("enter"),
+        "folder"                         : Key("c-x,c-j"),
         
         # window commands
         "kill window"                    : Cmd("(delete-window)"),
@@ -231,20 +342,23 @@ class EmacsRule(SeriesMappingRule):
         "new frame"                      : Key("c-x, 5, 2"),
         
         # navigation commands
-        "home"                           : Key("c-a"),
-        "end"                            : Key("c-e"),
+        "hedge"                          : Key("c-a"),
+        "edge"                           : Key("c-e"),
         "top"                            : Key("a-langle"),
         "bottom"                         : Key("a-rangle"),
-        "next word [<n>]"                : Key("a-f:%(n)d"),
-        "back word [<n>]"                : Key("a-b:%(n)d"),
+        "post [<n>]"                     : Key("a-f:%(n)d"),
+        "pre [<n>]"                      : Key("a-b:%(n)d"),
         "go to line"                     : Key("a-g,a-g"),
         "go to line <line>"              : Key("a-g,a-g") + Text("%(line)d") + Key("enter"),
-        "(page down | next page)"        : Key("c-v"),
-        "(page up | back page)"          : Key("a-v"),
         "ace"                            : Key("c-c,space"),
         "ace care"                       : Key("c-u,c-c,space"),
         "ace line"                       : Key("c-u,c-u,c-c,space"),
-        
+        "pade"                           : Key("a-v"),
+        "page"                           : Key("c-v"),
+        "center"                         : Key("c-l"),
+        "gruff [<n>]"                    : Key("c-up:%(n)d"),
+        "graph [<n>]"                    : Key("c-down:%(n)d"),
+
         # text manip commands
         "mark"                           : Key("c-space"),
         "tark"                           : Cmd("(exchange-point-and-mark)"),
@@ -253,9 +367,9 @@ class EmacsRule(SeriesMappingRule):
         "copy word"                      : Cmd('(copy-word)'),
 
         "cut"                            : Key("c-x,c-k"),
-        "kill"                           : Key('c-k'),
+        "kill [<n>]"                     : Key('c-k:%(n)d'),
         "(cut | kill) line"              : Cmd('(quick-cut-line)'),
-        "kill word"                      : Key('a-d'),
+        "snip [<n>]"                     : Key('a-d:%(n)d'),
 
         "yank"                           : Key("c-y"),
         "yank pop"                       : Key("a-y"),
@@ -267,7 +381,6 @@ class EmacsRule(SeriesMappingRule):
         "undo [that]"                    : Key("cs-underscore"),
         "redo [that]"                    : Key("as-underscore"),
         "pre slap"                       : Key("c-o"),
-        "hit <text>"                     : Text("%(text)s") + Key("enter"),
 
         "shift right"                    : Cmd("(call-interactively 'python-indent-shift-right)"),
         "shift left"                     : Cmd("(call-interactively 'python-indent-shift-left)"),
@@ -294,6 +407,8 @@ class EmacsRule(SeriesMappingRule):
         "single quotes"                  : Text("'"),
         "quotes [<text>]"                : Text("\""),
         "angles"                         : Text("<"),
+
+        #"comma"
     }
 
     extras = [
@@ -313,4 +428,19 @@ class EmacsRule(SeriesMappingRule):
     def activeForWindow(cls, window)     :
         return "emacs" in window.wmclass or "Emacs" in window.wmclass    
 
-EmacsRule.mapping.update(sexpRules)
+EmacsRule.mapping.update(sexpRules)    
+
+@registerRule
+class EmacsPython(SeriesMappingRule):
+    mapping = {
+        "align dic"                     : Cmd("(align-dict)"),
+    }
+
+    @classmethod
+    def activeForWindow(cls, window):
+        isemacs = EmacsRule.activeForWindow(window)
+        if not isemacs:
+            return False
+        out = runEmacsCmd("major-mode", inFrame=window.iconName).strip()
+        return out == "python-mode"    
+

@@ -10,7 +10,7 @@ def runCmd(cmd):
     print 'cmd: [' + cmd + ']'
     subprocess.call(cmd, shell=True)
 
-def parseKeyString(keyStr):
+def splitKeyString(keyStr):
     """Translate dragonfly style key descriptions
     to xdotool's preferred versions"""
     
@@ -24,11 +24,16 @@ def parseKeyString(keyStr):
             count = int(count)
         else:
             key, count = s, 1
-
-        key = parseSingleKeystring(key)
         keys.extend([key] * count)
             
-    return ' '.join(keys)
+    return keys    
+
+def parseKeyString(keyStr):
+    """Translate dragonfly style key descriptions
+    to xdotool's preferred versions"""
+    
+    keys = [parseSingleKeystring(k) for k in splitKeyString(keyStr)]
+    return ' '.join(keys)    
 
 def parseSingleKeystring(keyStr):
     xdo = []

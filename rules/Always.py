@@ -1,6 +1,7 @@
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, Repeat
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
+from MappingRule import MappingRule
 from Elements import Integer, Dictation
 from collections import OrderedDict
 from listHelpers import dictReplace
@@ -144,21 +145,20 @@ class PressKey(object):
 class AlwaysRule(SeriesMappingRule):
     mapping = {
         "camel <text>" : Camel("%(text)s"),
-        "cap camel <text>" : Camel("%(text)s", True),
+        "stud <text>" : Camel("%(text)s", True),
         "fen <text>" : Hyphen("%(text)s"),
         "cap fen <text>" : Hyphen("%(text)s", True),
         "score <text>" : Underscore("%(text)s"),
         "cap score <text>" : Underscore("%(text)s", True),
-        "type <text>" : Text("%(text)s"),
         "command tally" : (lambda x: Speak(str(commandTally()))()),
         "left [<n>]" : Key("left:%(n)d"),
         "right [<n>]" : Key("right:%(n)d"),
         "up [<n>]" : Key("up:%(n)d"),
         "down [<n>]" : Key("down:%(n)d"),
-        "spit" : Key("backspace"),
+        "spat [<n>]" : Key("delete:%(n)d"),
+        "spit [<n>]" : Key("backspace:%(n)d"),
         "pa" : Key("space"),
         "slap" : Key("enter"),
-        "delete" : Key("delete"),
         'let ' + possibleLetters : PressKey(),
         'caplet ' + possibleLetters : PressKey(force_shift=True),
         'num ' + possibleDigits : PressKey(),
@@ -180,3 +180,23 @@ class AlwaysRule(SeriesMappingRule):
     @classmethod
     def activeForWindow(cls, window):
         return True
+
+@registerRule
+class TypingRule(MappingRule):
+    mapping = {
+        "type <text>" : Text("%(text)s"),
+    }
+
+    extras = [
+        Integer("n", 1, 20),
+        Dictation("text")
+        ]
+    
+    defaults = {
+        "n": 1,
+        }    
+
+    @classmethod
+    def activeForWindow(cls, window):
+        return True
+

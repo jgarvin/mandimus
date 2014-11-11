@@ -19,8 +19,8 @@ class CUARule(SeriesMappingRule):
         "escape" : Key("escape"),
         "find [<search_terms>]" : Key("c-f") + Text("%(search_terms)s"),
         "find next" : Key("F3"),
-        "page up" : Key("pgup"),
-        "page down" : Key("pgdown"),
+        "pade" : Key("pgup"),
+        "page" : Key("pgdown"),
         "home" : Key("home"),
         "end": Key("end"),
         }
