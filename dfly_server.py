@@ -37,7 +37,7 @@ class DragonflyThread(DragonflyNode):
             # we use a timeout so ctrl-c will work
             self.server_socket.settimeout(BLOCK_TIME)
             try:
-                print 'waiting for connection'
+                #print 'waiting for connection'
                 self.other, addr = self.server_socket.accept()
                 print 'connected'
                 self.onConnect()

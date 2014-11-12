@@ -5,6 +5,7 @@ from MappingRule import MappingRule
 from Elements import Integer, Dictation
 from collections import OrderedDict
 from listHelpers import dictReplace
+from rules.Emacs import EmacsRule
 
 import string
 
@@ -198,5 +199,5 @@ class TypingRule(MappingRule):
 
     @classmethod
     def activeForWindow(cls, window):
-        return True
+        return not EmacsRule.activeForWindow(window)
 

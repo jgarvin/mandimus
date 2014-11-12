@@ -275,7 +275,6 @@ class EmacsRule(SeriesMappingRule):
         "single quotes"                  : Text("'"),
         "quotes [<text>]"                : Text("\""),
         "angles"                         : Text("<"),
-        "test <text>"                    : EmacsType("%(text)s"),
     }
 
     extras = [
@@ -294,5 +293,23 @@ class EmacsRule(SeriesMappingRule):
     @classmethod
     def activeForWindow(cls, window)     :
         return "emacs" in window.wmclass or "Emacs" in window.wmclass    
-
 EmacsRule.mapping.update(sexpRules)    
+
+@registerRule
+class EmacsTypeRule(MappingRule):
+    mapping = {
+        "type <text>" : Cmd("(undo-boundary)") + EmacsType("%(text)s"),
+    }
+
+    extras = [
+        Integer("n", 1, 20),
+        Dictation("text")
+        ]
+    
+    defaults = {
+        "n": 1,
+        }
+
+    @classmethod
+    def activeForWindow(cls, window):
+        return EmacsRule.activeForWindow(window)
