@@ -22,7 +22,7 @@ class CUARule(SeriesMappingRule):
         "pade" : Key("pgup"),
         "page" : Key("pgdown"),
         "home" : Key("home"),
-        "end": Key("end"),
+        "edge": Key("edge"),
         }
 
     extras = [

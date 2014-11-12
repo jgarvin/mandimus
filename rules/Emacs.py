@@ -149,6 +149,14 @@ class EmacsText(Cmd):
         cmd = "(insert \"%s\")" % (' '.join(words))
         return cmd
         
+class EmacsType(Action):
+    def __call__(self, extras={}):
+        words = self.data % extras
+        needSpace = runEmacsCmd("(md-need-space)").strip() is 't'
+        if needSpace:
+            words = ' ' + words
+        Text(words)()
+
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
     interactively that it doesn't if you call it manually.
@@ -199,9 +207,10 @@ class EmacsRule(SeriesMappingRule):
         "other window"                   : Key("c-x, o"),
         "one window"                     : Key("c-x, 1"),
         "new frame"                      : Key("c-x, 5, 2"),
+        "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
         
         # navigation commands
-        "hedge"                          : Key("c-a"),
+        "home"                           : Key("c-a"),
         "edge"                           : Key("c-e"),
         "top"                            : Key("a-langle"),
         "bottom"                         : Key("a-rangle"),
@@ -260,12 +269,13 @@ class EmacsRule(SeriesMappingRule):
         "upper case"                     : Key("a-u"),
         "lower case"                     : Key("a-l"),
         
-        "parens"                       : Text("("),
-        "braces"                       : Text("{"),
-        "brackets"                     : Text("["),
-        "single quotes"                : Text("'"),
-        "quotes [<text>]"              : Text("\""),
-        "angles"                       : Text("<"),
+        "parens"                         : Text("("),
+        "braces"                         : Text("{"),
+        "brackets"                       : Text("["),
+        "single quotes"                  : Text("'"),
+        "quotes [<text>]"                : Text("\""),
+        "angles"                         : Text("<"),
+        "test <text>"                    : EmacsType("%(text)s"),
     }
 
     extras = [

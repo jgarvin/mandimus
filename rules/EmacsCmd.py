@@ -17,7 +17,7 @@ def runEmacsCmd(command, inFrame=True):
     args += ['-e']
     if inFrame:
         cmd = '(with-current-buffer %s %s)'
-        command = cmd % ("(window-buffer (selected-window))", command)
+        command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
     args += [command]
     # print 'emacs cmd: ' + str(args)
     s = subprocess.Popen(args, shell=False,
