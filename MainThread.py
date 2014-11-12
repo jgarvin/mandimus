@@ -211,6 +211,7 @@ if __name__ == "__main__":
     
     from rules.Always import AlwaysRule
     from rules.Emacs import EmacsRule
+    from rules.EmacsPython import EmacsPython
     from rules.XMonad import XMonadRule
     from rules.CUA import CUARule
     from rules.Chrome import ChromeRule

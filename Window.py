@@ -24,7 +24,6 @@ class Window(object):
     FOCUSED = -1
 
     def __init__(self, winId=None):
-        print 'creating window'
         if winId is None:
             winId = self.FOCUSED
         if winId == self.FOCUSED:

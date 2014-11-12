@@ -38,7 +38,7 @@ class ChromeRule(SeriesMappingRule):
 
     extras = [
         Dictation("text"),
-        Integer("n", 1, 20),
+        Integer("n", 2, 20),
         ]
 
     defaults = {
