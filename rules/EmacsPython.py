@@ -6,7 +6,8 @@ from Rule import registerRule
 @registerRule
 class EmacsPython(SeriesMappingRule):
     mapping = {
-        "align dic"                     : Cmd("(align-dict)"),
+        "align dic"  : Cmd("(align-dict)"),
+        "align list" : Cmd("(align-list)"),
     }
 
     @classmethod
@@ -16,4 +17,3 @@ class EmacsPython(SeriesMappingRule):
             return False
         out = runEmacsCmd("major-mode").strip()
         return out == "python-mode"
-

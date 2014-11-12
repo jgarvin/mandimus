@@ -8,6 +8,7 @@ from wordUtils import extractWords, buildSelectMapping
 import EventLoop
 import re
 import time
+import traceback
 from Events import GrammarEvent
 
 from rules.Rule import registerRule, registeredRules
@@ -209,11 +210,22 @@ class MainThread(object):
 if __name__ == "__main__":
     main = MainThread()
     
-    from rules.Always import AlwaysRule
-    from rules.Emacs import EmacsRule
-    from rules.EmacsPython import EmacsPython
-    from rules.XMonad import XMonadRule
-    from rules.CUA import CUARule
-    from rules.Chrome import ChromeRule
+    imports = [
+        ('rules.Always', ['AlwaysRule']),
+        ('rules.Emacs', ['EmacsRule']),
+        ('rules.EmacsPython', ['EmacsPython']),
+        ('rules.XMonad', ['XMonadRule']),
+        ('rules.CUA', ['CUARule']),
+        ('rules.Chrome', ['ChromeRule']),        
+    ]
+
+    # TODO: catch syntax errors, make copies of module files, then
+    # try to import again with offending line removed
+    for module, fromlist in imports:
+        try:
+            __import__(module, globals(), locals(), fromlist)
+        except Exception as e:
+            print "Couldn't import %s" % module
+            traceback.print_exc()
 
     main()

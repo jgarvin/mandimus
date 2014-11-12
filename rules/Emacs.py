@@ -286,4 +286,3 @@ class EmacsRule(SeriesMappingRule):
         return "emacs" in window.wmclass or "Emacs" in window.wmclass    
 
 EmacsRule.mapping.update(sexpRules)    
-

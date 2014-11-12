@@ -23,6 +23,7 @@ class ChromeRule(SeriesMappingRule):
         "zoom in [<n>]"                 : Key("c-plus:%(n)d"),
         "zoom out [<n>]"                : Key("c-minus:%(n)d"),
         # these are provided by the 'tabloid' extension
+        # TODO: not necessary, cs-pgdown/pgup
         "move tab right"                : Key("as-l"),
         "move tab left"                 : Key("as-h"),
         "move tab to start"             : Key("as-k"),
