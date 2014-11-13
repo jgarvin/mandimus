@@ -37,7 +37,7 @@ sexpPairs = {
     "paren"        : "(",
     "brace"        : "{",
     "bracket"      : "[",
-    "quote"        : "\"",
+    "quote"        : "\\\"",
     "single quote" : "'",
     "angle"        : "<",
 }
@@ -123,7 +123,9 @@ def updateCommandGrammar():
     #                   SelectCommand, "EmacsCommandMapping")
 
 def updateBufferGrammar():
-    updateListGrammar(bufferList(), 'buff', {'*'},
+    b = bufferList()
+    
+    updateListGrammar(b, 'buff', {},
                       SelectBuffer, "EmacsBufferMapping")    
 
 getLoop().subscribeTimer(1, updateBufferGrammar)
@@ -155,8 +157,9 @@ class EmacsType(Action):
         needSpace = runEmacsCmd("(md-need-space)").strip() is 't'
         if needSpace:
             words = ' ' + words
+        runEmacsCmd("(undo-boundary)")
         Text(words)()
-
+        runEmacsCmd("(undo-boundary)")
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
     interactively that it doesn't if you call it manually.
@@ -179,9 +182,8 @@ class EmacsRule(SeriesMappingRule):
         # general commands
         "cancel"                         : Key("c-g"),
         "eval"                           : Key("c-x,c-e"),
-        "(start search | search)"        : Key('c-s'),
         "search [<text>]"                : Key('c-s') + Text("%(text)s"),
-        "reverse search [<text>]"        : Key('c-r') + Text("%(text)s"),
+        "lurch [<text>]"                 : Key('c-r') + Text("%(text)s"),
         "start macro"                    : Key("F3"),
         "mack"                           : Key("F4"),
         "command"                        : Key("c-x,c-m"),
@@ -193,6 +195,7 @@ class EmacsRule(SeriesMappingRule):
         
         # file commands
         "open file"                      : Key("c-x,c-f"),
+        "alternate file"                 : Key("c-x,c-v"),
         
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
@@ -231,13 +234,14 @@ class EmacsRule(SeriesMappingRule):
         "mark"                           : Key("c-space"),
         "tark"                           : Cmd("(exchange-point-and-mark)"),
         "copy"                           : Key("a-w"),
-        "copy line"                      : Cmd('(quick-copy-line)'),
-        "copy word"                      : Cmd('(copy-word)'),
-
+        "copy line"                      : Cmd('(md-quick-copy-line)'),
+        "copy word"                      : Cmd('(md-copy-word)'),
         "cut"                            : Key("c-x,c-k"),
+        "cut line"                       : Cmd('(md-quick-cut-line)'),
+
         "kill [<n>]"                     : Key('c-k:%(n)d'),
-        "(cut | kill) line"              : Cmd('(quick-cut-line)'),
-        "snip [<n>]"                     : Key('a-d:%(n)d'),
+        "snip [<n>]"                     : Cmd('(md-backward-kill-word)'),
+        "snap [<n>]"                     : Cmd('(md-forward-kill-word)'),        
 
         "yank"                           : Key("c-y"),
         "yank pop"                       : Key("a-y"),
@@ -249,6 +253,7 @@ class EmacsRule(SeriesMappingRule):
         "undo"                           : Key("cs-underscore"),
         "redo"                           : Key("as-underscore"),
         "pre slap"                       : Key("c-o"),
+        "turf"                           : Key("enter,c-o"),
 
         "shift right"                    : Cmd("(call-interactively 'python-indent-shift-right)"),
         "shift left"                     : Cmd("(call-interactively 'python-indent-shift-left)"),
@@ -275,6 +280,9 @@ class EmacsRule(SeriesMappingRule):
         "single quotes"                  : Text("'"),
         "quotes [<text>]"                : Text("\""),
         "angles"                         : Text("<"),
+        
+        # misc
+        "start irc"                      : Cmd("(irc-maybe)"),
     }
 
     extras = [

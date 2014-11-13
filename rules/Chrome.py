@@ -23,11 +23,11 @@ class ChromeRule(SeriesMappingRule):
         "zoom in [<n>]"                 : Key("c-plus:%(n)d"),
         "zoom out [<n>]"                : Key("c-minus:%(n)d"),
         # these are provided by the 'tabloid' extension
-        # TODO: not necessary, cs-pgdown/pgup
-        "move tab right"                : Key("as-l"),
-        "move tab left"                 : Key("as-h"),
-        "move tab to start"             : Key("as-k"),
-        "move tab to end"               : Key("as-j"),
+        # TODO                          : not necessary, cs-pgdown/pgup
+        "move right"                    : Key("as-l"),
+        "move left"                     : Key("as-h"),
+        "move start"                    : Key("as-k"),
+        "move end"                      : Key("as-j"),
         # these are provided by the 'tabasco' extension
         "close other tabs"              : Key("as-o"),
         "close tabs to the right"       : Key("as-r"),
@@ -35,6 +35,11 @@ class ChromeRule(SeriesMappingRule):
         "pin tab"                       : Key("as-p"),
         "wikipedia [<text>]"            : Key("c-l, c-a, backspace") + Text("wk %(text)s") + Key("enter"),
         "youtube [<text>]"              : Key("c-l, c-a, backspace") + Text("yt %(text)s") + Key("enter"),
+        # provided ty the "duplicate tab" extension
+        "duplicate"                     : Key("as-d"),
+        #misc
+        "private browsing"              : Key("cs-n"),
+        "link"                          : Key("f"),
         }
 
     extras = [

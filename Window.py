@@ -54,7 +54,7 @@ class Window(object):
         self.lastXpropTime = time.time()
 
     def __eq__(self, other):
-        return self.winId == other.winId
+        return self.winId == other.winId and self.name == other.name
 
     def __ne__(self, other):
         return not self.__eq__(other)

@@ -5,12 +5,14 @@ from util import deepEmpty
 
 punc2Words = {
     "*" : ["star", "asterisk"],
+    "#" : ["sharp"],
 }
 
-def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate=set()):
+# TODO: maybe give translate a better default
+def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={}):
     """Split a string into a list using multiple delimeters, and optionally
     translating some characters to one or more words. Also lowercase everything."""
-    splitters = splitters - translate
+    splitters = splitters - set(translate.keys())
     all_words = []
     word = []
     strlen = len(wordstr)
@@ -27,7 +29,7 @@ def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate=s
             if word:
                 finish(word)
                 word = []
-            all_words.extend(punc2Words[c])
+            all_words.extend(translate[c])
         else:
             word.append(c)
     if word:

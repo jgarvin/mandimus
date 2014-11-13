@@ -4,7 +4,7 @@ from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, SelectWindow
 from DragonflyNode import ConnectedEvent
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent, WindowListEvent
 from Window import Window, getFocusedWindow
-from wordUtils import extractWords, buildSelectMapping
+from wordUtils import extractWords, buildSelectMapping, punc2Words
 import EventLoop
 import re
 import time
@@ -49,7 +49,16 @@ def weechat(w):
     if "terminal" in w.wmclass.lower() and "weechat" in w.name:
         return ["we", "chat"]
     return []
-    
+
+
+@spokenWindowRule
+def chromium(w):
+    "without this open tabs affect the name"
+    if "chromium" in w.wmclass.lower() and "chromium" in w.name.lower():
+        return ["chrome", "chromium"]
+    return []
+
+
 # so write rules for specific window types
 # and then fall back to generic word search
 # grammar only when the windows aren't special
@@ -170,8 +179,8 @@ class MainThread(object):
                 # thought about using name instead of wmclass,
                 # but the title tends to contain debris like
                 # the name of the currently opened document/page
-                nameset = extractWords(w.name)
-                classset = extractWords(w.wmclass)
+                nameset = extractWords(w.name, translate=punc2Words)
+                classset = extractWords(w.wmclass, translate=punc2Words)
                 spokenForms = [nameset, classset]
 
             spokenWindows[w] = spokenForms
@@ -214,6 +223,7 @@ if __name__ == "__main__":
         ('rules.Always', ['AlwaysRule']),
         ('rules.Emacs', ['EmacsRule']),
         ('rules.EmacsPython', ['EmacsPython']),
+        ('rules.EmacsERC', ['EmacsERC']),
         ('rules.XMonad', ['XMonadRule']),
         ('rules.CUA', ['CUARule']),
         ('rules.Chrome', ['ChromeRule']),        

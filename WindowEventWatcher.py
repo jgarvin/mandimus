@@ -17,29 +17,37 @@ class WindowEventWatcher(object):
 
         self.previousWindowId = getFocusedWindow().winId
         self.previousWindowName = getFocusedWindow().name
-        self.nextWindowList = getWindowList() # start async
-        self.previousWindowList = None
+        self.nextWindowList = getWindowList()
+        self.previousWindowList = []
 
         # this is still too much of a perf hog, need real poll
         getLoop().subscribeTimer(REFRESH_TIME, self)
-        
+
+    def extractList(self, windowList):
+        return [(w.winId, w.name) for w in windowList]
+
     def __call__(self):
+        windowList = self.nextWindowList.result # force finishing        
+        windowList = filter(self.filterFunc, windowList)
+
+        for window in windowList:
+            if time.time() - window.lastXpropTime > REFRESH_TIME:
+                window.refreshInfo()        
+
+        newWindowList = self.extractList(windowList)
+        if self.previousWindowList != newWindowList:
+            self.pushQ.put(WindowListEvent(windowList))
+        self.previousWindowList = newWindowList
+
         newWindow = getFocusedWindow()
-        if time.time() - newWindow.lastXpropTime > REFRESH_TIME:
-            newWindow.refreshInfo()
-        if self.previousWindowId != newWindow.winId or self.previousWindowId != newWindow.name:
+        if self.previousWindowId != newWindow.winId or self.previousWindowName != newWindow.name:
             self.pushQ.put(FocusChangeEvent(newWindow))
         self.previousWindowId = newWindow.winId
         self.previousWindowName = newWindow.name
 
-        windowList = self.nextWindowList.result # force finishing
-        windowList = filter(self.filterFunc, windowList)
-        if self.previousWindowList is None or self.previousWindowList != windowList:
-            self.pushQ.put(WindowListEvent(copy(windowList)))
-        self.previousWindowList = windowList
-
         self.nextWindowList = getWindowList() # start async
 
+        
 if __name__ == "__main__":
     import sys
     import Queue

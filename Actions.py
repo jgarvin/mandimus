@@ -291,6 +291,7 @@ class FormatState(object):
         ur"\backslash" : ur"backslash",
         ur"<\less-than-sign" : ur"less than sign",
         ur">\greater-than-sign" : ur"greater than sign", 
+        ur"=\equals-sign" : ur"equals sign",        
         }
     
     formatting = {
@@ -324,6 +325,7 @@ class FormatState(object):
         ur"\backslash" : u"\\",
         ur"<\less-than-sign" : ur"<",
         ur">\greater-than-sign" : ur">", 
+        ur"=\equals-sign" : ur"=",        
         }
 
     numeralmap = {
