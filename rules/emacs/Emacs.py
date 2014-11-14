@@ -13,34 +13,7 @@ from util import deepEmpty
 from rules.emacs.Cmd import Cmd, runEmacsCmd
 from rules.emacs.Key import Key as EmacsKey
 
-import re
-
-sexpFuncs = {
-    "forward"            : "sp-forward-sexp",
-    "backward"           : "sp-backward-sexp",
-    "in"                 : "sp-down-sexp",
-    "backward in"        : "sp-backward-down-sexp",
-    "out"                : "sp-up-sexp",
-    "backward out"       : "sp-backward-up-sexp",
-    "next"               : "sp-next-sexp",
-    "previous"           : "sp-previous-sexp",
-    "beginning"          : "sp-beginning-of-sexp",
-    "beginning next"     : "sp-beginning-of-next-sexp",
-    "beginning previous" : "sp-beginning-of-previous-sexp",
-    "end next"           : "sp-end-of-next-sexp",
-    "end previous"       : "sp-end-of-previous-sexp",
-    "select [next]"      : "sp-select-next-thing",
-    "select previous"    : "sp-select-previous-thing",
-}
-        
-sexpPairs = {
-    "paren"        : "(",
-    "brace"        : "{",
-    "bracket"      : "[",
-    "quote"        : "\\\"",
-    "single quote" : "'",
-    "angle"        : "<",
-}
+import re        
 
 def bufferList():
     buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
@@ -131,11 +104,6 @@ getLoop().subscribeTimer(1, updateBufferGrammar)
 getLoop().subscribeTimer(10, updateCommandGrammar)
 updateCommandGrammar()
 
-class PairCmd(Cmd):
-    def __init__(self, pair, cmd):
-        x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
-        Cmd.__init__(self, x)        
-
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
     interactively that it doesn't if you call it manually.
@@ -183,10 +151,6 @@ class Mark(Cmd):
         else:
             return "(set-mark-command)"                
 
-sexpRules = {}
-for words, func in sexpFuncs.items():
-    for pairWord, p in sexpPairs.items():
-        sexpRules[words + ' ' + pairWord] = PairCmd(p, func)    
 
 @registerRule
 class Emacs(SeriesMappingRule):
@@ -242,9 +206,13 @@ class Emacs(SeriesMappingRule):
         "gruff [<n>]"                    : Key("c-up:%(n)d"),
         "graph [<n>]"                    : Key("c-down:%(n)d"),
 
-        # text manip commands
+        # mark commands
         "mark [(line | word | graph)]"   : Mark(),
         "tark"                           : Cmd("(exchange-point-and-mark)"),
+        "select"                         : Key("c-equal"),
+        "contract"                       : Key("hyphen"),
+        
+        # text manip commands
         "copy [(line | word | graph)]"   : Copy(),
         "cut [(line | word | graph)]"    : Cut(),        
 
@@ -316,5 +284,4 @@ class Emacs(SeriesMappingRule):
     @classmethod
     def activeForWindow(cls, window)     :
         return "emacs" in window.wmclass or "Emacs" in window.wmclass    
-Emacs.mapping.update(sexpRules)    
 

@@ -226,6 +226,7 @@ if __name__ == "__main__":
         ('rules.emacs.Python', ['']),
         ('rules.emacs.ERC', ['']),
         ('rules.emacs.VarNames', ['']),
+        ('rules.emacs.Pairs', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),        
