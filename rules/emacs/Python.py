@@ -1,10 +1,10 @@
-from SeriesMappingRule import SeriesMappingRule
-from Emacs import EmacsRule
-from EmacsCmd import runEmacsCmd, Cmd
-from Rule import registerRule
+from rules.SeriesMappingRule import SeriesMappingRule
+from rules.emacs.Emacs import Emacs
+from rules.emacs.Cmd import runEmacsCmd, Cmd
+from rules.Rule import registerRule
 
 @registerRule
-class EmacsPython(SeriesMappingRule):
+class Python(SeriesMappingRule):
     mapping = {
         "align dic"  : Cmd("(align-dict)"),
         "align list" : Cmd("(align-list)"),
@@ -12,7 +12,7 @@ class EmacsPython(SeriesMappingRule):
 
     @classmethod
     def activeForWindow(cls, window):
-        isemacs = EmacsRule.activeForWindow(window)
+        isemacs = Emacs.activeForWindow(window)
         if not isemacs:
             return False
         out = runEmacsCmd("major-mode").strip()

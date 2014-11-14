@@ -1,17 +1,17 @@
-from Rule import registerRule
-from SeriesMappingRule import SeriesMappingRule
-from MappingRule import MappingRule
+from rules.Rule import registerRule
+from rules.SeriesMappingRule import SeriesMappingRule
+from rules.MappingRule import MappingRule
 from Actions import (
     Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic,
     splitKeyString, FormatState, ActionList)
-from Elements import Integer, Dictation
+from rules.Elements import Integer, Dictation
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from EmacsCmd import Cmd, runEmacsCmd
-from EmacsKey import EmacsKey
+from rules.emacs.Cmd import Cmd, runEmacsCmd
+from rules.emacs.Key import Key as EmacsKey
 
 import re
 
@@ -124,7 +124,6 @@ def updateCommandGrammar():
 
 def updateBufferGrammar():
     b = bufferList()
-    
     updateListGrammar(b, 'buff', {},
                       SelectBuffer, "EmacsBufferMapping")    
 
@@ -132,34 +131,11 @@ getLoop().subscribeTimer(1, updateBufferGrammar)
 getLoop().subscribeTimer(10, updateCommandGrammar)
 updateCommandGrammar()
 
-#
-
-# We make an interactive function that does the combination of commands
-
 class PairCmd(Cmd):
     def __init__(self, pair, cmd):
         x = "(single-pair-only-sexp \"%s\" '%s)" % (pair, cmd)
         Cmd.__init__(self, x)        
 
-class EmacsText(Cmd):
-    def _lisp(self, extras={}):
-        words = (self.data % extras).lower().split(' ')
-        if deepEmpty(words):
-            return
-        
-        words = FormatState().format(words)
-        cmd = "(insert \"%s\")" % (' '.join(words))
-        return cmd
-        
-class EmacsType(Action):
-    def __call__(self, extras={}):
-        words = self.data % extras
-        needSpace = runEmacsCmd("(md-need-space)").strip() is 't'
-        if needSpace:
-            words = ' ' + words
-        runEmacsCmd("(undo-boundary)")
-        Text(words)()
-        runEmacsCmd("(undo-boundary)")
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
     interactively that it doesn't if you call it manually.
@@ -171,13 +147,49 @@ class AlignRegexp(Cmd):
         command %= (whitespace % data)
         Cmd.__init__(self, command)
             
+class Copy(Cmd):
+    def _lisp(self, extras={}):
+        words = extras['words']
+        if "line" in words:
+            return "(md-copy-line)"
+        elif "word" in words:
+            return "(md-copy-word)"
+        elif "graph" in words:
+            return "(md-copy-paragraph)"
+        else:
+            return "(kill-ring-save (region-beginning) (region-end) t)"
+
+class Cut(Cmd):
+    def _lisp(self, extras={}):
+        words = extras['words']
+        if "line" in words:
+            return "(md-cut-line)"
+        elif "word" in words:
+            return "(md-forward-kill-word)"
+        elif "graph" in words:
+            return "(md-cut-paragraph)"
+        else:
+            return "(kill-region (region-beginning) (region-end) t)"        
+
+class Mark(Cmd):
+    def _lisp(self, extras={}):
+        words = extras['words']
+        if "line" in words:
+            return "(md-mark-line)"
+        elif "word" in words:
+            return "(md-mark-word)"
+        elif "graph" in words:
+            return "(md-mark-paragraph)"
+        else:
+            return "(set-mark-command)"                
+
 sexpRules = {}
 for words, func in sexpFuncs.items():
     for pairWord, p in sexpPairs.items():
         sexpRules[words + ' ' + pairWord] = PairCmd(p, func)    
 
 @registerRule
-class EmacsRule(SeriesMappingRule):
+class Emacs(SeriesMappingRule):
     mapping  = {
         # general commands
         "cancel"                         : Key("c-g"),
@@ -231,13 +243,10 @@ class EmacsRule(SeriesMappingRule):
         "graph [<n>]"                    : Key("c-down:%(n)d"),
 
         # text manip commands
-        "mark"                           : Key("c-space"),
+        "mark [(line | word | graph)]"   : Mark(),
         "tark"                           : Cmd("(exchange-point-and-mark)"),
-        "copy"                           : Key("a-w"),
-        "copy line"                      : Cmd('(md-quick-copy-line)'),
-        "copy word"                      : Cmd('(md-copy-word)'),
-        "cut"                            : Key("c-x,c-k"),
-        "cut line"                       : Cmd('(md-quick-cut-line)'),
+        "copy [(line | word | graph)]"   : Copy(),
+        "cut [(line | word | graph)]"    : Cut(),        
 
         "kill [<n>]"                     : Key('c-k:%(n)d'),
         "snip [<n>]"                     : Cmd('(md-backward-kill-word)'),
@@ -274,15 +283,21 @@ class EmacsRule(SeriesMappingRule):
         "upper case"                     : Key("a-u"),
         "lower case"                     : Key("a-l"),
         
-        "parens"                         : Text("("),
-        "braces"                         : Text("{"),
-        "brackets"                       : Text("["),
-        "single quotes"                  : Text("'"),
-        "quotes [<text>]"                : Text("\""),
-        "angles"                         : Text("<"),
+        "lane"                           : Text("("),
+        "rain"                           : Text(")"),
+        "lace"                           : Text("{"),
+        "race"                           : Text("}"),
+        "lack"                           : Text("["),
+        "rack"                           : Text("]"),
+        "soak"                           : Text("'"),
+        "quote [<text>]"                 : Text("\""),
+        "angle"                          : Text("<"),
+        "arg"                            : Text(","),
+        "dash"                           : Text("-"),
+        "cool"                           : Text(":"),
         
         # misc
-        "start irc"                      : Cmd("(irc-maybe)"),
+        "start irc"                      : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
     }
 
     extras = [
@@ -301,23 +316,5 @@ class EmacsRule(SeriesMappingRule):
     @classmethod
     def activeForWindow(cls, window)     :
         return "emacs" in window.wmclass or "Emacs" in window.wmclass    
-EmacsRule.mapping.update(sexpRules)    
+Emacs.mapping.update(sexpRules)    
 
-@registerRule
-class EmacsTypeRule(MappingRule):
-    mapping = {
-        "type <text>" : Cmd("(undo-boundary)") + EmacsType("%(text)s"),
-    }
-
-    extras = [
-        Integer("n", 1, 20),
-        Dictation("text")
-        ]
-    
-    defaults = {
-        "n": 1,
-        }
-
-    @classmethod
-    def activeForWindow(cls, window):
-        return EmacsRule.activeForWindow(window)

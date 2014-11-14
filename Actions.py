@@ -410,71 +410,79 @@ class FormatState(object):
                     first = False
         return new
 
+def typeKeys(letters):
+    # we pass each character as a separate argument to xdotool,
+    # this prevents xdotool from interpreting double hyphens and
+    # hyphens followed by words as xdotool flags
+    arglist = []
+    for l in letters:
+        newletter = l
+        # single quotes have to be passed unquoted and escaped
+        # or the shell gets confused
+        if l == '\'':
+            newletter = "\\'"
+        else:
+            newletter = "'" + l + "'"
+        arglist.append(newletter)
+
+    letters = ' '.join(arglist)
+    cmd = ("xdotool type --clearmodifiers " + letters)
+    runCmd(cmd)
+    
 # TODO: multiple formatting options, caps stuff is different than
 # punctuation
 class Text(Action):
     def __init__(self, data):
         Action.__init__(self, data)
         
-    def typeKeys(self, letters):
-        # we pass each character as a separate argument to xdotool,
-        # this prevents xdotool from interpreting double hyphens and
-        # hyphens followed by words as xdotool flags
-        arglist = []
-        for l in letters:
-            newletter = l
-            # single quotes have to be passed unquoted and escaped
-            # or the shell gets confused
-            if l == '\'':
-                newletter = "\\'"
-            else:
-                newletter = "'" + l + "'"
-            arglist.append(newletter)
-
-        letters = ' '.join(arglist)
-        cmd = ("xdotool type --clearmodifiers " + letters)
-        runCmd(cmd)
-
     def __call__(self, extras={}):
-        words = (self.data % extras).lower().split(' ')
-        if deepEmpty(words):
+        # print 'data: [' + self.data + ']'
+        # print 'extras: ' + str(extras) 
+        if not extras['words']:
             return
-        self._execute(words)
+        self._print(self._text(extras))
 
-    def _execute(self, words):
+    def _print(self, words):
+        typeKeys(words)
+
+    def _text(self, extras):
+        words = (self.data % extras).lower().split(' ')
         words = FormatState().format(words)
-        self.typeKeys(''.join(words))
+        return ''.join(words)
 
 class Camel(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
         self.caps = unicode.capitalize if caps else unicode.lower
 
-    def _execute(self, words):
+    def _text(self, extras):
+        words = (self.data % extras).lower().split(' ')
         words = FormatState(formatting=False, spaces=False).format(words)
         words = [w.lower() for w in words]
         words = [self.caps(words[0])] + [w.capitalize() for w in words[1:]]
-        self.typeKeys(''.join(words))
+        return ''.join(words)
 
 class Underscore(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
         self.caps = unicode.upper if caps else unicode.lower
 
-    def _execute(self, words):
+    def _text(self, extras):
+        words = (self.data % extras).lower().split(' ')
         words = FormatState(formatting=False, spaces=False).format(words)
         words = [self.caps(w) for w in words]
-        self.typeKeys('_'.join(words))        
+        return '_'.join(words)        
 
 class Hyphen(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
         self.caps = unicode.upper if caps else unicode.lower
 
-    def _execute(self, words):
+    def _text(self, extras):
+        words = (self.data % extras).lower().split(' ')
         words = FormatState(formatting=False, spaces=False).format(words)
         words = [self.caps(w) for w in words]
-        self.typeKeys('-'.join(words))        
+        return '-'.join(words)        
 
 class click:
     def __init__(self, keyStr):

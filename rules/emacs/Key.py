@@ -1,7 +1,7 @@
-from EmacsCmd import Cmd
+from rules.emacs.Cmd import Cmd
 from Actions import splitKeyString
 
-class EmacsKey(Cmd):
+class Key(Cmd):
     replacements = {
         "underscore" : "_",
         "comma"      : ",",

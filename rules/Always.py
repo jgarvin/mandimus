@@ -5,7 +5,7 @@ from MappingRule import MappingRule
 from Elements import Integer, Dictation
 from collections import OrderedDict
 from listHelpers import dictReplace
-from rules.Emacs import EmacsRule
+from rules.emacs.Emacs import Emacs
 
 import string
 
@@ -145,12 +145,6 @@ class PressKey(object):
 @registerRule
 class AlwaysRule(SeriesMappingRule):
     mapping = {
-        "camel <text>" : Camel("%(text)s"),
-        "stud <text>" : Camel("%(text)s", True),
-        "fen <text>" : Hyphen("%(text)s"),
-        "cap fen <text>" : Hyphen("%(text)s", True),
-        "score <text>" : Underscore("%(text)s"),
-        "cap score <text>" : Underscore("%(text)s", True),
         "command tally" : (lambda x: Speak(str(commandTally()))()),
         "left [<n>]" : Key("left:%(n)d"),
         "right [<n>]" : Key("right:%(n)d"),
@@ -182,12 +176,7 @@ class AlwaysRule(SeriesMappingRule):
     def activeForWindow(cls, window):
         return True
 
-@registerRule
-class TypingRule(MappingRule):
-    mapping = {
-        "type <text>" : Text("%(text)s"),
-    }
-
+class TypingBase(MappingRule):
     extras = [
         Integer("n", 1, 20),
         Dictation("text")
@@ -199,5 +188,38 @@ class TypingRule(MappingRule):
 
     @classmethod
     def activeForWindow(cls, window):
-        return not EmacsRule.activeForWindow(window)
+        return not Emacs.activeForWindow(window)
+    
+@registerRule
+class TypingRule(TypingBase):
+    mapping = {
+        "type <text>" : Text("%(text)s"),
+    }
+
+@registerRule
+class CamelRule(TypingBase):
+    mapping = {
+        "camel <text>" : Camel("%(text)s"),
+    }
+
+@registerRule
+class StudRule(TypingBase):
+    mapping = {
+        "stud <text>" : Camel("%(text)s", True),
+    }
+
+@registerRule
+class HyphenRule(TypingBase):
+    mapping = {
+        "fen <text>"     : Hyphen("%(text)s"),
+        "cap fen <text>" : Hyphen("%(text)s", True),
+    }    
+
+@registerRule
+class UnderscoreRule(TypingBase):
+    mapping = {
+        "score <text>"     : Underscore("%(text)s"),
+        "cap score <text>" : Underscore("%(text)s", True),
+    }
+    
 

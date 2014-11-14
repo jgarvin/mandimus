@@ -2,7 +2,7 @@ from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
 from Elements import Integer, Dictation
-from rules.Emacs import EmacsRule
+from rules.emacs.Emacs import Emacs
 
 @registerRule
 class CUARule(SeriesMappingRule):
@@ -36,4 +36,4 @@ class CUARule(SeriesMappingRule):
 
     @classmethod
     def activeForWindow(cls, window):
-        return not EmacsRule.activeForWindow(window)
+        return not Emacs.activeForWindow(window)

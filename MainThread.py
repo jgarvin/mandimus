@@ -220,13 +220,15 @@ if __name__ == "__main__":
     main = MainThread()
     
     imports = [
-        ('rules.Always', ['AlwaysRule']),
-        ('rules.Emacs', ['EmacsRule']),
-        ('rules.EmacsPython', ['EmacsPython']),
-        ('rules.EmacsERC', ['EmacsERC']),
-        ('rules.XMonad', ['XMonadRule']),
-        ('rules.CUA', ['CUARule']),
-        ('rules.Chrome', ['ChromeRule']),        
+        ('rules.Always', ['']),
+        ('rules.emacs.Dired', ['']),
+        ('rules.emacs.Emacs', ['']),
+        ('rules.emacs.Python', ['']),
+        ('rules.emacs.ERC', ['']),
+        ('rules.emacs.VarNames', ['']),
+        ('rules.XMonad', ['']),
+        ('rules.CUA', ['']),
+        ('rules.Chrome', ['']),        
     ]
 
     # TODO: catch syntax errors, make copies of module files, then

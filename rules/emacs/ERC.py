@@ -1,12 +1,12 @@
 from Actions import Key, Text
-from Elements import Dictation, Integer
-from SeriesMappingRule import SeriesMappingRule
-from Emacs import EmacsRule
-from EmacsCmd import runEmacsCmd, Cmd
-from Rule import registerRule
+from rules.Elements import Dictation, Integer
+from rules.SeriesMappingRule import SeriesMappingRule
+from rules.emacs.Emacs import Emacs
+from rules.emacs.Cmd import runEmacsCmd, Cmd
+from rules.Rule import registerRule
 
 @registerRule
-class EmacsERC(SeriesMappingRule):
+class ERC(SeriesMappingRule):
     mapping = {
         "hiss" : Key("a-p"),
         "piss" : Key("a-n"),
@@ -25,7 +25,7 @@ class EmacsERC(SeriesMappingRule):
 
     @classmethod
     def activeForWindow(cls, window):
-        isemacs = EmacsRule.activeForWindow(window)
+        isemacs = Emacs.activeForWindow(window)
         if not isemacs:
             return False
         out = runEmacsCmd("major-mode").strip()
