@@ -160,6 +160,7 @@ class SelectChoice(Action):
 
         # whichever choice matches the most words, choose
         # TODO: would be better if it regarded order
+        # TODO: should use percentage matching rather than total
         counter = {}
         for word in words:
             if word not in self.data:
@@ -436,11 +437,9 @@ class Text(Action):
         Action.__init__(self, data)
         
     def __call__(self, extras={}):
-        # print 'data: [' + self.data + ']'
-        # print 'extras: ' + str(extras) 
-        if not extras['words']:
-            return
-        self._print(self._text(extras))
+        text = self._text(extras)
+        print text
+        self._print(text)
 
     def _print(self, words):
         typeKeys(words)

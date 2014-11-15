@@ -13,7 +13,7 @@ sexpFuncs = {
     "previous"        : "sp-previous-sexp",
     "start"           : "sp-beginning-of-sexp",
     "end"             : "sp-end-of-sexp",
-    "select next"   : "sp-select-next-thing",
+    "select next"     : "sp-select-next-thing",
     "select previous" : "sp-select-previous-thing",
 }
 

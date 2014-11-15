@@ -151,12 +151,16 @@ def getWindow(winId):
         masterWindowList[winId] = Window(winId)
     return masterWindowList[winId]
 
+global lastKnownFocusedWindow
+lastKnownFocusedWindow = None
+
 def getFocusedWindow():
     # TODO: pay attention to errors, exit status
     s = subprocess.Popen("xdotool getwindowfocus", shell=True, stdout=subprocess.PIPE)
     (out, err) = s.communicate()
     try:
-        return getWindow(int(out))
+         lastKnownFocusedWindow = getWindow(int(out))
+         return lastKnownFocusedWindow
     except ValueError:
         # no window currently selected!
         return None

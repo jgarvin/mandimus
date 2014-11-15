@@ -1,3 +1,5 @@
+from copy import copy
+
 registered_rules = set()
 
 def getName(f):
@@ -9,10 +11,11 @@ def registeredRules():
 
 def registerRule(f):
     global registered_rules
+    remove = set()
     for rule in registered_rules:
         if getName(f) == getName(rule):
-            print "Error: Double registration of " + getName(f)
-            return
+            remove.add(rule)
+    registered_rules -= remove
     registered_rules.add(f)
     return f
 

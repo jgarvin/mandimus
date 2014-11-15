@@ -145,22 +145,22 @@ class PressKey(object):
 @registerRule
 class AlwaysRule(SeriesMappingRule):
     mapping = {
-        "command tally" : (lambda x: Speak(str(commandTally()))()),
-        "left [<n>]" : Key("left:%(n)d"),
-        "right [<n>]" : Key("right:%(n)d"),
-        "up [<n>]" : Key("up:%(n)d"),
-        "down [<n>]" : Key("down:%(n)d"),
-        "spat [<n>]" : Key("delete:%(n)d"),
-        "spit [<n>]" : Key("backspace:%(n)d"),
-        "pa" : Key("space"),
-        "slap" : Key("enter"),
-        'let ' + possibleLetters : PressKey(),
-        'caplet ' + possibleLetters : PressKey(force_shift=True),
-        'num ' + possibleDigits : PressKey(),
-        'dir ' + possibleDirections : PressKey(),
+        "command tally"              : (lambda x: Speak(str(commandTally()))()),
+        "left [<n>]"                 : Key("left:%(n)d"),
+        "right [<n>]"                : Key("right:%(n)d"),
+        "up [<n>]"                   : Key("up:%(n)d"),
+        "down [<n>]"                 : Key("down:%(n)d"),
+        "spat [<n>]"                 : Key("delete:%(n)d"),
+        "spit [<n>]"                 : Key("backspace:%(n)d"),
+        "pa"                         : Key("space"),
+        "slap [<n>]"                 : Key("enter:%(n)d"),
+        'let ' + possibleLetters     : PressKey(),
+        'caplet ' + possibleLetters  : PressKey(force_shift=True),
+        'num ' + possibleDigits      : PressKey(),
+        'dir ' + possibleDirections  : PressKey(),
         'sym ' + possiblePunctuation : PressKey(),
-        'rep [<n>]' : Repeat(),
-        'tab' : Key("tab"),
+        'rep [<n>]'                  : Repeat(),
+        'tab'                        : Key("tab"),
     }
 
     extras = [

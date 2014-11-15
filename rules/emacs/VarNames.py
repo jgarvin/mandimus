@@ -2,22 +2,22 @@ from rules.MappingRule import MappingRule
 from rules.emacs.Emacs import Emacs
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
-from Actions import Text, Camel, Hyphen, Underscore, Action
+from Actions import Text, Camel, Hyphen, Underscore, Action, FormatState
 from rules.Elements import Integer, Dictation
 
-class EmacsType(Action):
-    def __call__(self, extras={}):
-        words = (self.data % extras)
+class EmacsText(Text):
+    def _print(self, words):
         needSpace = runEmacsCmd("(md-need-space)").strip() is 't'
         if needSpace:
             words = ' ' + words
-
+            
         # There's no good elisp way to handle putting characters into
         # the search box AFAIK. You can get text in there but giving it
         # focus disables search as you type.
         inSearchMode = runEmacsCmd("isearch-mode").strip() != 'nil'
-        if inSearchMode:
-            Text(self.data)(extras)
+        inMiniBuffer = '*Minibuf-' in runEmacsCmd("(with-current-buffer (buffer-name))").strip()
+        if inSearchMode or inMiniBuffer:
+            Text._print(self, words)
         else:
             runEmacsCmd("(undo-boundary)")
             runEmacsCmd("(insert \"%s\")" % words)
@@ -25,7 +25,7 @@ class EmacsType(Action):
 
 
 def emacsTextPrint(self, words):
-    EmacsType(words)()
+    return EmacsText('')._print(words)
 
 class EmacsCamel(Camel): pass
 class EmacsHyphen(Hyphen): pass
@@ -49,9 +49,9 @@ class TypingBase(MappingRule):
         return Emacs.activeForWindow(window)
         
 @registerRule
-class EmacsTypeRule(TypingBase):
+class EmacsTextRule(TypingBase):
     mapping = {
-        "type <text>" : EmacsType("%(text)s"),
+        "type <text>" : EmacsText("%(text)s"),
     }
 
 @registerRule

@@ -8,6 +8,8 @@ class Python(SeriesMappingRule):
     mapping = {
         "align dic"  : Cmd("(align-dict)"),
         "align list" : Cmd("(align-list)"),
+        "mark block" : Cmd("(er/mark-python-block)"),
+        "mark state" : Cmd("(er/mark-python-statement)"),
     }
 
     @classmethod
