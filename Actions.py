@@ -292,7 +292,11 @@ class FormatState(object):
         ur"\backslash" : ur"backslash",
         ur"<\less-than-sign" : ur"less than sign",
         ur">\greater-than-sign" : ur"greater than sign", 
-        ur"=\equals-sign" : ur"equals sign",        
+        ur"=\equals-sign" : ur"equals sign",
+        ur"[\left-square-bracket" : ur"left square bracket",
+        ur"]\right-square-bracket" : ur"right square bracket",
+        ur"{\left-curly-bracket" : ur"left curly bracket",
+        ur"}\right-curly-bracket" : ur"right curly bracket",
         }
     
     formatting = {
@@ -327,6 +331,10 @@ class FormatState(object):
         ur"<\less-than-sign" : ur"<",
         ur">\greater-than-sign" : ur">", 
         ur"=\equals-sign" : ur"=",        
+        ur"[\left-square-bracket" : ur"[",
+        ur"]\right-square-bracket" : ur"]",
+        ur"{\left-curly-bracket" : ur"{",
+        ur"}\right-curly-bracket" : ur"}",
         }
 
     numeralmap = {

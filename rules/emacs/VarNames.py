@@ -4,25 +4,7 @@ from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 from Actions import Text, Camel, Hyphen, Underscore, Action, FormatState
 from rules.Elements import Integer, Dictation
-
-class EmacsText(Text):
-    def _print(self, words):
-        needSpace = runEmacsCmd("(md-need-space)").strip() is 't'
-        if needSpace:
-            words = ' ' + words
-            
-        # There's no good elisp way to handle putting characters into
-        # the search box AFAIK. You can get text in there but giving it
-        # focus disables search as you type.
-        inSearchMode = runEmacsCmd("isearch-mode").strip() != 'nil'
-        inMiniBuffer = '*Minibuf-' in runEmacsCmd("(with-current-buffer (buffer-name))").strip()
-        if inSearchMode or inMiniBuffer:
-            Text._print(self, words)
-        else:
-            runEmacsCmd("(undo-boundary)")
-            runEmacsCmd("(insert \"%s\")" % words)
-            runEmacsCmd("(undo-boundary)")
-
+from rules.emacs.Text import EmacsText
 
 def emacsTextPrint(self, words):
     return EmacsText('')._print(words)

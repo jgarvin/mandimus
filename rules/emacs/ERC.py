@@ -6,7 +6,7 @@ from rules.emacs.Emacs import Emacs
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 from rules.emacs.grammar import updateListGrammar, getStringList
-from rules.emacs.VarNames import EmacsText
+from rules.emacs.Text import EmacsText
 
 class SelectNick(SelectChoice):
     def _currentChoice(self):
@@ -15,10 +15,10 @@ class SelectNick(SelectChoice):
     def _select(self, choice):
         if runEmacsCmd("(md-at-start-of-erc-input-line)").strip() == 't':
             # we're addressing them, include the colon
-            EmacsText("%s: " % choice)()
+            EmacsText("%s: " % choice, capitalCheck=False)()
         else:
             # we're referring to them, omit the colon
-            EmacsText("%s" % choice)()
+            EmacsText("%s" % choice, capitalCheck=False)()
             
     def _noChoice(self):
         pass
@@ -35,8 +35,8 @@ def updateNickGrammar():
     mapping = updateListGrammar(nicks, 'nick', {},
                                 SelectNick, "EmacsNickMapping",
                                 ERC.activeForWindow)
-    if mapping:
-        print mapping.keys()
+    # if mapping:
+    #     print mapping.keys()
 
 getLoop().subscribeTimer(1, updateNickGrammar)
 

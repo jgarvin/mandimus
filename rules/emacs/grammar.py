@@ -5,11 +5,11 @@ from EventLoop import getLoop
 from Window import getFocusedWindow
 import re
 
-def updateListGrammar(lst, leadingTerm, translate, action, clsname, filterFunction):
+def updateListGrammar(lst, leadingTerm, translate, action, clsname, filterFunction, useDict=True):
     bufs = lst
     spokenForms = {}
     for b in bufs:
-        spokenForms[b] = [set(extractWords(b, translate=translate))] 
+        spokenForms[b] = [set(extractWords(b, translate=translate, useDict=useDict))] 
     omapping = buildSelectMapping(leadingTerm, spokenForms, action)
     
     if omapping is None:

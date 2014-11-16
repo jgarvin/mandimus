@@ -13,6 +13,8 @@ from util import deepEmpty
 from rules.emacs.Cmd import Cmd, runEmacsCmd
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
+from rules.emacs.Text import EmacsText
+import string
 
 def bufferList():
     buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
@@ -44,7 +46,7 @@ class SelectCommand(SelectChoice):
 
     def _noChoice(self):
         Key("c-x,c-m")()
-
+        
 def updateBufferGrammar():
     pass
     b = set(bufferList())
@@ -64,8 +66,32 @@ def updateBufferGrammar():
                       SelectBuffer, "EmacsSpecialMapping",
                       Emacs.activeForWindow)
 
+class SelectTypeClosest(SelectChoice):
+    def _currentChoice(self):
+        return None
 
+    def _select(self, choice):
+        print type(choice)
+        EmacsText("%s" % choice)()        
+
+    def _noChoice(self):
+        pass
+
+def tokenList():
+    tokens = runEmacsCmd("(md-get-buffer-words)")
+    tokens = getStringList(tokens)
+    # filter unicode crap
+    tokens = [''.join([c for c in n if c in string.printable]) for n in tokens]
+    return tokens
+
+def updateTokenGrammar():
+    t = set(tokenList())
+    updateListGrammar(t, 'toke', {},
+                      SelectTypeClosest, "EmacsTokenMapping",
+                      Emacs.activeForWindow, useDict=False)    
+    
 getLoop().subscribeTimer(1, updateBufferGrammar)
+# getLoop().subscribeTimer(1, updateTokenGrammar)
 #getLoop().subscribeTimer(10, updateCommandGrammar)
 #updateCommandGrammar()
 
@@ -192,6 +218,7 @@ class Emacs(SeriesMappingRule):
         # navigation commands
         "home"                         : Key("c-a"),
         "edge"                         : Key("c-e"),
+        "cliff"                        : Cmd("(md-go-to-cliff)"),
         "top"                          : Key("a-langle"),
         "bottom"                       : Key("a-rangle"),
         "post [<n>]"                   : Key("a-f:%(n)d"),
@@ -222,7 +249,7 @@ class Emacs(SeriesMappingRule):
         
         "select all"                   : Key("c-a"),
         "fish"                         : Key("a-space"),
-        "toke <text>"                  : Text("%(text)s") + Key("a-space"),
+        #"toke <text>"                 : Text("%(text)s") + Key("a-space"),
         "undo"                         : Key("cs-underscore"),
         "redo"                         : Key("as-underscore"),
         "open"                         : Key("c-o"),

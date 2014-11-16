@@ -18,7 +18,8 @@ with open("/usr/share/dict/american-english") as f:
         englishWords.update(set(re.findall("[a-z]+", word)))
 
 # TODO: maybe give translate a better default
-def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={}):
+def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={},
+                 useDict=True):
     """Split a string into a list using multiple delimeters, and optionally
     translating some characters to one or more words. Also lowercase everything."""
     splitters = splitters - set(translate.keys())
@@ -29,14 +30,15 @@ def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={
     def finish(w):
         new_words = [i.lower() for i in deCamelize(''.join(w))]
         new_subwords = set()
-        for word in new_words:
-            for i in range(len(word)):
-                for j in range(len(word)-1):
-                    subword = word[i:j+2]
-                    if subword in englishWords and len(subword) > 2:
-                        new_subwords.add(subword)
+        if useDict:
+            for word in new_words:
+                for i in range(len(word)):
+                    for j in range(len(word)-1):
+                        subword = word[i:j+2]
+                        if subword in englishWords and len(subword) > 2:
+                            new_subwords.add(subword)
+            all_words.extend(new_subwords)
         all_words.extend(new_words)
-        all_words.extend(new_subwords)
                         
     for c in wordstr:
         if c in splitters:
