@@ -1,3 +1,4 @@
+from Actions import Text
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
 from rules.emacs.Cmd import runEmacsCmd, Cmd
@@ -10,6 +11,8 @@ class Python(SeriesMappingRule):
         "align list" : Cmd("(align-list)"),
         "mark block" : Cmd("(er/mark-python-block)"),
         "mark state" : Cmd("(er/mark-python-statement)"),
+        "False"      : Text("False"),
+        "True"       : Text("True"),
     }
 
     @classmethod

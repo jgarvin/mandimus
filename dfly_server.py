@@ -55,9 +55,10 @@ class DragonflyThread(DragonflyNode):
     def loadGrammar(self, grammar):
         if grammar.__name__ in self.grammars:
             if grammar.equals(self.grammars[grammar.__name__]):
+                #print 'grammar UNchanged: ' + grammar.__name__
                 return
             else:
-                print 'grammar changed'
+                print 'grammar changed: ' + grammar.__name__
                 self.unloadGrammar(self.grammars[grammar.__name__])
         
         print 'Loading grammar: ' + grammar.__name__

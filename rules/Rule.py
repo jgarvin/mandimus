@@ -14,6 +14,7 @@ def registerRule(f):
     remove = set()
     for rule in registered_rules:
         if getName(f) == getName(rule):
+            # print 'removing old ' + getName(f)
             remove.add(rule)
     registered_rules -= remove
     registered_rules.add(f)

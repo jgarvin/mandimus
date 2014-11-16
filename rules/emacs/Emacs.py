@@ -5,24 +5,18 @@ from Actions import (
     Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic,
     splitKeyString, FormatState, ActionList)
 from rules.Elements import Integer, Dictation
-from Window import Window, getFocusedWindow, lastKnownFocusedWindow
+from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
 from rules.emacs.Cmd import Cmd, runEmacsCmd
 from rules.emacs.Key import Key as EmacsKey
-
-import re        
+from rules.emacs.grammar import updateListGrammar, getStringList
 
 def bufferList():
     buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
     return getStringList(buffs)
-
-def getStringList(output):
-    output = re.findall('"[^"]*"', output)
-    output = [x.strip('"') for x in output]
-    return output    
 
 def currentBuffer():
     buf = runEmacsCmd("(buffer-name (current-buffer))")
@@ -50,25 +44,6 @@ class SelectCommand(SelectChoice):
 
     def _noChoice(self):
         Key("c-x,c-m")()
-
-def updateListGrammar(lst, leadingTerm, translate, action, clsname, filterFunction):
-    bufs = lst
-    spokenForms = {}
-    for b in bufs:
-        spokenForms[b] = [set(extractWords(b, translate=translate))] 
-    omapping = buildSelectMapping(leadingTerm, spokenForms, action)
-    class LocalMapping(MappingRule):
-        mapping = omapping
-        
-        @classmethod
-        def activeForWindow(cls, window):
-            return filterFunction(window)
-    LocalMapping.__name__ = clsname
-    registerRule(LocalMapping)
-    if lastKnownFocusedWindow:
-        getLoop().determineRules(lastKnownFocusedWindow)
-    #print omapping.keys()
-    #getLoop().put(GrammarEvent(True, LocalMapping))
 
 def updateBufferGrammar():
     pass
@@ -164,7 +139,7 @@ class EmacsMapping(MappingRule):
         # window commands
         "kill window"                    : Cmd("(delete-window)"),
         "other window"                   : Key("c-x, o"),
-        "one window"                     : Key("c-x, 1"),
+        "collapse"                       : Key("c-x, 1"),
         "new frame"                      : Key("c-x, 5, 2"),
         "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
 
@@ -231,7 +206,7 @@ class Emacs(SeriesMappingRule):
         "mark [(line | word | graph)]" : Mark(),
         "tark"                         : Cmd("(exchange-point-and-mark)"),
         "select"                       : Key("c-equal"),
-        "contract"                     : Key("hyphen"),
+        "contract"                     : Key("a-equal"),
         
         # text manip commands
         "copy [(line | word | graph)]" : Copy(),
@@ -266,12 +241,12 @@ class Emacs(SeriesMappingRule):
         "no"                           : Key('n'),
         
         # text commands
-        "capitalize"                   : Key("a-c"),
-        "upper case"                   : Key("a-u"),
-        "lower case"                   : Key("a-l"),
+        "capital"                      : Key("a-c"),
+        "upper"                        : Key("a-u"),
+        "lower"                        : Key("a-l"),
         
-        "lane"                         : Text("("),
-        "rain"                         : Text(")"),
+        "lap"                          : Text("("),
+        "rap"                          : Text(")"),
         "lace"                         : Text("{"),
         "race"                         : Text("}"),
         "lack"                         : Text("["),
@@ -284,6 +259,9 @@ class Emacs(SeriesMappingRule):
         "cool"                         : Text(":"),
         "cusp"                         : Text(";"),
         "dot"                          : Text("."),        
+        "equals"                       : Text("="),
+        "slash"                        : Text("/"),        
+        "backslash"                    : Text("\\"),        
     }
 
     extras = [

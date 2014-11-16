@@ -37,18 +37,41 @@ def splitFlatten(slist, s=' '):
         x.extend(i.split(s))
     return x
 
+UPPER = 0
+LOWER = 1
+OTHER = 2
+
+def category(c):
+    if c in string.ascii_uppercase:
+        return UPPER
+    elif c in string.ascii_lowercase:
+        return LOWER
+    else:
+        return OTHER
+
 def deCamelize(word):
-    upper = None
+    cat = None
     wordList = []
     buildingWord = []
+
     for i, c in enumerate(word):
-        newUpper = c in string.ascii_uppercase
+        newCategory = category(c)
         isLast = i == len(word)-1
-        if isLast:
-            buildingWord.append(c)
-        if (upper == False and newUpper == True) or isLast: 
+        if (cat and cat != newCategory):
             wordList.append(''.join(buildingWord))
             buildingWord = []
-        upper = newUpper
+        if isLast:
+            buildingWord.append(c)
+            wordList.append(''.join(buildingWord))
+            buildingWord = []
+        cat = newCategory
         buildingWord.append(c)
     return wordList
+
+if __name__ == "__main__":
+    assert(deCamelize("helloWorld") == ["hello", "World"])
+    assert(deCamelize("hello2world") == ["hello", "2", "world"])
+    assert(deCamelize("3hello@WorldThere") == ["3", "hello", "@", "World", "There"])
+    print deCamelize("a7a")
+    assert(deCamelize("a7a") == ["a", "7", "a"])
+    

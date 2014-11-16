@@ -76,6 +76,9 @@ class Window(object):
                 return value.strip(',').strip('"')
         return ""
 
+    def __str__(self):
+        return self.name + "," + str(self.winId)
+
     @property
     def size(self):
         cmd = "xwininfo -id " + str(self.winId)
@@ -151,16 +154,12 @@ def getWindow(winId):
         masterWindowList[winId] = Window(winId)
     return masterWindowList[winId]
 
-global lastKnownFocusedWindow
-lastKnownFocusedWindow = None
-
 def getFocusedWindow():
     # TODO: pay attention to errors, exit status
     s = subprocess.Popen("xdotool getwindowfocus", shell=True, stdout=subprocess.PIPE)
     (out, err) = s.communicate()
     try:
-         lastKnownFocusedWindow = getWindow(int(out))
-         return lastKnownFocusedWindow
+         return getWindow(int(out))
     except ValueError:
         # no window currently selected!
         return None

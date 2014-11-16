@@ -93,7 +93,7 @@ class MainThread(object):
             nextTimer = min(self.timers, key=lambda x: x.nextExpiration)
             nextExpiration = nextTimer.nextExpiration
         else:
-            # without a timeout, ctrl-c doesn't work because.. python
+            # without a timeout, cgetrl-c doesn't work because.. python
             ONEYEAR = 365 * 24 * 60 * 60
             nextExpiration = time.time() + ONEYEAR 
         return max(nextExpiration - time.time(), 0)

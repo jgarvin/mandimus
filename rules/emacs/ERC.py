@@ -1,9 +1,44 @@
-from Actions import Key, Text
+from Actions import Key, Text, SelectChoice
+from EventLoop import getLoop
 from rules.Elements import Dictation, Integer
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
+from rules.emacs.grammar import updateListGrammar, getStringList
+from rules.emacs.VarNames import EmacsText
+
+class SelectNick(SelectChoice):
+    def _currentChoice(self):
+        return None
+
+    def _select(self, choice):
+        if runEmacsCmd("(md-at-start-of-erc-input-line)").strip() == 't':
+            # we're addressing them, include the colon
+            EmacsText("%s: " % choice)()
+        else:
+            # we're referring to them, omit the colon
+            EmacsText("%s" % choice)()
+            
+    def _noChoice(self):
+        pass
+
+def nickList():
+    nicks = runEmacsCmd("(md-get-active-erc-nicknames)").strip()
+    if nicks == "nil":
+        return []
+    return getStringList(nicks)
+
+def updateNickGrammar():
+    nicks = set(nickList())
+    #print 'building with : ' + str(nicks)
+    mapping = updateListGrammar(nicks, 'nick', {},
+                                SelectNick, "EmacsNickMapping",
+                                ERC.activeForWindow)
+    if mapping:
+        print mapping.keys()
+
+getLoop().subscribeTimer(1, updateNickGrammar)
 
 @registerRule
 class ERC(SeriesMappingRule):

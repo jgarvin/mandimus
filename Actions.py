@@ -323,7 +323,7 @@ class FormatState(object):
         u"_\\underscore" : ur"_",
         ur"|\vertical-bar" : ur"|",
         ur"/\slash" : ur"/",
-        ur"\backslash" : u"\\",
+        ur"\backslash" : u"\\\\",
         ur"<\less-than-sign" : ur"<",
         ur">\greater-than-sign" : ur">", 
         ur"=\equals-sign" : ur"=",        
@@ -351,7 +351,8 @@ class FormatState(object):
         self.do_formatting = formatting
         self.spacesEnabled = spaces
         self.next_numeral = False
-
+        self.next_literal = False
+        
     def format(self, s):
         new = []
         first = True
@@ -367,12 +368,14 @@ class FormatState(object):
                 self.no_space_once = True
             elif word == ur"\numeral" and self.do_formatting:
                 self.next_numeral = True
+            elif word == ur"literal" and self.do_formatting and not self.next_literal and len(s) > 1:
+                self.next_literal = True
             else:
                 isCode = word in self.formatting.keys()
                 #print 'isCode: ' + str(isCode)
                 newWord = word
                 if isCode:
-                    if self.do_formatting:
+                    if self.do_formatting and not self.next_literal:
                         replacements = self.formatting
                     else:
                         replacements = self.noformatting
@@ -409,6 +412,7 @@ class FormatState(object):
                         
                     new.append(newWord)
                     first = False
+                self.next_literal = False
         return new
 
 def typeKeys(letters):
@@ -445,7 +449,7 @@ class Text(Action):
         typeKeys(words)
 
     def _text(self, extras):
-        words = (self.data % extras).lower().split(' ')
+        words = (self.data % extras).split(' ')
         words = FormatState().format(words)
         return ''.join(words)
 

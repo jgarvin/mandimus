@@ -178,7 +178,7 @@ class DragonflyClient(DragonflyNode):
             self.addRule(new_rule, rule_name)
         except SyntaxError:
             traceback.print_exc()
-            print "Mapping rule: "
+            print "Mapping rule %s: " % rule_name
             print rules
             print "Extras:"
             print extras
