@@ -229,7 +229,7 @@ if __name__ == "__main__":
         ('rules.emacs.Pairs', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
-        ('rules.Chrome', ['']),        
+        ('rules.Chrome', ['']),   
     ]
 
     # TODO: catch syntax errors, make copies of module files, then

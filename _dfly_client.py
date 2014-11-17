@@ -186,7 +186,7 @@ class DragonflyClient(DragonflyNode):
             print defaults
             return
         
-    def getRule(self, ruleName):
+    def getRule(self, ruleName):                
         pass        
         
     def parseExtras(self, extras):

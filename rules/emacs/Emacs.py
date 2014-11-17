@@ -154,6 +154,7 @@ class EmacsMapping(MappingRule):
         "help function"                  : Key("c-h,f"),
         "help variable"                  : Key("c-h,v"),
         "help key"                       : Key("c-h,k"),
+        "help docks"                     : Key("c-h,d"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
 
