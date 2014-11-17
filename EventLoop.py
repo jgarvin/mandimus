@@ -1,4 +1,4 @@
-event_loop = None
+Trueevent_loop = None
 
 def getLoop():
     return event_loop

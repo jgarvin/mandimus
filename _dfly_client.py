@@ -186,6 +186,9 @@ class DragonflyClient(DragonflyNode):
             print defaults
             return
         
+    def getRule(self, ruleName):
+        pass        
+        
     def parseExtras(self, extras):
         parsed = []
         for e in extras:
@@ -194,6 +197,10 @@ class DragonflyClient(DragonflyNode):
                 parsed.append(Integer(e[1], int(e[2]), int(e[3])))
             elif e[0] == "DICTATION":
                 parsed.append(Dictation(e[1]))
+            elif e[0] == "REPETITION":
+                parsed.append(Repetition(e[1], int(e[2]), int[e3]))
+            elif e[0] == "RULEREF":
+                parsed.append(RuleRef(rule=self.getRule(e[1]), name=e[2]))
         return parsed
         
     def parseDefaults(self, defaults):

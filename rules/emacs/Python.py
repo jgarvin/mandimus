@@ -11,8 +11,8 @@ class Python(SeriesMappingRule):
         "align list" : Cmd("(align-list)"),
         "mark block" : Cmd("(er/mark-python-block)"),
         "mark state" : Cmd("(er/mark-python-statement)"),
-        "False"      : Text("False"),
-        "True"       : Text("True"),
+        "False"      : Text("False", lower=False),
+        "True"       : Text("True", lower=False),
     }
 
     @classmethod

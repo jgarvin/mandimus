@@ -27,6 +27,7 @@ class Dired(SeriesMappingRule):
         "delete picks"        : Key("D"),
         "ascend"              : Text("^"),
         "refresh"             : Key("g"),
+        "open picks"          : Key("c-u,0,F"),
     }
 
     @classmethod

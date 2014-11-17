@@ -146,25 +146,19 @@ class PressKey(object):
 class AlwaysRule(SeriesMappingRule):
     mapping = {
         "command tally"              : (lambda x: Speak(str(commandTally()))()),
-        "left [<n>]"                 : Key("left:%(n)d"),
-        "right [<n>]"                : Key("right:%(n)d"),
-        "up [<n>]"                   : Key("up:%(n)d"),
-        "down [<n>]"                 : Key("down:%(n)d"),
-        "spat [<n>]"                 : Key("delete:%(n)d"),
-        "spit [<n>]"                 : Key("backspace:%(n)d"),
-        "pa"                         : Key("space"),
-        "slap [<n>]"                 : Key("enter:%(n)d"),
         'let ' + possibleLetters     : PressKey(),
         'caplet ' + possibleLetters  : PressKey(force_shift=True),
-        'num ' + possibleDigits      : PressKey(),
+        'num key ' + possibleDigits  : PressKey(),
         'dir ' + possibleDirections  : PressKey(),
         'sym ' + possiblePunctuation : PressKey(),
         'rep [<n>]'                  : Repeat(),
         'tab'                        : Key("tab"),
+        "num <big>"                  : Text("%(big)d"),
     }
 
     extras = [
         Integer("n", 2, 20),
+        Integer("big", 0, 2**14),
         Dictation("text")
         ]
     
@@ -193,7 +187,7 @@ class TypingBase(MappingRule):
 @registerRule
 class TypingRule(TypingBase):
     mapping = {
-        "type <text>" : Text("%(text)s"),
+        "type <text>" : Text("%(text)s", False),
     }
 
 @registerRule

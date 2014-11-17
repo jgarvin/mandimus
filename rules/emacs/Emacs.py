@@ -154,6 +154,8 @@ class EmacsMapping(MappingRule):
         "help function"                  : Key("c-h,f"),
         "help variable"                  : Key("c-h,v"),
         "help key"                       : Key("c-h,k"),
+        "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
+        "exit debug"                     : Key("c-rbracket"),
 
         "ace"                            : Key("c-c,space"),
         "ace care"                       : Key("c-u,c-c,space"),
@@ -164,7 +166,7 @@ class EmacsMapping(MappingRule):
         
         # window commands
         "kill window"                    : Cmd("(delete-window)"),
-        "other window"                   : Key("c-x, o"),
+        "other"                          : Key("c-x, o"),
         "collapse"                       : Key("c-x, 1"),
         "new frame"                      : Key("c-x, 5, 2"),
         "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
@@ -228,6 +230,16 @@ class Emacs(SeriesMappingRule):
         "center"                       : Key("c-l"),
         "gruff [<n>]"                  : Key("c-up:%(n)d"),
         "graph [<n>]"                  : Key("c-down:%(n)d"),
+        "left [<n>]"                   : Key("left:%(n)d"),
+        "right [<n>]"                  : Key("right:%(n)d"),
+        "up [<n>]"                     : Key("up:%(n)d"),
+        "down [<n>]"                   : Key("down:%(n)d"),
+        "pa"                           : Key("space"),
+        
+        "slap [<n>]"                   : Key("enter:%(n)d"),
+        "pals [<n>]"                   : Cmd("(md-new-line-anywhere)"),
+        "open [<n>]"                   : Key("c-o:%(n)d"),
+        "nepo [<n>]"                   : Cmd("(md-open-line-anywhere)"),
 
         # mark commands
         "mark [(line | word | graph)]" : Mark(),
@@ -240,8 +252,11 @@ class Emacs(SeriesMappingRule):
         "cut [(line | word | graph)]"  : Cut(),        
 
         "kill [<n>]"                   : Key('c-k:%(n)d'),
-        "snip [<n>]"                   : Cmd('(md-backward-kill-word)'),
-        "snap [<n>]"                   : Cmd('(md-forward-kill-word)'),        
+        "nip [<n>]"                    : Cmd('(md-backward-kill-word)'),
+        "pin [<n>]"                    : Cmd('(md-forward-kill-word)'),        
+        "pat [<n>]"                    : Key("delete:%(n)d"),
+        "tap [<n>]"                    : Key("backspace:%(n)d"),
+        "squeeze"                      : Cmd('(cycle-spacing)'),
 
         "yank"                         : Key("c-y"),
         "yank pop"                     : Key("a-y"),
@@ -252,7 +267,6 @@ class Emacs(SeriesMappingRule):
         #"toke <text>"                 : Text("%(text)s") + Key("a-space"),
         "undo"                         : Key("cs-underscore"),
         "redo"                         : Key("as-underscore"),
-        "open"                         : Key("c-o"),
         "turf"                         : Key("enter,c-o"),
 
         "shift right"                  : Cmd("(call-interactively 'python-indent-shift-right)"),
@@ -272,8 +286,8 @@ class Emacs(SeriesMappingRule):
         "upper"                        : Key("a-u"),
         "lower"                        : Key("a-l"),
         
-        "lap"                          : Text("("),
-        "rap"                          : Text(")"),
+        "larp"                         : Text("("),
+        "ralp"                         : Text(")"),
         "lace"                         : Text("{"),
         "race"                         : Text("}"),
         "lack"                         : Text("["),

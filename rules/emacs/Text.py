@@ -5,8 +5,8 @@ from Actions import Text, Camel, Hyphen, Underscore, Action, FormatState
 from rules.Elements import Integer, Dictation
 
 class EmacsText(Text):
-    def __init__(self, data, capitalCheck=True):
-        Text.__init__(self, data)
+    def __init__(self, data, lower=True, capitalCheck=True):
+        Text.__init__(self, data, lower=lower)
         self.capitalCheck = capitalCheck
 
     def _print(self, words):

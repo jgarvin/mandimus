@@ -33,7 +33,7 @@ class TypingBase(MappingRule):
 @registerRule
 class EmacsTextRule(TypingBase):
     mapping = {
-        "type <text>" : EmacsText("%(text)s"),
+        "type <text>" : EmacsText("%(text)s", False),
     }
 
 @registerRule

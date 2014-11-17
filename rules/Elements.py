@@ -24,3 +24,12 @@ class Repetition(EqualityMixin):
         
     def __str__(self):
         return "REPETITION %s" % (self.name, self.min, self.max)
+
+class RuleRef(EqualityMixin):
+    def __init__(self, rule, name):
+        self.rule = rule
+        self.name = name
+        
+    def __str__(self):
+        return "RULEREF %s" % (self.rule, self.name)
+

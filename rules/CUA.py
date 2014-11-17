@@ -23,16 +23,26 @@ class CUARule(SeriesMappingRule):
         "page"                  : Key("pgdown"),
         "home"                  : Key("home"),
         "edge"                  : Key("end"),
-        }
+        "left [<n>]"            : Key("left:%(n)d"),
+        "right [<n>]"           : Key("right:%(n)d"),
+        "up [<n>]"              : Key("up:%(n)d"),
+        "down [<n>]"            : Key("down:%(n)d"),
+        "pat [<n>]"             : Key("delete:%(n)d"),
+        "tap [<n>]"             : Key("backspace:%(n)d"),
+        "pa"                    : Key("space"),
+        "slap [<n>]"            : Key("enter:%(n)d"),
+    }
 
     extras = [
         Dictation("text"),
         Dictation("search_terms"),
-        ]
+        Integer("n", 2, 20),
+    ]
 
     defaults = {
         "search_terms" : "",
-        }
+        "n": 1,
+    }
 
     @classmethod
     def activeForWindow(cls, window):

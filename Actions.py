@@ -442,11 +442,26 @@ def typeKeys(letters):
     cmd = ("xdotool type --clearmodifiers " + letters)
     runCmd(cmd)
     
+def lower(word):
+    if isinstance(word, unicode):
+        return unicode.lower(word)
+    elif isinstance(word, str):
+        return str.lower(word)
+    raise Exception("Unknown string type.")
+
+def capitalize(word):
+    if isinstance(word, unicode):
+        return unicode.capitalize(word)
+    elif isinstance(word, str):
+        return str.capitalize(word)
+    raise Exception("Unknown string type.")
+
 # TODO: multiple formatting options, caps stuff is different than
 # punctuation
 class Text(Action):
-    def __init__(self, data):
+    def __init__(self, data, lower=True):
         Action.__init__(self, data)
+        self.lower = lower
         
     def __call__(self, extras={}):
         text = self._text(extras)
@@ -459,12 +474,14 @@ class Text(Action):
     def _text(self, extras):
         words = (self.data % extras).split(' ')
         words = FormatState().format(words)
+        if self.lower:
+            words = [w.lower() for w in words]
         return ''.join(words)
-
+    
 class Camel(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
-        self.caps = unicode.capitalize if caps else unicode.lower
+        self.caps = capitalize if caps else lower
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
@@ -476,7 +493,7 @@ class Camel(Text):
 class Underscore(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
-        self.caps = unicode.upper if caps else unicode.lower
+        self.caps = capitalize if caps else lower
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
@@ -487,7 +504,7 @@ class Underscore(Text):
 class Hyphen(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
-        self.caps = unicode.upper if caps else unicode.lower
+        self.caps = capitalize if caps else lower
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
