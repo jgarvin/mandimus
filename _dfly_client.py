@@ -11,6 +11,7 @@ import natlink
 import socket
 import sys, os, traceback
 from functools import partial
+from copy import copy
 
 # Without this stderr won't go to the Natlink
 # message window.
@@ -27,6 +28,8 @@ def reloadClient():
     client.cleanup()
     unloadCode()
     reloadCode()
+
+class NeedsDependency(Exception): pass
 
 class GlobalRules(MappingRule):
     mapping = {
@@ -59,29 +62,52 @@ class DragonflyClient(DragonflyNode):
         DragonflyNode.__init__(self)
         self.timer = get_engine().create_timer(self._eventLoop, 1)
         self.buf = ""
+
+        self.rules = {}
         self.grammars = {}
+        self.pendingRules = []
 
         self.addRule(GlobalRules(), "GlobalRules")
 
-    def addRule(self, rule, name):
-        if name in self.grammars:
+    def addRule(self, rule, name, flags=[]):
+        print 'adding rule: %s' % name
+
+        if name in self.rules:
             print 'Already have rule: ' + name
             return
 
-        #print 'Adding rule: ' + name
-        grammar = Grammar(name)
-        grammar.add_rule(rule)
-        grammar.load()
-        get_engine().set_exclusiveness(grammar, 1)
-        self.grammars[name] = grammar
+        self.rules[name] = rule
+        if "REFONLY" not in flags:
+            self.makeRuleGrammar(rule, name)
+
+        toParse = copy(self.pendingRules)
+        if self.pendingRules:
+            while toParse:
+                x = toParse.pop()
+                try:
+                    self._parseMessage(x)
+                    self.pendingRules.remove(x)
+                except NeedsDependency:
+                    pass
 
     def removeRule(self, name):
         #print 'Removing rule: ' + name
         try:
+            del self.rules[name]
+        except KeyError:
+            print 'Rule not found: %s, ignoring' % name
+        try:
             self.grammars[name].unload()
             del self.grammars[name]
         except KeyError:
-            print 'Rule not found: %s, ignoring' % name
+            print 'Grammar not found: %s, ignoring' % name
+
+    def makeRuleGrammar(self, rule, name):
+        grammar = Grammar(name)
+        grammar.add_rule(rule)
+        grammar.load()
+        get_engine().set_exclusiveness(grammar, 1)
+        self.grammars[name] = grammar        
 
     def dumpOther(self):
         # on disconnect unload all the rules
@@ -116,7 +142,7 @@ class DragonflyClient(DragonflyNode):
         self.retrieveMessages()
         self.heartbeat()
 
-    def onMessage(self, msg):
+    def _parseMessage(self, msg):
         try:
             if msg.startswith("MappingRule"):
                 self.parseMappingRuleMsg(msg, MappingRule)
@@ -125,17 +151,26 @@ class DragonflyClient(DragonflyNode):
             elif msg.startswith("unload"):
                 self.parseUnloadMsg(msg)
             elif msg.startswith("ack"):
-                pass
                 #print 'received ack: ' + msg
-            elif len(msg) == 0:
                 pass
+            elif len(msg) == 0:
                 #print 'received heartbeat'
+                pass
             else:
                 print "Received unknown message type!: " + msg
                 print 'Message length %d' % (len(msg),)
-        except Exception:
+        except Exception as e:
+            if isinstance(e, NeedsDependency):
+                raise
             traceback.print_exc()
-            return
+
+    def onMessage(self, msg):
+        try:
+            self._parseMessage(msg)
+        except NeedsDependency:
+            print "Waiting to parse [%s ...], needs dependency" % msg[:min(len(msg), 30)] 
+            self.pendingRules.append(msg)
+            return False
 
     def parseUnloadMsg(self, msg):
         allargs = msg.split(ARG_DELIMETER) 
@@ -168,14 +203,21 @@ class DragonflyClient(DragonflyNode):
 
         defaults = []
         for arg in allargs[idx:]:
-            if arg:
-                defaults.append(arg)
             idx += 1
+            if arg == "FLAGS":
+                break
+            defaults.append(arg)
         defaults = self.parseDefaults(defaults)
+
+        flags = []
+        for arg in allargs[idx:]:
+            if arg:
+                flags.append(arg)
+            idx += 1
 
         try:
             new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
-            self.addRule(new_rule, rule_name)
+            self.addRule(new_rule, rule_name, flags)
         except SyntaxError:
             traceback.print_exc()
             print "Mapping rule %s: " % rule_name
@@ -187,7 +229,12 @@ class DragonflyClient(DragonflyNode):
             return
         
     def getRule(self, ruleName):                
-        pass        
+        if ruleName not in self.rules:
+            print "Missing dependency!: %s" % ruleName 
+            raise NeedsDependency()
+        # we only ever have one 'rule' per grammar
+        print 'Found dependency!: %s' % ruleName
+        return self.rules[ruleName]
         
     def parseExtras(self, extras):
         parsed = []

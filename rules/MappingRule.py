@@ -1,29 +1,43 @@
 from dfly_parser import ARG_DELIMETER, KEY_VALUE_SEPARATOR
+from util import EqualityMixin
 
-class MappingRule(object):
+class MappingRule(EqualityMixin):
     mapping = {}
     extras = []
     defaults = {}
+    refOnly = False
     serializedType = "MappingRule"
 
-    @classmethod
-    def textSerialize(cls):
-        serializeType = cls.serializedType
+    def __eq__(self, other):
+        return (self.name == other.name
+                and self.mapping == other.mapping
+                and self.extras == other.extras and self.defaults == other.defaults)
+
+    @property
+    def name(self):
+        return type(self).__name__
+
+    def textSerialize(self):
+        serializeType = self.serializedType
         
         msg = []
-        msg += [serializeType + ARG_DELIMETER + cls.__name__ + ARG_DELIMETER,
-                ARG_DELIMETER.join(cls.mapping.keys())]
+        msg += [serializeType + ARG_DELIMETER + self.name + ARG_DELIMETER,
+                ARG_DELIMETER.join(self.mapping.keys())]
         msg += [ARG_DELIMETER]
         msg += ["EXTRAS"]
-        for extra in cls.extras:
+        for extra in self.extras:
             msg += [ARG_DELIMETER, str(extra)]
         msg += [ARG_DELIMETER]
         msg += ["DEFAULTS"]
-        for key, val in cls.defaults.items():
+        for key, val in self.defaults.items():
             msg += [ARG_DELIMETER, str(key), KEY_VALUE_SEPARATOR, str(val)]
+        msg += [ARG_DELIMETER]
+        msg += ["FLAGS"]
+        if self.refOnly:
+            msg += [ARG_DELIMETER]
+            msg += "REFONLY"
         msg += [ARG_DELIMETER]
         return ''.join(msg)
 
-    @classmethod
-    def equals(cls, other):
-        return (cls.mapping == other.mapping and cls.extras == other.extras and cls.defaults == other.defaults)
+    def activeForWindow(self, w):
+        return False

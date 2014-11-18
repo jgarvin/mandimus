@@ -2,7 +2,7 @@ from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, Repeat
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
 from MappingRule import MappingRule
-from Elements import Integer, Dictation
+from Elements import Integer, Dictation, RuleRef
 from collections import OrderedDict
 from listHelpers import dictReplace
 from rules.emacs.Emacs import Emacs
@@ -107,7 +107,42 @@ possiblePunctuation = modifierRule + '(' + '|'.join(punctuationMapping.keys()) +
 
 #print possibleKeyPresses
 
-        
+class UnregisteredRule(MappingRule):
+    pass
+
+@registerRule
+class AlphaRule(MappingRule):
+    refOnly = True
+    
+    mapping = {
+        "alpha"    : Key("a"),
+        "bravo"    : Key("b"),
+        "charlie"  : Key("c"),
+        "delta"    : Key("d"),
+        "echo"     : Key("e"),
+        "foxtrot"  : Key("f"),
+        "golf"     : Key("g"),
+        "hotel"    : Key("h"),
+        "india"    : Key("i"),
+        "juliet"   : Key("j"),
+        "kilo"     : Key("k"),
+        "lima"     : Key("l"),
+        "mike"     : Key("m"),
+        "november" : Key("n"),
+        "oscar"    : Key("o"),
+        "papa"     : Key("p"),
+        "quebec"   : Key("q"),
+        "romeo"    : Key("r"),
+        "sierra"   : Key("s"),
+        "tango"    : Key("t"),
+        "uniform"  : Key("u"),
+        "victor"   : Key("v"),
+        "whiskey"  : Key("w"),
+        "xray"     : Key("x"),
+        "yankee"   : Key("y"),
+        "zulu"     : Key("z"),
+    }
+    
 class PressKey(object):
     def __init__(self, force_shift=False):
         self.force_shift = force_shift
@@ -146,7 +181,8 @@ class PressKey(object):
 class AlwaysRule(SeriesMappingRule):
     mapping = {
         "command tally"              : (lambda x: Speak(str(commandTally()))()),
-        'let ' + possibleLetters     : PressKey(),
+        #'let ' + possibleLetters     : PressKey(),
+        "let [control] [alt] [shift] <alpharule>" : PressKey(),
         'caplet ' + possibleLetters  : PressKey(force_shift=True),
         'num key ' + possibleDigits  : PressKey(),
         'dir ' + possibleDirections  : PressKey(),
@@ -159,7 +195,8 @@ class AlwaysRule(SeriesMappingRule):
     extras = [
         Integer("n", 2, 20),
         Integer("big", 0, 2**14),
-        Dictation("text")
+        Dictation("text"),
+        RuleRef(AlphaRule, "alpharule"),
         ]
     
     defaults = {

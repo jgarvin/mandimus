@@ -31,5 +31,5 @@ class RuleRef(EqualityMixin):
         self.name = name
         
     def __str__(self):
-        return "RULEREF %s" % (self.rule, self.name)
+        return "RULEREF %s %s" % (self.rule.__name__, self.name)
 

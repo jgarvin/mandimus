@@ -58,7 +58,6 @@ def chromium(w):
         return ["chrome", "chromium"]
     return []
 
-
 # so write rules for specific window types
 # and then fall back to generic word search
 # grammar only when the windows aren't special
@@ -106,12 +105,12 @@ class MainThread(object):
                 t.callback()
     
     def determineRules(self, window):
-        for r in registeredRules():
-            if r.activeForWindow(window):
+        for r in registeredRules().values():
+            if r.activeForWindow(window) or r.refOnly:
                 self.dfly.loadGrammar(r)
             else:
                 self.dfly.unloadGrammar(r)
-
+        
     def loadRule(self):
         self.dfly.loadGrammar(WindowRule)
 
@@ -122,6 +121,8 @@ class MainThread(object):
         class MainRule(SeriesMappingRule):
             mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
                         "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
+            def activeForWindow(self, w):
+                return True
 
         try:
             while self.run:
@@ -135,7 +136,7 @@ class MainThread(object):
                     continue
 
                 if isinstance(ev, ConnectedEvent):
-                    self.dfly.loadGrammar(MainRule)
+                    registerRule(MainRule)
 
                     # so that rules apply for whatever is focused on startup
                     self.determineRules(getFocusedWindow())
@@ -202,8 +203,10 @@ class MainThread(object):
 
         class WindowRule(MappingRule):
             mapping = omapping
-            
-        self.dfly.loadGrammar(WindowRule)        
+            def activeForWindow(self, w):
+                return True
+
+        registerRule(WindowRule)
 
     def stop(self):
         self.run = False

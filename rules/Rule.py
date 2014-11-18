@@ -1,6 +1,6 @@
 from copy import copy
 
-registered_rules = set()
+registered_rules = {}
 
 def getName(f):
     return f.__name__
@@ -11,13 +11,17 @@ def registeredRules():
 
 def registerRule(f):
     global registered_rules
+    newName = getName(f) 
+    
     remove = set()
-    for rule in registered_rules:
-        if getName(f) == getName(rule):
+    for ruleName in registered_rules:
+        if newName == ruleName:
             # print 'removing old ' + getName(f)
-            remove.add(rule)
-    registered_rules -= remove
-    registered_rules.add(f)
+            remove.add(ruleName)
+    for r in remove:
+        del registered_rules[r]
+
+    registered_rules[newName] = f()
     return f
 
 def commandTally():

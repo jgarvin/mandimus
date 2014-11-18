@@ -53,25 +53,25 @@ class DragonflyThread(DragonflyNode):
             self.server_socket.close()
 
     def loadGrammar(self, grammar):
-        if grammar.__name__ in self.grammars:
-            if grammar.equals(self.grammars[grammar.__name__]):
+        if grammar.name in self.grammars:
+            if grammar == self.grammars[grammar.name]:
                 #print 'grammar UNchanged: ' + grammar.__name__
                 return
             else:
-                print 'grammar changed: ' + grammar.__name__
-                self.unloadGrammar(self.grammars[grammar.__name__])
+                print 'grammar changed: ' + grammar.name
+                self.unloadGrammar(self.grammars[grammar.name])
         
-        print 'Loading grammar: ' + grammar.__name__
+        print 'Loading grammar: ' + grammar.name
         self.sendMsg(grammar.textSerialize())
-        self.grammars[grammar.__name__] = grammar
+        self.grammars[grammar.name] = grammar
 
     def unloadGrammar(self, grammar):
-        if grammar.__name__ not in self.grammars:
+        if grammar.name not in self.grammars:
             return
         
-        print 'Unloading grammar: ' + grammar.__name__        
-        self.sendMsg('unload' + ARG_DELIMETER + grammar.__name__)
-        del self.grammars[grammar.__name__]        
+        print 'Unloading grammar: ' + grammar.name        
+        self.sendMsg('unload' + ARG_DELIMETER + grammar.name)
+        del self.grammars[grammar.name]        
         
     def onConnect(self):
         self.pushQ.put(ConnectedEvent())
