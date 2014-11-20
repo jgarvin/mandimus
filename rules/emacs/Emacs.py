@@ -159,8 +159,6 @@ class EmacsMapping(MappingRule):
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
 
-        "ace"                            : Key("c-c,space"),
-        "ace care"                       : Key("c-u,c-c,space"),
         "ace line"                       : Key("c-u,c-u,c-c,space"),
 
         "go to line"                     : Key("a-g,a-g"),
@@ -220,6 +218,9 @@ class Emacs(SeriesMappingRule):
         "mack"                         : Key("F4"),
         
         # navigation commands
+        "ace"                          : Key("c-c,space"),
+        "ace care"                     : Key("c-u,c-c,space"),
+
         "home"                         : Key("c-a"),
         "edge"                         : Key("c-e"),
         "cliff"                        : Cmd("(md-go-to-cliff)"),

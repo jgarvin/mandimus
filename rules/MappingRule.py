@@ -40,4 +40,6 @@ class MappingRule(EqualityMixin):
         return ''.join(msg)
 
     def activeForWindow(self, w):
+        if not self.refOnly:
+            raise NotImplemented(__func__.__name__)
         return False

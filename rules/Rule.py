@@ -27,7 +27,7 @@ def registerRule(f):
 def commandTally():
     global registered_rules
     tally = 0
-    for s in registered_rules:
+    for s in registered_rules.values():
         tally += len(s.mapping)
     print tally
     return tally
