@@ -116,7 +116,7 @@ class DragonflyThread(DragonflyNode):
                     else:
                         self.history.append(GrammarMatchEvent(grammar, extras))
 
-                    print 'match %s -- %s' % (str(grammar), str(extras['words']))
+                    print 'match %s -- %s' % (grammar, extras['words'])
                     cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because

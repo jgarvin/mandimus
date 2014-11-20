@@ -25,7 +25,7 @@ def currentBuffer():
     return buf.strip().strip('"')
 
 def showBuffer(buf):
-    runEmacsCmd("(switch-to-buffer \"%s\")" % buf)        
+    runEmacsCmd("(switch-to-buffer \"%s\")" % buf)
 
 class SelectBuffer(SelectChoice):
     def _currentChoice(self):
@@ -155,6 +155,7 @@ class EmacsMapping(MappingRule):
         "help variable"                  : Key("c-h,v"),
         "help key"                       : Key("c-h,k"),
         "help docks"                     : Key("c-h,d"),
+        "help news"                      : Key("c-h,n"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
 
@@ -286,24 +287,6 @@ class Emacs(SeriesMappingRule):
         "capital"                      : Key("a-c"),
         "upper"                        : Key("a-u"),
         "lower"                        : Key("a-l"),
-        
-        "larp"                         : Text("("),
-        "ralp"                         : Text(")"),
-        "lace"                         : Text("{"),
-        "race"                         : Text("}"),
-        "lack"                         : Text("["),
-        "rack"                         : Text("]"),
-        "soak"                         : Text("'"),
-        "quote [<text>]"               : Text("\""),
-        "angle"                        : Text("<"),
-        "arg"                          : Text(","),
-        "dash"                         : Text("-"),
-        "cool"                         : Text(":"),
-        "cusp"                         : Text(";"),
-        "dot"                          : Text("."),        
-        "equals"                       : Text("="),
-        "slash"                        : Text("/"),        
-        "backslash"                    : Text("\\"),        
     }
 
     extras = [

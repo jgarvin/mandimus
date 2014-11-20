@@ -1,3 +1,4 @@
+import traceback
 from util import EqualityMixin
 
 class Integer(EqualityMixin):
@@ -17,13 +18,14 @@ class Dictation(EqualityMixin):
         return "DICTATION %s" % (self.name,)
 
 class Repetition(EqualityMixin):
-    def __init__(self, min=1, max=None, name=None):
+    def __init__(self, child, min=1, max=None, name=None):
+        self.child = child
         self.min = min
         self.max = max
         self.name = name
         
     def __str__(self):
-        return "REPETITION %s" % (self.name, self.min, self.max)
+        return "REPETITION %s %s %s %s" % (self.child.name, self.min, self.max, self.name)
 
 class RuleRef(EqualityMixin):
     def __init__(self, rule, name):

@@ -80,8 +80,8 @@ class DragonflyClient(DragonflyNode):
         if "REFONLY" not in flags:
             self.makeRuleGrammar(rule, name)
 
-        toParse = copy(self.pendingRules)
         if self.pendingRules:
+            toParse = copy(self.pendingRules)
             while toParse:
                 x = toParse.pop()
                 try:
@@ -114,6 +114,7 @@ class DragonflyClient(DragonflyNode):
         for key, val in self.grammars.items():
             if key != "GlobalRules":
                 self.removeRule(key)
+        self.pendingRules = []
         DragonflyNode.dumpOther(self)
 
     def _eventLoop(self):
@@ -245,9 +246,18 @@ class DragonflyClient(DragonflyNode):
             elif e[0] == "DICTATION":
                 parsed.append(Dictation(e[1]))
             elif e[0] == "REPETITION":
-                parsed.append(Repetition(e[1], int(e[2]), int[e3]))
+                elementRef = None
+                for p in parsed:
+                    if p.name == e[1]:
+                        elementRef = p
+                        break
+                if elementRef is None:
+                    raise Exception("Can't find element %s referred to by %s" % (e[1], e[4]))        
+                parsed.append(Repetition(p, int(e[2]), int(e[3]), name=e[4]))
             elif e[0] == "RULEREF":
                 parsed.append(RuleRef(rule=self.getRule(e[1]), name=e[2]))
+            else:
+                raise Exception("Unknown element: %s" % e)
         return parsed
         
     def parseDefaults(self, defaults):

@@ -2,147 +2,98 @@ from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, Repeat
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
 from MappingRule import MappingRule
-from Elements import Integer, Dictation, RuleRef
+from Elements import Integer, Dictation, RuleRef, Repetition
 from collections import OrderedDict
 from listHelpers import dictReplace
 from rules.emacs.Emacs import Emacs
 
 import string
 
-# taken from https://github.com/schickm/dragonfly-modules/blob/master/chrome.py
-alphamapping = OrderedDict([
-    ("alpha", "a"),
-    ("bravo", "b"),
-    ("charlie", "c"),
-    ("delta", "d"),
-    ("echo", "e"),
-    ("foxtrot", "f"),
-    ("golf", "g"),
-    ("hotel", "h"),
-    ("india", "i"),
-    ("juliet", "j"),
-    ("kilo", "k"),
-    ("lima", "l"),
-    ("mike", "m"),
-    ("november", "n"),
-    ("oscar", "o"),
-    ("papa", "p"),
-    ("quebec", "q"),
-    ("romeo", "r"),
-    ("sierra", "s"),
-    ("tango", "t"),
-    ("uniform", "u"),
-    ("victor", "v"),
-    ("whiskey", "w"),
-    ("xray", "x"),
-    ("yankee", "y"),
-    ("zulu", "z"),
-    ])
-
-digitmapping = OrderedDict([
-    ("zero", "0"),
-    ("one", "1"),
-    ("two", "2"),
-    ("tree", "3"),
-    ("four", "4"),
-    ("fife", "5"),
-    ("six", "6"),
-    ("seven", "7"),
-    ("eight", "8"),
-    ("niner", "9"),
-    ])
-
-punctuationMapping = OrderedDict([
-    ("backslash" , "backslash"),
-    ("slash" , "slash"),
-    ("exclamation" , "exclamation"),
-    ("at" , "at"),
-    ("pound" , "hash"),
-    ("dollar" , "dollar"),
-    ("cash" , "dollar"),
-    ("percent" , "percent"),
-    ("caret" , "caret"),
-    ("ampersand" , "ampersand"),
-    ("asterisk" , "asterisk"),
-    ("colon" , "colon"),
-    ("semicolon" , "semicolon"),
-    ("period" , "period"),
-    ("dot" , "period"),
-    ("swirl" , "comma"), # wtf dragon? can't recognize 'comma'
-    ("backtick" , "backtick"),
-    ("tilde" , "tilde"),
-    ("single quote" , "squote"),
-    ("quote" , "dquote"),
-    ("less" , "langle"),
-    ("greater" , "rangle"),
-    ("left angle" , "langle"),
-    ("right angle" , "rangle"),
-    ("open angle" , "langle"),
-    ("close angle" , "rangle"),
-    ("left brace" , "lbrace"),
-    ("right brace" , "rbrace"),
-    ("open brace" , "lbrace"),
-    ("close brace" , "rbrace"),
-    ("left bracket" , "lbracket"),
-    ("right bracket" , "rbracket"),
-    ("open bracket" , "lbracket"),
-    ("close bracket" , "rbracket"),
-    ("left paren" , "lparen"),
-    ("right paren" , "rparen"),
-    ("open paren" , "lparen"),
-    ("close paren" , "rparen"),
-    ("hyphen" , "hyphen"),
-    ("minus" , "hyphen"),
-    ("dash" , "hyphen"),
-    ])
-
-directions = ['left', 'right', 'up', 'down']
-
-# TODO: grammar could be much better, 3 controls in a row doesn't make sense
-modifierRule = "[control] [alt] [shift]"
-possibleLetters = modifierRule + '(' + '|'.join(alphamapping.keys()) + ')'
-possibleDigits = modifierRule + '(' + '|'.join(digitmapping.keys()) + ')'
-possibleDirections = modifierRule + '(' + '|'.join(directions) + ')'
-possiblePunctuation = modifierRule + '(' + '|'.join(punctuationMapping.keys()) + ')'
-
-#print possibleKeyPresses
-
-class UnregisteredRule(MappingRule):
-    pass
-
 @registerRule
 class AlphaRule(MappingRule):
     refOnly = True
-    
     mapping = {
-        "alpha"    : Key("a"),
-        "bravo"    : Key("b"),
-        "charlie"  : Key("c"),
-        "delta"    : Key("d"),
-        "echo"     : Key("e"),
-        "foxtrot"  : Key("f"),
-        "golf"     : Key("g"),
-        "hotel"    : Key("h"),
-        "india"    : Key("i"),
-        "juliet"   : Key("j"),
-        "kilo"     : Key("k"),
-        "lima"     : Key("l"),
-        "mike"     : Key("m"),
-        "november" : Key("n"),
-        "oscar"    : Key("o"),
-        "papa"     : Key("p"),
-        "quebec"   : Key("q"),
-        "romeo"    : Key("r"),
-        "sierra"   : Key("s"),
-        "tango"    : Key("t"),
-        "uniform"  : Key("u"),
-        "victor"   : Key("v"),
-        "whiskey"  : Key("w"),
-        "xray"     : Key("x"),
-        "yankee"   : Key("y"),
-        "zulu"     : Key("z"),
+        "alpha"    : "a",
+        "bravo"    : "b",
+        "charlie"  : "c",
+        "delta"    : "d",
+        "echo"     : "e",
+        "foxtrot"  : "f",
+        "golf"     : "g",
+        "hotel"    : "h",
+        "india"    : "i",
+        "juliet"   : "j",
+        "kilo"     : "k",
+        "lima"     : "l",
+        "mike"     : "m",
+        "november" : "n",
+        "oscar"    : "o",
+        "papa"     : "p",
+        "quebec"   : "q",
+        "romeo"    : "r",
+        "sierra"   : "s",
+        "tango"    : "t",
+        "uniform"  : "u",
+        "victor"   : "v",
+        "whiskey"  : "w",
+        "xray"     : "x",
+        "yankee"   : "y",
+        "zulu"     : "z",
     }
-    
+
+@registerRule
+class DigitRule(MappingRule):
+    refOnly = True
+    mapping = {
+        "zero"  : "0",
+        "one"   : "1",
+        "two"   : "2",
+        "tree"  : "3",
+        "four"  : "4",
+        "fife"  : "5",
+        "six"   : "6",
+        "seven" : "7",
+        "eight" : "8",
+        "niner" : "9",
+    }
+
+@registerRule
+class SymRule(MappingRule):
+    refOnly = True
+    mapping = {
+        "backtick"    : "backtick",
+        "backslash"   : "backslash",
+        "equal"       : "equal",
+        "slash"       : "slash",
+        "exclamation" : "exclamation",
+        "at"          : "at",
+        "pound"       : "hash",
+        "dollar"      : "dollar",
+        "cash"        : "dollar",
+        "percent"     : "percent",
+        "caret"       : "caret",
+        "ampersand"   : "ampersand",
+        "asterisk"    : "asterisk",
+        "cool"        : "colon",
+        "cusp"        : "semicolon",
+        "period"      : "period",
+        "dot"         : "period",
+        "arg"         : "comma",
+        "tilde"       : "tilde",
+        "soak"        : "squote",
+        "quote"       : "dquote",
+        "lesser"      : "langle",
+        "greater"     : "rangle",
+        "lace"        : "lbrace",
+        "race"        : "rbrace",
+        "lack"        : "lbracket",
+        "rack"        : "rbracket",
+        "larp"        : "lparen",
+        "ralp"        : "rparen",
+        "dash"        : "hyphen",
+    }
+
+
 class PressKey(object):
     def __init__(self, force_shift=False):
         self.force_shift = force_shift
@@ -151,7 +102,7 @@ class PressKey(object):
         words = extras['words']
         print 'w: ' + str(words)
         words = words.split()
-        words = words[1:] # cut off num/dir/sym
+        #words = words[1:] # cut off num/dir/sym
         keystring = []
         foundModifier = True
 
@@ -169,9 +120,9 @@ class PressKey(object):
             keystring.append('-')
                                   
         finalkey = ' '.join(words[i:]) # everything not a modifier
-        finalkey = dictReplace(finalkey, dict(alphamapping.items() + digitmapping.items() + punctuationMapping.items()))
+        finalkey = dictReplace(finalkey, dict(AlphaRule.mapping.items() + DigitRule.mapping.items() + SymRule.mapping.items()))
         keystring.append(finalkey)
-        print keystring
+        print "keystring: %s" % keystring
         Key(''.join(keystring))()
 
 # TODO: 'blend' all the active grammars including this one together
@@ -180,28 +131,29 @@ class PressKey(object):
 @registerRule
 class AlwaysRule(SeriesMappingRule):
     mapping = {
-        "command tally"              : (lambda x: Speak(str(commandTally()))()),
-        #'let ' + possibleLetters     : PressKey(),
-        "let [control] [alt] [shift] <alpharule>" : PressKey(),
-        'caplet ' + possibleLetters  : PressKey(force_shift=True),
-        'num key ' + possibleDigits  : PressKey(),
-        'dir ' + possibleDirections  : PressKey(),
-        'sym ' + possiblePunctuation : PressKey(),
-        'rep [<n>]'                  : Repeat(),
-        'tab'                        : Key("tab"),
-        "num <big>"                  : Text("%(big)d"),
+        "command tally"                                                   : (lambda x: Speak(str(commandTally()))()),
+        "[control] [alt] [shift] (<alpharule> | <digitrule> | <symrule>)" : PressKey(),
+        'rep [<n>]'                                                       : Repeat(),
+        'tab'                                                             : Key("tab"),
+        "num <big>"                                                       : Text("%(big)d"),
     }
+
+    alpharef = RuleRef(AlphaRule, "alpharule")
+    digitref = RuleRef(DigitRule, "digitrule")
+    symref   = RuleRef(SymRule, "symrule")
 
     extras = [
         Integer("n", 2, 20),
         Integer("big", 0, 2**14),
         Dictation("text"),
-        RuleRef(AlphaRule, "alpharule"),
+        alpharef,
+        digitref,
+        symref,
         ]
     
     defaults = {
         "n": 1,
-        }    
+        }
 
     @classmethod
     def activeForWindow(cls, window):

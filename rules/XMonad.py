@@ -6,6 +6,8 @@ from Elements import Integer, Dictation
 
 @registerRule
 class XMonadRule(SeriesMappingRule):
+    allowCombining = False
+
     mapping  = {
         "mon (one | left)"            : Key("ca-p"),
         "mon (two | middle | center)" : Key("ca-f"),
