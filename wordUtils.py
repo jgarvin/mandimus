@@ -124,21 +124,30 @@ def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={
                     toReplace[n] = fixed
 
         # change 'blastgreenhouse' to ['blast', 'green', 'house']
-        new_subwords = set()
         if useDict:
             for word in new_words:
+                new_subwords = set()
                 for i in range(len(word)):
                     for j in range(len(word)-1):
                         subword = word[i:j+2]
                         if subword in englishWords and len(subword) > 2:
                             new_subwords.add(subword)
-            all_words.extend(new_subwords)
+
+                # take the top 3 longest subwords, otherwise you get a
+                # a ton of fragments
+                new_subwords = list(new_subwords)
+                new_subwords.sort(key=lambda x: len(x))
+                new_subwords = new_subwords[:3]
+                all_words.extend(new_subwords)
 
         # we do this after because we don't want the dictionary
         # stuff to run on the imaginary words we made by fixing
         # bad consonant pairs
         for k, v in toReplace.items():
-            new_words.remove(k)
+            try:
+                new_words.remove(k)
+            except ValueError:
+                pass
             new_words.append(v)
 
         all_words.extend(new_words)
