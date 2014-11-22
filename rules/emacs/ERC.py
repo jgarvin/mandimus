@@ -7,6 +7,7 @@ from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
+from wordUtils import extractWords
 
 class SelectNick(SelectChoice):
     def _currentChoice(self):
@@ -15,10 +16,10 @@ class SelectNick(SelectChoice):
     def _select(self, choice):
         if runEmacsCmd("(md-at-start-of-erc-input-line)").strip() == 't':
             # we're addressing them, include the colon
-            EmacsText("%s: " % choice, capitalCheck=False)()
+            EmacsText("%s: " % choice, lower=False, capitalCheck=False)()
         else:
             # we're referring to them, omit the colon
-            EmacsText("%s" % choice, capitalCheck=False)()
+            EmacsText("%s" % choice, lower=False, capitalCheck=False)()
             
     def _noChoice(self):
         pass
@@ -29,12 +30,16 @@ def nickList():
         return []
     return getStringList(nicks)
 
+def nickExtractFunction(w):
+    return extractWords(w, translate={}, useDict=True, detectBadConsonantPairs=True)
+
 def updateNickGrammar():
     nicks = set(nickList())
     #print 'building with : ' + str(nicks)
-    mapping = updateListGrammar(nicks, 'nick', {},
+    mapping = updateListGrammar(nicks, 'nick',
                                 SelectNick, "EmacsNickMapping",
-                                ERC.activeForWindow)
+                                ERC.activeForWindow,
+                                nickExtractFunction)
     # if mapping:
     #     print mapping.keys()
 
@@ -43,9 +48,12 @@ getLoop().subscribeTimer(1, updateNickGrammar)
 @registerRule
 class ERC(SeriesMappingRule):
     mapping = {
-        "hiss" : Key("a-p"),
-        "piss" : Key("a-n"),
-        "join [<text>]" : Text("/join #%(text)s"),
+        "hiss"               : Key("a-p"),
+        "piss"               : Key("a-n"),
+        "join [<text>]"      : Text("/join #%(text)s"),
+        "smiley wink"        : EmacsText(";)"),
+        "smiley tongue"      : EmacsText(":P", lower=False),
+        "smiley wink tongue" : EmacsText(";P", lower=False),
     }
 
     extras = [

@@ -17,9 +17,91 @@ with open("/usr/share/dict/american-english") as f:
         word = word.lower()
         englishWords.update(set(re.findall("[a-z]+", word)))
 
+normalConsonantBlends = {
+    "bl",
+    "br",
+    "pr",
+    "dr",
+    "fl",
+    "cl",
+    "gl",
+    "sl",
+    "cr",
+    "pl",
+    "fr",
+    "gr",
+    "tr",
+    "sc",
+    "sk",
+    "st",
+    "sw",
+    "sn",
+    "sm",
+    "wh",
+    "str",
+    "sh",
+    "th",
+    "tw",
+    "wr",
+    "sch",
+    "shr",
+    "sph",
+    "scr",
+    "spl",
+    "spr",
+    "squ",
+    "thr",
+}
+
+consonants = { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n',
+               'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' }
+
+vowels = { 'a', 'e', 'i', 'o', 'u' }
+
+l33tTranslation = {
+    '0' : 'o',
+    '1' : 'l',
+    '3' : 'e',
+    '4' : 'a',
+    '7' : 't',
+}
+
+def deL33t(w):
+    return ''.join(l33tTranslation[c] if c in l33tTranslation else c for c in w)
+
+def fixBadConsonantPairs(w):
+    """put 'oo' between unnatural consonant blends to make them
+    pronouncable, so wb -> woob"""
+    word = []
+    i = 0
+    while i < len(w):
+        #print word
+        if i+2 < len(w) and w[i:i+3] in normalConsonantBlends:
+            #print 'path A'
+            word.extend(w[i:i+2])
+            i += 2
+            continue
+        if i+1 < len(w):
+            if w[i:i+2] in normalConsonantBlends:
+                #print 'path B'
+                word.extend(w[i])
+                i += 1
+                continue
+            a, b = w[i:i+2]
+            #print (a, b)
+            if a in consonants and b in consonants:
+                #print 'path C'
+                word.extend([a, 'o', 'o', b])
+                i += 2
+                continue
+        #print 'path D'
+        word.extend(w[i])
+        i += 1
+    return ''.join(word)
+    
 # TODO: maybe give translate a better default
 def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={},
-                 useDict=True):
+                 useDict=True, removeLeetSpeak=True, detectBadConsonantPairs=False):
     """Split a string into a list using multiple delimeters, and optionally
     translating some characters to one or more words. Also lowercase everything."""
     splitters = splitters - set(translate.keys())
@@ -28,7 +110,20 @@ def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={
     strlen = len(wordstr)
 
     def finish(w):
+        if removeLeetSpeak:
+            w = deL33t(w)
+
+        # change 'camelCase' to ['camel', 'case']
         new_words = [i.lower() for i in deCamelize(''.join(w))]
+
+        toReplace = {}
+        if detectBadConsonantPairs:
+            for n in new_words:
+                fixed = fixBadConsonantPairs(n)
+                if fixed != n:
+                    toReplace[n] = fixed
+
+        # change 'blastgreenhouse' to ['blast', 'green', 'house']
         new_subwords = set()
         if useDict:
             for word in new_words:
@@ -38,6 +133,14 @@ def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={
                         if subword in englishWords and len(subword) > 2:
                             new_subwords.add(subword)
             all_words.extend(new_subwords)
+
+        # we do this after because we don't want the dictionary
+        # stuff to run on the imaginary words we made by fixing
+        # bad consonant pairs
+        for k, v in toReplace.items():
+            new_words.remove(k)
+            new_words.append(v)
+
         all_words.extend(new_words)
                         
     for c in wordstr:
@@ -96,3 +199,9 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
 
 if __name__ == "__main__":
     print extractWords("wgreenhouse")
+    print extractWords("ijp", detectBadConsonantPairs=True)
+    print extractWords("twb", detectBadConsonantPairs=True)
+    print extractWords("t4ngo")
+    print fixBadConsonantPairs("twb")
+    print fixBadConsonantPairs("ijp")
+    print fixBadConsonantPairs("throw")

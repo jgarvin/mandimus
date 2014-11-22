@@ -51,8 +51,8 @@ class EmacsStudRule(TypingBase):
 @registerRule
 class EmacsHyphenRule(TypingBase):
     mapping = {
-        "fen <text>"     : EmacsHyphen("%(text)s"),
-        "cap fen <text>" : EmacsHyphen("%(text)s", True),
+        "hyphen <text>"     : EmacsHyphen("%(text)s"),
+        "cap hyphen <text>" : EmacsHyphen("%(text)s", True),
     }    
 
 @registerRule

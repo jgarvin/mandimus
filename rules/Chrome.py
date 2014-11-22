@@ -3,6 +3,12 @@ from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
 from Elements import Integer, Dictation
 
+class WebSearch(Action):
+    def __call__(self, extras={}):
+        (Key("c-l, c-a, backspace")
+         + Text(self.data + (" %(text)s" % extras))
+         + Key("enter"))()
+
 @registerRule
 class ChromeRule(SeriesMappingRule):
     mapping  = {
@@ -32,13 +38,16 @@ class ChromeRule(SeriesMappingRule):
         "close tabs to the right"       : Key("as-r"),
         "close right tabs"              : Key("as-r"),
         "pin tab"                       : Key("as-p"),
-        "wikipedia [<text>]"            : Key("c-l, c-a, backspace") + Text("wk %(text)s") + Key("enter"),
-        "youtube [<text>]"              : Key("c-l, c-a, backspace") + Text("yt %(text)s") + Key("enter"),
         # provided ty the "duplicate tab" extension
         "duplicate"                     : Key("as-d"),
         #misc
         "private browsing"              : Key("cs-n"),
         "link"                          : Key("f"),
+        # search types
+        "wikipedia [<text>]"            : WebSearch("wk"),
+        "youtube [<text>]"              : WebSearch("yt"),
+        "dictionary [<text>]"           : WebSearch("dict"),
+        "thesaurus [<text>]"            : WebSearch("thes"),
         }
 
     extras = [

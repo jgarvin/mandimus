@@ -30,7 +30,7 @@ def rindex(lst, item):
 
 def flattenList(l):
     return list(chain.from_iterable(l))
-    
+
 def splitFlatten(slist, s=' '):
     x = []
     for i in slist:

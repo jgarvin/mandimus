@@ -71,8 +71,8 @@ class DragonflyThread(DragonflyNode):
         
         print 'Unloading grammar: ' + grammar.name        
         self.sendMsg('unload' + ARG_DELIMETER + grammar.name)
-        del self.grammars[grammar.name]        
-        
+        del self.grammars[grammar.name]
+
     def onConnect(self):
         self.pushQ.put(ConnectedEvent())
         oldGrammars = self.grammars

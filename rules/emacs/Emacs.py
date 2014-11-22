@@ -56,13 +56,13 @@ def updateBufferGrammar():
     special |= {k for k in b if k.startswith('*')}
     b -= channels
     b -= special
-    updateListGrammar(b, 'buff', {},
+    updateListGrammar(b, 'buff',
                       SelectBuffer, "EmacsBufferMapping",
                       Emacs.activeForWindow)
-    updateListGrammar(channels, 'channel', {},
+    updateListGrammar(channels, 'channel',
                       SelectBuffer, "EmacsChannelMapping",
                       Emacs.activeForWindow)
-    updateListGrammar(special, 'special', {},
+    updateListGrammar(special, 'special',
                       SelectBuffer, "EmacsSpecialMapping",
                       Emacs.activeForWindow)
 
@@ -84,11 +84,15 @@ def tokenList():
     tokens = [''.join([c for c in n if c in string.printable]) for n in tokens]
     return tokens
 
+def extractTokeFunction(w):
+    return extractWords(w, translate={}, useDict=False)
+
 def updateTokenGrammar():
     t = set(tokenList())
-    updateListGrammar(t, 'toke', {},
+    updateListGrammar(t, 'toke',
                       SelectTypeClosest, "EmacsTokenMapping",
-                      Emacs.activeForWindow, useDict=False)    
+                      Emacs.activeForWindow,
+                      extractTokeFunction)
     
 getLoop().subscribeTimer(1, updateBufferGrammar)
 # getLoop().subscribeTimer(1, updateTokenGrammar)
@@ -218,6 +222,8 @@ class Emacs(SeriesMappingRule):
         "mack"                         : Key("F4"),
         
         # navigation commands
+        "fluff [<n>]"                  : Cmd("(md-next-whitespace-separated-thing)"),
+        "fleece [<n>]"                 : Cmd("(md-previous-whitespace-separated-thing)"),
         "ace"                          : Key("c-c,space"),
         "ace care"                     : Key("c-u,c-c,space"),
 
@@ -226,6 +232,8 @@ class Emacs(SeriesMappingRule):
         "cliff"                        : Cmd("(md-go-to-cliff)"),
         "top"                          : Key("a-langle"),
         "bottom"                       : Key("a-rangle"),
+        "window top"                   : Cmd("(goto-char (window-start))"),
+        "window bottom"                : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
         "post [<n>]"                   : Key("a-f:%(n)d"),
         "pre [<n>]"                    : Key("a-b:%(n)d"),
         "pade"                         : Key("a-v"),
@@ -288,6 +296,10 @@ class Emacs(SeriesMappingRule):
         "capital"                      : Key("a-c"),
         "upper"                        : Key("a-u"),
         "lower"                        : Key("a-l"),
+
+        "push"                         : Key("c-space,c-space"),
+        "snap"                         : Key("c-u,c-space"),
+        "big snap"                     : Key("c-x,c-space"),
     }
 
     extras = [

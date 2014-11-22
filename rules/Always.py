@@ -110,8 +110,8 @@ class StudRule(TypingBase):
 @registerRule
 class HyphenRule(TypingBase):
     mapping = {
-        "fen <text>"     : Hyphen("%(text)s"),
-        "cap fen <text>" : Hyphen("%(text)s", True),
+        "hyphen <text>"     : Hyphen("%(text)s"),
+        "cap hyphen <text>" : Hyphen("%(text)s", True),
     }    
 
 @registerRule

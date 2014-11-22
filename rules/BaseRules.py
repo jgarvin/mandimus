@@ -58,6 +58,7 @@ class SymRule(MappingRule):
         "equal"       : "equal",
         "slash"       : "slash",
         "exclamation" : "exclamation",
+        "question"    : "question",
         "at"          : "at",
         "pound"       : "hash",
         "dollar"      : "dollar",
@@ -83,5 +84,5 @@ class SymRule(MappingRule):
         "larp"        : "lparen",
         "ralp"        : "rparen",
         "dash"        : "hyphen",
-        "pipe"        : "bar",
+        "bar"         : "bar",
     }

@@ -142,9 +142,6 @@ class MainThread(object):
             print "Series combining: %s" % [type(x).__name__ for x in self.combined_series_parts] 
             self.dfly.loadGrammar(self.combined_series)
     
-    def loadRule(self):
-        self.dfly.loadGrammar(WindowRule)
-
     def put(self, p):
         self.events += [p]
 

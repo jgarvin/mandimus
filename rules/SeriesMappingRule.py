@@ -10,6 +10,8 @@ def combineSeriesMappingRules(series):
         extras = []
         defaults = {}
         
+    name = []
+
     for a in series:
         commonKeys = set(MergedSeries.mapping.keys()) & set(a.mapping.keys()) 
         if commonKeys:
@@ -29,6 +31,11 @@ def combineSeriesMappingRules(series):
                 if a.defaults[i] != MergedSeries.defaults[i]:
                     print "MergedSeries and %s disagree on defaults (%s) (%s)" % (type(a).__name__, a.defaults[i], MergedSeries.defaults[i])
         MergedSeries.defaults.update(a.defaults.items())
+
+        name.append(type(a).__name__)
+
+    name.sort()
+    MergedSeries.__name__ = ''.join(name)
 
     # print MergedSeries.mapping
     # print MergedSeries.extras

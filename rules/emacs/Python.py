@@ -1,6 +1,7 @@
 from Actions import Text
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
+from rules.emacs.Text import EmacsText
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 
@@ -11,8 +12,8 @@ class Python(SeriesMappingRule):
         "align list" : Cmd("(align-list)"),
         "mark block" : Cmd("(er/mark-python-block)"),
         "mark state" : Cmd("(er/mark-python-statement)"),
-        "False"      : Text("False", lower=False),
-        "True"       : Text("True", lower=False),
+        "True"       : EmacsText("True", lower=False),
+        "False"      : EmacsText("False", lower=False),
     }
 
     @classmethod
@@ -22,3 +23,9 @@ class Python(SeriesMappingRule):
             return False
         out = runEmacsCmd("major-mode").strip()
         return out == "python-mode"
+
+import keyword
+Python.mapping.update({i : EmacsText("%s" % i, lower=False) for i in keyword.kwlist})
+
+otherMainWords = {"True", "False", "set", "list", "dict", "None"}
+Python.mapping.update({i : EmacsText("%s" % i, lower=False) for i in otherMainWords})

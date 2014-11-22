@@ -80,16 +80,6 @@ class DragonflyClient(DragonflyNode):
         if "REFONLY" not in flags:
             self.makeRuleGrammar(rule, name)
 
-        if self.pendingRules:
-            toParse = copy(self.pendingRules)
-            while toParse:
-                x = toParse.pop()
-                try:
-                    self._parseMessage(x)
-                    self.pendingRules.remove(x)
-                except NeedsDependency:
-                    pass
-
     def removeRule(self, name):
         #print 'Removing rule: ' + name
         try:
@@ -142,6 +132,16 @@ class DragonflyClient(DragonflyNode):
 
         self.retrieveMessages()
         self.heartbeat()
+
+        if self.pendingRules:
+            toParse = copy(self.pendingRules)
+            while toParse:
+                x = toParse.pop()
+                try:
+                    self._parseMessage(x)
+                    self.pendingRules.remove(x)
+                except NeedsDependency:
+                    pass
 
     def _parseMessage(self, msg):
         try:
