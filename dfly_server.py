@@ -11,8 +11,10 @@ from DragonflyNode import DragonflyNode, ConnectedEvent
 from namedtuple import namedtuple
 from Actions import Repeat
 from EventLoop import getLoop
+from rules.Rule import registeredRules
+from rules.SeriesMappingRule import SeriesMappingRule, combineSeriesMappingRules
 
-GrammarMatchEvent = namedtuple("GrammarMatchEvent", "grammar, extras")
+RuleMatchEvent = namedtuple("RuleMatchEvent", "rule, extras")
 
 BLOCK_TIME = 0.05
 
@@ -21,7 +23,6 @@ class DragonflyThread(DragonflyNode):
         self.address = address
         self.pushQ = pushQ
         DragonflyNode.__init__(self)
-        self.grammars = {}
         self.history = []
         
         self.server_socket = self.makeSocket()
@@ -29,6 +30,11 @@ class DragonflyThread(DragonflyNode):
         self.server_socket.listen(1)
         self.other = None
         self.buf = ''
+
+        self.combinedSeries = None
+
+        self.rules = {}
+        self.enabledRules = set()
 
         getLoop().subscribeTimer(BLOCK_TIME, self)
 
@@ -52,34 +58,97 @@ class DragonflyThread(DragonflyNode):
         if self.server_socket is not None:
             self.server_socket.close()
 
-    def loadGrammar(self, grammar):
-        if grammar.name in self.grammars:
-            if grammar == self.grammars[grammar.name]:
-                #print 'grammar UNchanged: ' + grammar.__name__
+    def loadRule(self, rule):
+        if rule.name in self.rules:
+            if rule == self.rules[rule.name]:
+                #print 'rule UNchanged: ' + rule.name
                 return
             else:
-                print 'grammar changed: ' + grammar.name
-                self.unloadGrammar(self.grammars[grammar.name])
+                print 'rule changed: ' + rule.name
+                self.unloadRule(self.rules[rule.name])
         
-        print 'Loading grammar: ' + grammar.name
-        self.sendMsg(grammar.textSerialize())
-        self.grammars[grammar.name] = grammar
+        print 'Loading rule: ' + rule.name
+        self.sendMsg(rule.textSerialize())
+        self.rules[rule.name] = rule
 
-    def unloadGrammar(self, grammar):
-        if grammar.name not in self.grammars:
+    def unloadRule(self, rule):
+        if rule.name not in self.rules:
             return
         
-        print 'Unloading grammar: ' + grammar.name        
-        self.sendMsg('unload' + ARG_DELIMETER + grammar.name)
-        del self.grammars[grammar.name]
+        print 'Unloading rule: ' + rule.name        
+        self.sendMsg('unload' + ARG_DELIMETER + rule.name)
+        try:
+            self.enabledRules.remove(rule)
+        except ValueError:
+            pass
+
+    def clearAllRules(self):
+        print 'Unloading all rules.'        
+        self.sendMsg('unload_all')
+        self.rules = {}
+        self.enabledRules = set()
+        for r in registeredRules().values():
+            self.unloadRule(r)
+
+    def sendAllRules(self):
+        for r in registeredRules().values():
+            self.loadRule(r)
+
+    def enableRule(self, rule):
+        if rule in self.enabledRules:
+            return
+        print 'Enabling rule: ' + rule.name        
+        self.sendMsg('enable' + ARG_DELIMETER + rule.name)
+        self.enabledRules.add(rule)
+        
+    def disableRule(self, rule):
+        if rule not in self.enabledRules:
+            return
+        print 'Disabling rule: ' + rule.name        
+        self.sendMsg('disable' + ARG_DELIMETER + rule.name)
+        self.enabledRules.remove(rule)
+
+    def updateRuleEnabledness(self, active):
+        # load anything new that was registered or that changed
+        registered = set(registeredRules().values())
+        for r in registered:
+            self.loadRule(r)
+
+        allRules = set(self.rules.values())
+
+        combine_series = []
+        
+        for l in active:
+            if isinstance(l, SeriesMappingRule) and l.allowCombining and not l.isMergedSeries:
+                combine_series.append(l)
+        for s in combine_series:
+            active.remove(s)
+
+        # sort so they'll compare reliably
+        combine_series.sort(key=lambda x: type(x).__name__)
+        combine_series_name = ','.join([type(x).__name__ for x in combine_series])
+
+        if combine_series:
+            if combine_series_name in self.rules:
+                self.combinedSeries = self.rules[combine_series_name]
+                active.add(self.combinedSeries)
+            else:
+                self.combinedSeries = combineSeriesMappingRules(combine_series)()
+                print "Series combining: %s" % [type(x).__name__ for x in self.combinedSeries.parts] 
+                self.loadRule(self.combinedSeries)
+                active.add(self.combinedSeries)
+
+        inactive = allRules - active        
+        for u in inactive:
+            self.disableRule(u)
+
+        for l in active:
+            self.enableRule(l)
 
     def onConnect(self):
+        self.clearAllRules()
+        self.sendAllRules()
         self.pushQ.put(ConnectedEvent())
-        oldGrammars = self.grammars
-        self.grammars = {}
-        for k, g in oldGrammars.items():
-            self.unloadGrammar(g)
-            self.loadGrammar(g)
 
     def onMessage(self, msg):
         if msg.startswith("MATCH"):
@@ -89,34 +158,34 @@ class DragonflyThread(DragonflyNode):
     def parseMatchMsg(self, msg):
         msg = msg.split("MATCH")[1]
         tokens = msg.split(ARG_DELIMETER)
-        grammar, words = tokens[:2]
+        rule, words = tokens[:2]
         extras = tokens[2:]
         
         extras = [g for g in extras if g != '']
         extras = self.parseExtras(extras)
-        extras['grammar'] = grammar
+        extras['rule'] = rule
         extras['words'] = words
 
-        self.onMatch(grammar, extras)
+        self.onMatch(rule, extras)
 
-    def onMatch(self, grammar, extras):
+    def onMatch(self, rule, extras):
         # todo replace this with MatchEvent
-        for k, g in self.grammars.items():
-            if grammar in g.mapping:
+        for g in self.enabledRules:
+            if rule in g.mapping:
                 try:
-                    cb = g.mapping[grammar]
+                    cb = g.mapping[rule]
 
                     if isinstance(cb, Repeat):
                         if len(self.history) >= 1:
                             repetitions = extras['n']
-                            grammar, extras = self.history[-1]
+                            rule, extras = self.history[-1]
                             for i in range(repetitions):
-                                self.onMatch(grammar, extras)
+                                self.onMatch(rule, extras)
                             return
                     else:
-                        self.history.append(GrammarMatchEvent(grammar, extras))
+                        self.history.append(RuleMatchEvent(rule, extras))
 
-                    print 'match %s -- %s' % (grammar, extras['words'])
+                    print 'match %s -- %s' % (rule, extras['words'])
                     cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because

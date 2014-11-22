@@ -6,6 +6,7 @@ class MappingRule(EqualityMixin):
     extras = []
     defaults = {}
     refOnly = False
+    isMergedSeries = False
     serializedType = "MappingRule"
 
     def __eq__(self, other):

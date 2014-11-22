@@ -48,6 +48,12 @@ class ChromeRule(SeriesMappingRule):
         "youtube [<text>]"              : WebSearch("yt"),
         "dictionary [<text>]"           : WebSearch("dict"),
         "thesaurus [<text>]"            : WebSearch("thes"),
+        "amazon [<text>]"               : WebSearch("az"),
+        "c plus plus [<text>]"          : WebSearch("cpp"),
+        "facebook [<text>]"             : WebSearch("fb"),
+        "game facks [<text>]"           : WebSearch("gfaqs"),
+        "images [<text>]"               : WebSearch("im"),
+        "stack overflow"                : WebSearch("so"),
         }
 
     extras = [

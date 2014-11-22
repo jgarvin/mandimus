@@ -27,6 +27,7 @@ importOrReload("DragonflyNode", "DragonflyNode")
 def reloadClient():
     client.cleanup()
     unloadCode()
+    from hotcode import reloadCode
     reloadCode()
 
 class NeedsDependency(Exception): pass
@@ -67,21 +68,23 @@ class DragonflyClient(DragonflyNode):
         self.grammars = {}
         self.pendingRules = []
 
-        self.addRule(GlobalRules(), "GlobalRules")
+        self.globalRule = GlobalRules() 
+
+        self.addRule(self.globalRule, "GlobalRules")
+        self.makeRuleGrammar(self.globalRule, "GlobalRules")
+        self.enableRule(self.globalRule)
 
     def addRule(self, rule, name, flags=[]):
-        print 'adding rule: %s' % name
+        print 'adding rule: %s %s' % (rule.name, name)
 
         if name in self.rules:
             print 'Already have rule: ' + name
             return
 
         self.rules[name] = rule
-        if "REFONLY" not in flags:
-            self.makeRuleGrammar(rule, name)
 
     def removeRule(self, name):
-        #print 'Removing rule: ' + name
+        print 'Removing rule: ' + name
         try:
             del self.rules[name]
         except KeyError:
@@ -95,15 +98,14 @@ class DragonflyClient(DragonflyNode):
     def makeRuleGrammar(self, rule, name):
         grammar = Grammar(name)
         grammar.add_rule(rule)
+        grammar.disable()
         grammar.load()
         get_engine().set_exclusiveness(grammar, 1)
         self.grammars[name] = grammar        
 
     def dumpOther(self):
         # on disconnect unload all the rules
-        for key, val in self.grammars.items():
-            if key != "GlobalRules":
-                self.removeRule(key)
+        self.unloadAllRules()
         self.pendingRules = []
         DragonflyNode.dumpOther(self)
 
@@ -143,14 +145,59 @@ class DragonflyClient(DragonflyNode):
                 except NeedsDependency:
                     pass
 
+    def unloadAllRules(self):
+        if len(self.grammars) > 1:
+            print 'Unloading all rules.'
+        for key, val in self.grammars.items():
+            if key != "GlobalRules":
+                self.removeRule(key)
+        
+    def parseEnableMsg(self, msg):
+        args = msg.split(ARG_DELIMETER)
+        rule = args[1]
+        r = self.getRule(rule)
+        if not r:
+            print "Can't enable %s, can't find it." % rule
+            return
+        self.enableRule(r)
+
+    def parseDisableMsg(self, msg):
+        args = msg.split(ARG_DELIMETER)
+        rule = args[1]
+        r = self.getRule(rule)
+        if not r:
+            print "Can't disable %s, can't find it." % rule
+            return
+        self.disableRule(r)
+
+    def enableRule(self, rule):
+        print "Enabling %s" % rule.name
+        if rule.name not in self.grammars:
+            self.makeRuleGrammar(rule, rule.name)
+        if not self.grammars[rule.name].enabled:
+            self.grammars[rule.name].enable()
+
+    def disableRule(self, rule):
+        print "Disabling %s" % rule.name
+        if rule.name not in self.grammars:
+            return
+        if self.grammars[rule.name].enabled:
+            self.grammars[rule.name].disable()
+
     def _parseMessage(self, msg):
         try:
             if msg.startswith("MappingRule"):
                 self.parseMappingRuleMsg(msg, MappingRule)
             elif msg.startswith("SeriesMappingRule"):
                 self.parseMappingRuleMsg(msg, SeriesMappingRule)
+            elif msg.startswith("unload_all"):
+                self.unloadAllRules()
             elif msg.startswith("unload"):
                 self.parseUnloadMsg(msg)
+            elif msg.startswith("enable"):
+                self.parseEnableMsg(msg)
+            elif msg.startswith("disable"):
+                self.parseDisableMsg(msg)
             elif msg.startswith("ack"):
                 #print 'received ack: ' + msg
                 pass
@@ -180,8 +227,8 @@ class DragonflyClient(DragonflyNode):
         self.removeRule(allargs[1])
         
     def parseMappingRuleMsg(self, msg, mappingCls):
-        allargs = msg.split(ARG_DELIMETER) 
-        
+        allargs = msg.split(ARG_DELIMETER)
+
         typ = allargs[0]
         rule_name = allargs[1]
         idx = 2
@@ -231,10 +278,7 @@ class DragonflyClient(DragonflyNode):
         
     def getRule(self, ruleName):                
         if ruleName not in self.rules:
-            print "Missing dependency!: %s" % ruleName 
-            raise NeedsDependency()
-        # we only ever have one 'rule' per grammar
-        print 'Found dependency!: %s' % ruleName
+            return None
         return self.rules[ruleName]
         
     def parseExtras(self, extras):
@@ -255,7 +299,11 @@ class DragonflyClient(DragonflyNode):
                     raise Exception("Can't find element %s referred to by %s" % (e[1], e[4]))        
                 parsed.append(Repetition(p, int(e[2]), int(e[3]), name=e[4]))
             elif e[0] == "RULEREF":
-                parsed.append(RuleRef(rule=self.getRule(e[1]), name=e[2]))
+                r = self.getRule(e[1])
+                if not r:
+                    print "Missing dependency!: %s" % e[1] 
+                    raise NeedsDependency()
+                parsed.append(RuleRef(rule=r, name=e[2]))
             else:
                 raise Exception("Unknown element: %s" % e)
         return parsed
@@ -275,9 +323,9 @@ class DragonflyClient(DragonflyNode):
             return
 
         print 'match ' + grammarString
-        print 'data ' + unicode(data)
-        print 'node ' + u' '.join(data['_node'].words())
-        print 'rule ' + unicode(data['_rule'].name)
+        # print 'data ' + unicode(data)
+        # print 'node ' + u' '.join(data['_node'].words())
+        # print 'rule ' + unicode(data['_rule'].name)
         print 'grammar ' + unicode(data['_grammar'].name)
         msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
         msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
@@ -290,7 +338,7 @@ class DragonflyClient(DragonflyNode):
                 if isinstance(value, int) or isinstance(value, unicode):
                     msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value), ARG_DELIMETER]
                 elif isinstance(value, get_engine().DictationContainer):
-                    print 'valuecont',value.words,unicode(value)
+                    # print 'valuecont',value.words,unicode(value)
                     msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value.format()), ARG_DELIMETER]
         self.sendMsg(u''.join(msg))
 

@@ -9,6 +9,9 @@ def combineSeriesMappingRules(series):
         mapping = {}
         extras = []
         defaults = {}
+        parts = []
+        allowCombining = False
+        isMergedSeries = True
         
     name = []
 
@@ -32,10 +35,10 @@ def combineSeriesMappingRules(series):
                     print "MergedSeries and %s disagree on defaults (%s) (%s)" % (type(a).__name__, a.defaults[i], MergedSeries.defaults[i])
         MergedSeries.defaults.update(a.defaults.items())
 
-        name.append(type(a).__name__)
+        MergedSeries.parts.append(a)
 
-    name.sort()
-    MergedSeries.__name__ = ''.join(name)
+    MergedSeries.parts.sort(key=lambda x: type(x).__name__)
+    MergedSeries.__name__ = ','.join([type(x).__name__ for x in MergedSeries.parts])
 
     # print MergedSeries.mapping
     # print MergedSeries.extras

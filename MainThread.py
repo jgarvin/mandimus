@@ -12,7 +12,7 @@ import traceback
 from Events import GrammarEvent
 
 from rules.Rule import registerRule, registeredRules
-from rules.SeriesMappingRule import SeriesMappingRule, combineSeriesMappingRules
+from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
 from rules.Elements import Integer, Dictation
 
@@ -84,9 +84,6 @@ class MainThread(object):
         
         self.events = []
 
-        self.combined_series_parts = []
-        self.combined_series = None
-
     def subscribeTimer(self, seconds, cb):
         self.timers.append(TimerEntry(time.time() + seconds, cb, seconds))
 
@@ -108,39 +105,11 @@ class MainThread(object):
                 t.callback()
     
     def determineRules(self, window):
-        load = []
-        unload = []
+        active = set()
         for r in registeredRules().values():
-            if r.activeForWindow(window) or r.refOnly:
-                load.append(r)
-            else:
-                unload.append(r)
-
-        for u in unload:
-            if u in self.combined_series_parts and self.combined_series:
-                # removing even one means we need to assemble
-                # a whole new series to replace it
-                self.dfly.unloadGrammar(self.combined_series)
-                self.combined_series_parts = []
-                self.combined_series = None
-            else:
-                self.dfly.unloadGrammar(u)
-
-        combine_series = []
-        for l in load:
-            if isinstance(l, SeriesMappingRule) and l.allowCombining:
-                combine_series.append(l)
-            else:
-                self.dfly.loadGrammar(l)
-
-        # sort so they'll compare reliably
-        combine_series.sort(key=lambda x: type(x).__name__)
-
-        if combine_series != self.combined_series_parts:
-            self.combined_series = combineSeriesMappingRules(combine_series)()
-            self.combined_series_parts = combine_series
-            print "Series combining: %s" % [type(x).__name__ for x in self.combined_series_parts] 
-            self.dfly.loadGrammar(self.combined_series)
+            if r.activeForWindow(window):
+                active.add(r)
+        self.dfly.updateRuleEnabledness(active)
     
     def put(self, p):
         self.events += [p]

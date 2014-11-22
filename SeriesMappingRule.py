@@ -15,7 +15,7 @@ class SeriesMappingRule(CompoundRule):
 
         compound_spec = "<series>"
         compound_extras = [series]
-        CompoundRule.__init__(self, spec=compound_spec,
+        CompoundRule.__init__(self, name=name, spec=compound_spec,
             extras=compound_extras, exported=True)
 
     def _process_recognition(self, node, extras):  # @UnusedVariable
