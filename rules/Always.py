@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, Repeat
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
@@ -16,7 +19,7 @@ class PressKey(object):
     
     def __call__(self, extras):
         words = extras['words']
-        print 'w: ' + str(words)
+        log.info('w: ' + str(words))
         words = words.split()
         #words = words[1:] # cut off num/dir/sym
         keystring = []
@@ -38,7 +41,7 @@ class PressKey(object):
         finalkey = ' '.join(words[i:]) # everything not a modifier
         finalkey = dictReplace(finalkey, dict(AlphaRule.mapping.items() + DigitRule.mapping.items() + SymRule.mapping.items()))
         keystring.append(finalkey)
-        print "keystring: %s" % keystring
+        log.info("keystring: %s" % keystring)
         Key(''.join(keystring))()
 
 # TODO: 'blend' all the active grammars including this one together
@@ -51,7 +54,6 @@ class AlwaysRule(SeriesMappingRule):
         "[control] [alt] [shift] (<alpharule> | <digitrule> | <symrule>)" : PressKey(),
         'rep [<n>]'                                                       : Repeat(),
         'tab'                                                             : Key("tab"),
-        "num <big>"                                                       : Text("%(big)d"),
     }
 
     alpharef = RuleRef(AlphaRule, "alpharule")
@@ -60,7 +62,6 @@ class AlwaysRule(SeriesMappingRule):
 
     extras = [
         Integer("n", 2, 20),
-        Integer("big", 0, 2**14),
         Dictation("text"),
         alpharef,
         digitref,

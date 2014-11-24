@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from copy import copy
 
 registered_rules = {}
@@ -16,7 +19,7 @@ def registerRule(f):
     remove = set()
     for ruleName in registered_rules:
         if newName == ruleName:
-            # print 'removing old ' + getName(f)
+            # log.info('removing old ' + getName(f))
             remove.add(ruleName)
     for r in remove:
         del registered_rules[r]
@@ -29,5 +32,5 @@ def commandTally():
     tally = 0
     for s in registered_rules.values():
         tally += len(s.mapping)
-    print tally
+    log.info(tally)
     return tally

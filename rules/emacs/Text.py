@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from rules.MappingRule import MappingRule
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
@@ -15,10 +18,10 @@ class EmacsText(Text):
             needCapital = runEmacsCmd("(md-need-capitalization)").strip() is 't'
         needSpace = runEmacsCmd("(md-need-space \"%s\")" % words).strip() is 't'
         if needCapital:
-            print 'capitalize'
+            log.info('capitalize')
             words = words[0].upper() + words[1:]
         if needSpace:
-            print 'need space'
+            log.info('need space')
             words = ' ' + words
             
         # There's no good elisp way to handle putting characters into

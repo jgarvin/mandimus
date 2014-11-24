@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 import subprocess
 import re
 import string
@@ -7,7 +10,7 @@ from Window import Window, getFocusedWindow
 from util import deepEmpty
 
 def runCmd(cmd):
-    print 'cmd: [' + cmd + ']'
+    log.info('cmd: [' + cmd + ']')
     subprocess.call(cmd, shell=True)
 
 def splitKeyString(keyStr):
@@ -199,7 +202,7 @@ class SelectChoice(Action):
         if bestpick is None:
             for h in reversed(self.history()):
                 for t in ties:
-                    #print h,t[0]
+                    #log.info(h,t[0])
                     if h == t[0]:
                         bestpick = h
                         break
@@ -365,7 +368,7 @@ class FormatState(object):
         new = []
         first = True
         for word in s:
-            #print 'word ' + word
+            #log.info('word ' + word)
             if word == ur"\cap" and self.do_formatting:
                 self.cap_once = True
             elif word == ur"\caps-on" and self.do_formatting:
@@ -380,7 +383,7 @@ class FormatState(object):
                 self.next_literal = True
             else:
                 isCode = word in self.formatting.keys()
-                #print 'isCode: ' + str(isCode)
+                #log.info('isCode: ' + str(isCode))
                 newWord = word
                 if isCode:
                     if self.do_formatting and not self.next_literal:
@@ -391,7 +394,7 @@ class FormatState(object):
                     for key, val in replacements.items():
                         newWord = newWord.replace(key, val)
                     new.append(newWord)
-                    #print 'newWord: ' + newWord
+                    #log.info('newWord: ' + newWord)
                     self.no_space_once = True
                 else:
                     if self.cap_once:
@@ -465,7 +468,7 @@ class Text(Action):
         
     def __call__(self, extras={}):
         text = self._text(extras)
-        print text
+        log.info(text)
         self._print(text)
 
     def _print(self, words):
@@ -519,10 +522,10 @@ class click:
     def __call__(self):
         # TODO: pay attention to errors, exit status
         cmd = "xdotool click " + str(self.keyStr)
-#        print "executing: " + cmd
+#        log.info("executing: " + cmd)
         subprocess.call(cmd, shell=True)
 
 def moveRelativeToWindow(x, y, windowId):
         cmd = "xdotool mousemove --window %s %s %s" % (windowId, x, y)
-#        print "executing: " + cmd
+#        log.info("executing: " + cmd)
         subprocess.call(cmd, shell=True)

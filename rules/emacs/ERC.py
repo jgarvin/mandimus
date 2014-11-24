@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from Actions import Key, Text, SelectChoice
 from EventLoop import getLoop
 from rules.Elements import Dictation, Integer
@@ -35,13 +38,13 @@ def nickExtractFunction(w):
 
 def updateNickGrammar():
     nicks = set(nickList())
-    #print 'building with : ' + str(nicks)
+    #log.info('building with : ' + str(nicks))
     mapping = updateListGrammar(nicks, 'nick',
                                 SelectNick, "EmacsNickMapping",
                                 ERC.activeForWindow,
                                 nickExtractFunction)
     # if mapping:
-    #     print mapping.keys()
+    #     log.info(mapping.keys())
 
 getLoop().subscribeTimer(1, updateNickGrammar)
 

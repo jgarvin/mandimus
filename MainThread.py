@@ -1,3 +1,7 @@
+import mdlog, os
+mdlog.initLogging("server", "/tmp", stdOut=True)
+log = mdlog.getLogger(__name__)
+
 import os, sys
 from dfly_server import DragonflyThread
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, SelectWindow
@@ -238,7 +242,7 @@ if __name__ == "__main__":
         try:
             __import__(module, globals(), locals(), fromlist)
         except Exception as e:
-            print "Couldn't import %s" % module
+            log.info("Couldn't import %s" % module)
             traceback.print_exc()
 
     main()

@@ -1,3 +1,7 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
+
 import subprocess
 from collections import defaultdict
 import string

@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from listHelpers import splitFlatten, deCamelize
 import re, string
 from Actions import Noop
@@ -51,12 +54,16 @@ normalConsonantBlends = {
     "spr",
     "squ",
     "thr",
+    # my additions below
+    "omb", # otherwise comb becomes comoob
 }
 
 consonants = { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n',
-               'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' }
+               'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'z' }
 
-vowels = { 'a', 'e', 'i', 'o', 'u' }
+# y isn't always a vowel but when it doesn't it still
+# doesn't usually create a pronunciation problem
+vowels = { 'a', 'e', 'i', 'o', 'u', 'y' }
 
 l33tTranslation = {
     '0' : 'o',
@@ -75,26 +82,26 @@ def fixBadConsonantPairs(w):
     word = []
     i = 0
     while i < len(w):
-        #print word
+        #log.info(word)
         if i+2 < len(w) and w[i:i+3] in normalConsonantBlends:
-            #print 'path A'
+            #log.info('path A')
             word.extend(w[i:i+2])
             i += 2
             continue
         if i+1 < len(w):
             if w[i:i+2] in normalConsonantBlends:
-                #print 'path B'
+                #log.info('path B')
                 word.extend(w[i])
                 i += 1
                 continue
             a, b = w[i:i+2]
-            #print (a, b)
+            #log.info((a, b))
             if a in consonants and b in consonants:
-                #print 'path C'
+                #log.info('path C')
                 word.extend([a, 'o', 'o', b])
                 i += 2
                 continue
-        #print 'path D'
+        #log.info('path D')
         word.extend(w[i])
         i += 1
     return ''.join(word)

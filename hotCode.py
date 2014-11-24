@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 import sys, inspect, random
 
 def topy(path):
@@ -17,13 +20,13 @@ def resetImportState():
 resetImportState()        
 
 def getCallingModule():
-    #print inspect.stack()
+    #log.info(inspect.stack())
     for frm in inspect.stack():
         frmfile = topy(frm[1])
         mod = inspect.getmodulename(topy(frmfile))
-        # print dir(inspect.currentframe())
+        # log.info(dir(inspect.currentframe()))
         if frmfile != topy(__file__):
-            print frmfile, topy(__file__)
+            log.info((frmfile, topy(__file__)))
             return sys.modules[mod]
     raise "Couldn't find calling module in stack trace"
 
@@ -39,19 +42,19 @@ def importOrReload(module_name, *names):
 
             if hasattr(sys.modules[module_name], "unload") and callable(sys.modules[module_name].unload):
                 sys.modules[module_name].unload()
-            print 'calling reload: ' + module_name
+            log.info('calling reload: ' + module_name)
             reload(sys.modules[module_name])
         else:
-            print 'already loaded: ' + module_name
+            log.info('already loaded: ' + module_name)
             # we have already loaded this module since last reset
     else:
-        print 'calling import: ' + module_name
+        log.info('calling import: ' + module_name)
         __import__(module_name, fromlist=names)
         
     setattr(sys.modules[module_name], "__importState", __importState)
     callingModule = getCallingModule()
     for name in names:
-        print 'setting %s on %s' % (name, str(callingModule))
+        log.info('setting %s on %s' % (name, str(callingModule)))
         setattr(callingModule, name, getattr(sys.modules[module_name], name))
         # we only imported so we could assign, this 'unimports'
         try:
@@ -113,10 +116,12 @@ def unloadCode():
 
 def reloadCode():
     import natlinkmain
-    print 'Reloading code'
+    log.info('Reloading code')
     unload_code()
     natlinkmain.findAndLoadFiles()
-    print 'Finished reloading'
-                
+    import logging
+    log = logging.getLogger(__name__)
+    log.info('Finished reloading')
+
 
 ### DRAGONSHARE RSYNC

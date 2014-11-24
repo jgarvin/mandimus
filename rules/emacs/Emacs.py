@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from rules.Rule import registerRule
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
@@ -71,14 +74,15 @@ class SelectTypeClosest(SelectChoice):
         return None
 
     def _select(self, choice):
-        print type(choice)
-        EmacsText("%s" % choice)()        
+        log.info(type(choice))
+        EmacsText("%s" % choice, lower=False)()        
 
     def _noChoice(self):
         pass
 
 def tokenList():
-    tokens = runEmacsCmd("(md-get-buffer-words)")
+#    tokens = runEmacsCmd("(md-get-buffer-words)")
+    tokens = runEmacsCmd("(md-get-window-words)")
     tokens = getStringList(tokens)
     # filter unicode crap
     tokens = [''.join([c for c in n if c in string.printable]) for n in tokens]
@@ -95,7 +99,7 @@ def updateTokenGrammar():
                       extractTokeFunction)
     
 getLoop().subscribeTimer(1, updateBufferGrammar)
-# getLoop().subscribeTimer(1, updateTokenGrammar)
+#getLoop().subscribeTimer(1, updateTokenGrammar)
 #getLoop().subscribeTimer(10, updateCommandGrammar)
 #updateCommandGrammar()
 
@@ -182,6 +186,7 @@ class EmacsMapping(MappingRule):
         # file commands
         "open file"                      : Key("c-x,c-f"),
         "alternate file"                 : Key("c-x,c-v"),
+        "recent files"                   : Key("c-c,c-e"),
         
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
@@ -300,6 +305,8 @@ class Emacs(SeriesMappingRule):
         "push"                         : Key("c-space,c-space"),
         "snap"                         : Key("c-u,c-space"),
         "big snap"                     : Key("c-x,c-space"),
+
+        "num <big>"                    : EmacsText("%(big)d"),
     }
 
     extras = [
@@ -307,7 +314,8 @@ class Emacs(SeriesMappingRule):
         Dictation("text"),
         Dictation("match"),
         Dictation("replace"),
-        ]
+        Integer("big", 0, 2**14),
+    ]
 
     defaults = {
         "n"    : 1,

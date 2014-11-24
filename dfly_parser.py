@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 import sys
 
 # terminator just picked to be something that doesn't come up
@@ -29,8 +32,8 @@ def parseMessages(buf):
         return (buf, messages)
 
     except Exception, e:
-        print "Exception wile receiving message: ", e
-        print "Buf state: %s" % (buf,)
+        log.info("Exception wile receiving message: ", e)
+        log.info("Buf state: %s" % (buf,))
         sys.exit(1)
 
 ### DRAGONSHARE RSYNC

@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 import socket
 import sys
 import inspect
@@ -43,9 +46,9 @@ class DragonflyThread(DragonflyNode):
             # we use a timeout so ctrl-c will work
             self.server_socket.settimeout(BLOCK_TIME)
             try:
-                #print 'waiting for connection'
+                #log.info('waiting for connection')
                 self.other, addr = self.server_socket.accept()
-                print 'connected'
+                log.info('connected')
                 self.onConnect()
             except socket.timeout:
                 return
@@ -61,13 +64,13 @@ class DragonflyThread(DragonflyNode):
     def loadRule(self, rule):
         if rule.name in self.rules:
             if rule == self.rules[rule.name]:
-                #print 'rule UNchanged: ' + rule.name
+                #log.info('rule UNchanged: ' + rule.name)
                 return
             else:
-                print 'rule changed: ' + rule.name
+                log.info('rule changed: ' + rule.name)
                 self.unloadRule(self.rules[rule.name])
         
-        print 'Loading rule: ' + rule.name
+        log.info('Loading rule: ' + rule.name)
         self.sendMsg(rule.textSerialize())
         self.rules[rule.name] = rule
 
@@ -75,7 +78,7 @@ class DragonflyThread(DragonflyNode):
         if rule.name not in self.rules:
             return
         
-        print 'Unloading rule: ' + rule.name        
+        log.info('Unloading rule: ' + rule.name)        
         self.sendMsg('unload' + ARG_DELIMETER + rule.name)
         try:
             self.enabledRules.remove(rule)
@@ -83,7 +86,7 @@ class DragonflyThread(DragonflyNode):
             pass
 
     def clearAllRules(self):
-        print 'Unloading all rules.'        
+        log.info('Unloading all rules.')        
         self.sendMsg('unload_all')
         self.rules = {}
         self.enabledRules = set()
@@ -97,14 +100,14 @@ class DragonflyThread(DragonflyNode):
     def enableRule(self, rule):
         if rule in self.enabledRules:
             return
-        print 'Enabling rule: ' + rule.name        
+        log.info('Enabling rule: ' + rule.name)        
         self.sendMsg('enable' + ARG_DELIMETER + rule.name)
         self.enabledRules.add(rule)
         
     def disableRule(self, rule):
         if rule not in self.enabledRules:
             return
-        print 'Disabling rule: ' + rule.name        
+        log.info('Disabling rule: ' + rule.name)        
         self.sendMsg('disable' + ARG_DELIMETER + rule.name)
         self.enabledRules.remove(rule)
 
@@ -134,7 +137,7 @@ class DragonflyThread(DragonflyNode):
                 active.add(self.combinedSeries)
             else:
                 self.combinedSeries = combineSeriesMappingRules(combine_series)()
-                print "Series combining: %s" % [type(x).__name__ for x in self.combinedSeries.parts] 
+                log.info("Series combining: %s" % [type(x).__name__ for x in self.combinedSeries.parts]) 
                 self.loadRule(self.combinedSeries)
                 active.add(self.combinedSeries)
 
@@ -185,7 +188,7 @@ class DragonflyThread(DragonflyNode):
                     else:
                         self.history.append(RuleMatchEvent(rule, extras))
 
-                    print 'match %s -- %s' % (rule, extras['words'])
+                    log.info('match %s -- %s -- %s' % (g.name, rule, extras['words']))
                     cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because

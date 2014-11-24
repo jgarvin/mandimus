@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from EventLoop import getLoop
 from Window import Window, getWindowList, getFocusedWindow
 from namedtuple import namedtuple
@@ -40,9 +43,9 @@ class WindowEventWatcher(object):
         self.previousWindowList = newWindowList
 
         newWindow = getFocusedWindow()
-        if self.previousWindowId != newWindow.winId or self.previousWindowName != newWindow.name:
+        if (newWindow and self.previousWindowId != newWindow.winId) or self.previousWindowName != newWindow.name:
             self.pushQ.put(FocusChangeEvent(newWindow))
-        self.previousWindowId = newWindow.winId
+        self.previousWindowId = newWindow.winId if newWindow else None
         self.previousWindowName = newWindow.name
 
         self.nextWindowList = getWindowList() # start async

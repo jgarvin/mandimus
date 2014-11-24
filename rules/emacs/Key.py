@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from rules.emacs.Cmd import Cmd
 from Actions import splitKeyString
 
@@ -65,6 +68,6 @@ class Key(Cmd):
         keys = [self.dfly2emacsKey(k) for k in splitKeyString(self.data % extras)]
         cmd %= ' '.join(keys)
         cmd = self.tempCommand % cmd
-        print cmd
+        log.info(cmd)
         return cmd
 

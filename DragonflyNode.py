@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from hotCode import importOrReload
 
 import time, socket, errno
@@ -30,7 +33,7 @@ class DragonflyNode(object):
             pass
         except socket.error as e:
             if e.errno == errno.EAGAIN or e.errno == errno.EINTR:
-                print os.strerror(e.errno)
+                log.info(os.strerror(e.errno))
             else:
                 self.dumpOther()
                 return
@@ -48,7 +51,7 @@ class DragonflyNode(object):
             self.sendMsg('')
 
     def recv(self):
-        #print 'receiving...'
+        #log.info('receiving...')
         self.other.settimeout(0.05)
         return unicode(self.other.recv(4096), 'utf-8')            
 
@@ -65,16 +68,16 @@ class DragonflyNode(object):
 
     def dumpOther(self):
         if self.other is not None:
-            print 'other lost'
+            log.info('other lost')
         self.other.close()
         self.other = None
 
     def sendMsg(self, msg):
         if self.other is None:
-            print "can't send msg, not connected"
+            log.info("can't send msg, not connected")
             return
         
-        if len(msg) and not msg.startswith('ack'): # don't print heartbeats
+        if len(msg) and not msg.startswith('ack'): # don't log.info(heartbeats)
             pass
 
         try:

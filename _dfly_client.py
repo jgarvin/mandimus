@@ -1,4 +1,9 @@
-print "-----------load--------------"
+import mdlog
+mdlog.initLogging("client")
+
+log = mdlog.getLogger(__name__)
+log.info("-----------load--------------")
+
 from hotCode import importOrReload, unloadCode, reloadCode, resetImportState
 resetImportState()
 
@@ -13,11 +18,16 @@ import sys, os, traceback
 from functools import partial
 from copy import copy
 
+#log.setLevel(0)
+
 # Without this stderr won't go to the Natlink
 # message window.
-import logging
-# logging.basicConfig(filename="E:\\log.txt", filemode='w+')
-logging.basicConfig()
+#logging.basicConfig()
+
+# import logging
+# logging.basicConfig()
+# #logging.basicConfig(filename="E:\\log.txt", filemode='w')
+# log = logging.getLogger(__name__)
 
 importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIMETER",
                "MATCH_MSG_START", "KEY_VALUE_SEPARATOR")
@@ -71,35 +81,38 @@ class DragonflyClient(DragonflyNode):
         self.globalRule = GlobalRules() 
 
         self.addRule(self.globalRule, "GlobalRules")
-        self.makeRuleGrammar(self.globalRule, "GlobalRules")
+        #self.makeRuleGrammar(self.globalRule, "GlobalRules")
         self.enableRule(self.globalRule)
 
     def addRule(self, rule, name, flags=[]):
-        print 'adding rule: %s %s' % (rule.name, name)
+        log.info('adding rule: %s %s' % (rule.name, name))
 
         if name in self.rules:
-            print 'Already have rule: ' + name
+            log.info('Already have rule: ' + name)
             return
 
         self.rules[name] = rule
+        rule.disable()
 
     def removeRule(self, name):
-        print 'Removing rule: ' + name
+        log.info('Removing rule: ' + name)
         try:
             del self.rules[name]
         except KeyError:
-            print 'Rule not found: %s, ignoring' % name
+            log.info('Rule not found: %s, ignoring' % name)
         try:
             self.grammars[name].unload()
             del self.grammars[name]
         except KeyError:
-            print 'Grammar not found: %s, ignoring' % name
+            log.info('Grammar not found: %s, ignoring' % name)
 
     def makeRuleGrammar(self, rule, name):
+        #log.info("making grammar %s" % rule.name)
         grammar = Grammar(name)
         grammar.add_rule(rule)
-        grammar.disable()
+        #grammar.disable()
         grammar.load()
+        ##grammar.enable()
         get_engine().set_exclusiveness(grammar, 1)
         self.grammars[name] = grammar        
 
@@ -123,15 +136,16 @@ class DragonflyClient(DragonflyNode):
             self.other.settimeout(0.05)
             try:
                 self.other.connect(("10.0.0.2", 23133))
-                print 'connected'
+                log.info('connected')
             except socket.error as e:
-                print 'connect error'
+                log.info('connect error')
                 self.dumpOther()
             except socket.timeout as e:
-                print 'connect timeout'
+                log.info('connect timeout')
                 self.dumpOther()
                 return
 
+        mdlog.flush()
         self.retrieveMessages()
         self.heartbeat()
 
@@ -147,7 +161,7 @@ class DragonflyClient(DragonflyNode):
 
     def unloadAllRules(self):
         if len(self.grammars) > 1:
-            print 'Unloading all rules.'
+            log.info('Unloading all rules.')
         for key, val in self.grammars.items():
             if key != "GlobalRules":
                 self.removeRule(key)
@@ -157,7 +171,7 @@ class DragonflyClient(DragonflyNode):
         rule = args[1]
         r = self.getRule(rule)
         if not r:
-            print "Can't enable %s, can't find it." % rule
+            log.info("Can't enable %s, can't find it." % rule)
             return
         self.enableRule(r)
 
@@ -166,24 +180,32 @@ class DragonflyClient(DragonflyNode):
         rule = args[1]
         r = self.getRule(rule)
         if not r:
-            print "Can't disable %s, can't find it." % rule
+            log.info("Can't disable %s, can't find it." % rule)
             return
         self.disableRule(r)
 
     def enableRule(self, rule):
-        print "Enabling %s" % rule.name
+        log.info("Enabling %s" % rule.name)
         if rule.name not in self.grammars:
             self.makeRuleGrammar(rule, rule.name)
-        if not self.grammars[rule.name].enabled:
-            self.grammars[rule.name].enable()
+        if not self.rules[rule.name].enabled:
+            #log.info("Enabling for real %s" % rule.name)
+            self.rules[rule.name].enable()
+        else:
+            #log.info("not Enabling for real %s" % rule.name)
+            pass
 
     def disableRule(self, rule):
-        print "Disabling %s" % rule.name
+        log.info("Disabling %s" % rule.name)
         if rule.name not in self.grammars:
             return
-        if self.grammars[rule.name].enabled:
-            self.grammars[rule.name].disable()
-
+        if self.rules[rule.name].enabled:
+            #log.info("disabling for real %s" % rule.name)
+            self.rules[rule.name].disable()
+        else:
+            #log.info("not disabling for real %s" % rule.name)
+            pass
+            
     def _parseMessage(self, msg):
         try:
             if msg.startswith("MappingRule"):
@@ -199,14 +221,14 @@ class DragonflyClient(DragonflyNode):
             elif msg.startswith("disable"):
                 self.parseDisableMsg(msg)
             elif msg.startswith("ack"):
-                #print 'received ack: ' + msg
+                #log.info('received ack: ' + msg)
                 pass
             elif len(msg) == 0:
-                #print 'received heartbeat'
+                #log.info('received heartbeat')
                 pass
             else:
-                print "Received unknown message type!: " + msg
-                print 'Message length %d' % (len(msg),)
+                log.info("Received unknown message type!: " + msg)
+                log.info('Message length %d' % (len(msg),))
         except Exception as e:
             if isinstance(e, NeedsDependency):
                 raise
@@ -216,7 +238,7 @@ class DragonflyClient(DragonflyNode):
         try:
             self._parseMessage(msg)
         except NeedsDependency:
-            print "Waiting to parse [%s ...], needs dependency" % msg[:min(len(msg), 30)] 
+            log.info("Waiting to parse [%s ...], needs dependency" % msg[:min(len(msg), 30)]) 
             self.pendingRules.append(msg)
             return False
 
@@ -268,12 +290,12 @@ class DragonflyClient(DragonflyNode):
             self.addRule(new_rule, rule_name, flags)
         except SyntaxError:
             traceback.print_exc()
-            print "Mapping rule %s: " % rule_name
-            print rules
-            print "Extras:"
-            print extras
-            print "Defaults:"
-            print defaults
+            log.info("Mapping rule %s: " % rule_name)
+            log.info(rules)
+            log.info("Extras:")
+            log.info(extras)
+            log.info("Defaults:")
+            log.info(defaults)
             return
         
     def getRule(self, ruleName):                
@@ -301,7 +323,7 @@ class DragonflyClient(DragonflyNode):
             elif e[0] == "RULEREF":
                 r = self.getRule(e[1])
                 if not r:
-                    print "Missing dependency!: %s" % e[1] 
+                    log.info("Missing dependency!: %s" % e[1]) 
                     raise NeedsDependency()
                 parsed.append(RuleRef(rule=r, name=e[2]))
             else:
@@ -322,11 +344,12 @@ class DragonflyClient(DragonflyNode):
         if natlink.getMicState() != 'on':
             return
 
-        print 'match ' + grammarString
-        # print 'data ' + unicode(data)
-        # print 'node ' + u' '.join(data['_node'].words())
-        # print 'rule ' + unicode(data['_rule'].name)
-        print 'grammar ' + unicode(data['_grammar'].name)
+        log.info('match -- %s -- %s -- %s' %
+                 (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))
+        # log.info('data ' + unicode(data))
+        # log.info('node ' + u' '.join(data['_node'].words()))
+        # log.info('rule ' + unicode(data['_rule'].name))
+        #log.info('grammar ' + unicode(data['_grammar'].name))
         msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
         msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
         if data:
@@ -338,7 +361,7 @@ class DragonflyClient(DragonflyNode):
                 if isinstance(value, int) or isinstance(value, unicode):
                     msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value), ARG_DELIMETER]
                 elif isinstance(value, get_engine().DictationContainer):
-                    # print 'valuecont',value.words,unicode(value)
+                    # log.info(('valuecont',value.words,unicode(value)))
                     msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value.format()), ARG_DELIMETER]
         self.sendMsg(u''.join(msg))
 
@@ -361,6 +384,6 @@ client = DragonflyClient()
 def unload():
     client.cleanup()
     # unload_code()
-    print "----------unload-------------"
+    log.info("----------unload-------------")
     
 ### DRAGONSHARE RSYNC

@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 import traceback
 import os
 import os.path as op
@@ -6,7 +9,7 @@ from Actions import Action
 
 EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
-print alternative
+log.info(alternative)
 if op.exists(alternative):
     EMACSCLIENT = alternative
 
@@ -21,14 +24,14 @@ def runEmacsCmd(command, inFrame=True, log=False):
         command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
     args += [command]
     if log:
-        print 'emacs cmd: ' + str(args)
+        log.info('emacs cmd: ' + str(args))
     s = subprocess.Popen(args, shell=False,
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (out, err) = s.communicate()
     if err:
-        print "Emacs error!: " + err
+        log.info("Emacs error!: " + err)
         traceback.print_stack()
     return out
 
@@ -50,10 +53,10 @@ class Cmd(Action):
         code = self._lisp(extras)
         if code is None:
             if self.log:
-                print "%s no lisp code" % (type(self).__name__)
+                log.info("%s no lisp code" % (type(self).__name__))
             return
         if self.log:
-            print "%s lisp code: [%s]" % (type(self).__name__, code)
+            log.info("%s lisp code: [%s]" % (type(self).__name__, code))
             
         for i in range(repeat):
             runEmacsCmd(code)

@@ -31,12 +31,14 @@ class CUARule(SeriesMappingRule):
         "tap [<n>]"             : Key("backspace:%(n)d"),
         "pa"                    : Key("space"),
         "slap [<n>]"            : Key("enter:%(n)d"),
+        "num <big>"             : Text("%(big)d"),
     }
 
     extras = [
         Dictation("text"),
         Dictation("search_terms"),
         Integer("n", 2, 20),
+        Integer("big", 0, 2**14),
     ]
 
     defaults = {

@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from itertools import dropwhile, chain
 import string
 
@@ -16,7 +19,6 @@ def dictReplace(s, dic):
         # and we only want to match whole words
         leftWordBoundary = (i == 0 or s[i-1] == u' ')
         rightWordBoundary = (i + len(k) == len(s) or s[i+1] == u' ')
-        print leftWordBoundary, rightWordBoundary
         if rightWordBoundary and leftWordBoundary:
             s = s.replace(k, dic[k])
             
