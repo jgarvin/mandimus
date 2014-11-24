@@ -149,3 +149,6 @@ if __name__ == '__main__':
     import doctest
     TestResults = namedtuple('TestResults', 'failed attempted')
     print TestResults(*doctest.testmod())
+
+### DRAGONSHARE RSYNC
+

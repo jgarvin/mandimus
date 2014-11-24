@@ -13,7 +13,7 @@ log.info(alternative)
 if op.exists(alternative):
     EMACSCLIENT = alternative
 
-def runEmacsCmd(command, inFrame=True, log=False):
+def runEmacsCmd(command, inFrame=True, dolog=False):
     """Run command optionally in particular frame,
     set True for active frame."""
     args = []
@@ -23,7 +23,7 @@ def runEmacsCmd(command, inFrame=True, log=False):
         cmd = '(with-current-buffer %s %s)'
         command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
     args += [command]
-    if log:
+    if dolog:
         log.info('emacs cmd: ' + str(args))
     s = subprocess.Popen(args, shell=False,
                          stdin=subprocess.PIPE,

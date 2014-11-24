@@ -16,8 +16,7 @@ from Actions import Repeat
 from EventLoop import getLoop
 from rules.Rule import registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule, combineSeriesMappingRules
-
-RuleMatchEvent = namedtuple("RuleMatchEvent", "rule, extras")
+from EventList import MicrophoneEvent, RuleMatchEvent
 
 BLOCK_TIME = 0.05
 
@@ -25,7 +24,7 @@ class DragonflyThread(DragonflyNode):
     def __init__(self, address, pushQ):
         self.address = address
         self.pushQ = pushQ
-        DragonflyNode.__init__(self)
+        DragonflyNode.__init__(self, pushQ)
         self.history = []
         
         self.server_socket = self.makeSocket()
@@ -82,7 +81,7 @@ class DragonflyThread(DragonflyNode):
         self.sendMsg('unload' + ARG_DELIMETER + rule.name)
         try:
             self.enabledRules.remove(rule)
-        except ValueError:
+        except KeyError:
             pass
 
     def clearAllRules(self):
@@ -156,6 +155,15 @@ class DragonflyThread(DragonflyNode):
     def onMessage(self, msg):
         if msg.startswith("MATCH"):
             self.parseMatchMsg(msg)
+        elif msg.startswith("MICSTATE"):
+            log.info("Received mic event: %s" % msg)
+            self.pushQ.put(MicrophoneEvent(msg.split(ARG_DELIMETER)[1]))
+        elif msg == "":
+            log.debug("heartbeat")
+        elif msg.startswith("ack"):
+            log.debug('received ack: ' + msg)
+        else:
+            log.info("Unknown message type: [%s]" % msg[:min(10, len(msg))])
         self.sendMsg("ack " + msg)
 
     def parseMatchMsg(self, msg):
@@ -204,7 +212,7 @@ class DragonflyThread(DragonflyNode):
             except ValueError:
                 parsed[e[0]] = e[1]
         return parsed
-
+    
     
       
 

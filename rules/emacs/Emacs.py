@@ -176,6 +176,7 @@ class EmacsMapping(MappingRule):
         "kill window"                    : Cmd("(delete-window)"),
         "other"                          : Key("c-x, o"),
         "collapse"                       : Key("c-x, 1"),
+        "other collapse"                 : Key("c-x, o") + Key("c-x, 1"),
         "new frame"                      : Key("c-x, 5, 2"),
         "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
 
@@ -187,6 +188,7 @@ class EmacsMapping(MappingRule):
         "open file"                      : Key("c-x,c-f"),
         "alternate file"                 : Key("c-x,c-v"),
         "recent files"                   : Key("c-c,c-e"),
+        "man page"                       : Key("a-x") + Text("man") + Key("enter"),
         
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
@@ -196,8 +198,12 @@ class EmacsMapping(MappingRule):
         "replace"                        : Key('as-percent'),
         "replace <match> with <replace>" : Key('as-percent') + Text("%(match)s") + Key('enter') + Text("%(replace)s"),
 
+        "open client log"                : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
+        "open server log"                : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
+
         # misc
         "start irc"                      : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
+        "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
     }
 
     extras = [

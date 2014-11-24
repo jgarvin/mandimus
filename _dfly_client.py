@@ -42,14 +42,6 @@ def reloadClient():
 
 class NeedsDependency(Exception): pass
 
-class GlobalRules(MappingRule):
-    mapping = {
-        "reload client code" : Function(reloadClient),
-        "snore" : Function(lambda: natlink.setMicState('sleeping')),
-        }
-    extras = []
-    defaults = {}
-
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
     informs the server that grammar rules have been matched.
@@ -84,6 +76,10 @@ class DragonflyClient(DragonflyNode):
         #self.makeRuleGrammar(self.globalRule, "GlobalRules")
         self.enableRule(self.globalRule)
 
+        self.msgTypeHandlers = {}
+
+        self.lastMicState = None
+
     def addRule(self, rule, name, flags=[]):
         log.info('adding rule: %s %s' % (rule.name, name))
 
@@ -93,6 +89,9 @@ class DragonflyClient(DragonflyNode):
 
         self.rules[name] = rule
         rule.disable()
+
+    def addMsgTypeHandler(self, leadingTerm, handler):
+        self.msgTypeHandlers[leadingTerm] = handler
 
     def removeRule(self, name):
         log.info('Removing rule: ' + name)
@@ -148,6 +147,7 @@ class DragonflyClient(DragonflyNode):
         mdlog.flush()
         self.retrieveMessages()
         self.heartbeat()
+        self.sendMicState()
 
         if self.pendingRules:
             toParse = copy(self.pendingRules)
@@ -158,6 +158,14 @@ class DragonflyClient(DragonflyNode):
                     self.pendingRules.remove(x)
                 except NeedsDependency:
                     pass
+
+    def sendMicState(self):
+        # micState = natlink.getMicState()
+        # if self.lastMicState is None or micState != self.lastMicState:
+        #     self.lastMicState = micState
+        #     self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
+        log.info("Sending mic event %s" % natlink.getMicState())
+        self.sendMsg("MICSTATE" + ARG_DELIMETER + natlink.getMicState())
 
     def unloadAllRules(self):
         if len(self.grammars) > 1:
@@ -221,10 +229,9 @@ class DragonflyClient(DragonflyNode):
             elif msg.startswith("disable"):
                 self.parseDisableMsg(msg)
             elif msg.startswith("ack"):
-                #log.info('received ack: ' + msg)
-                pass
+                log.debug('received ack: ' + msg)
             elif len(msg) == 0:
-                #log.info('received heartbeat')
+                log.debug('received heartbeat')
                 pass
             else:
                 log.info("Received unknown message type!: " + msg)
@@ -366,6 +373,7 @@ class DragonflyClient(DragonflyNode):
         self.sendMsg(u''.join(msg))
 
     def cleanup(self):
+        self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
         self.timer.stop()
         for name, grammar in self.grammars.items():
             grammar.unload()
@@ -379,11 +387,27 @@ class DragonflyClient(DragonflyNode):
             mapping[g] = ReportingAction(g, self)
         return mapping
         
-client = DragonflyClient()
 
 def unload():
+    global client
     client.cleanup()
-    # unload_code()
     log.info("----------unload-------------")
-    
+    mdlog.shutdown()
+    # unload_code()
+
+def snore_and_unload():
+    natlink.setMicState('sleeping')
+    client.sendMicState()
+    #unload()
+
+class GlobalRules(MappingRule):
+    mapping = {
+        "reload client code" : Function(reloadClient),
+        "snore" : Function(snore_and_unload),
+        }
+    extras = []
+    defaults = {}
+
+client = DragonflyClient()
+
 ### DRAGONSHARE RSYNC

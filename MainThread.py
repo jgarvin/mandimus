@@ -88,6 +88,13 @@ class MainThread(object):
         
         self.events = []
 
+        self.eventSubscribers = {}
+
+    def subscribeEvent(self, eventType, handler):
+        if eventType not in self.eventSubscribers:
+            self.eventSubscribers[eventType] = set()
+        self.eventSubscribers[eventType].add(handler)
+
     def subscribeTimer(self, seconds, cb):
         self.timers.append(TimerEntry(time.time() + seconds, cb, seconds))
 
@@ -152,6 +159,9 @@ class MainThread(object):
                     self.handleWindowList(ev)
                 elif isinstance(ev, GrammarEvent):
                     self.handleGrammarEvent(ev)
+                elif type(ev) in self.eventSubscribers:
+                    for h in self.eventSubscribers[type(ev)]:
+                        h(ev)
         except KeyboardInterrupt:
             self.stop()
             sys.exit()
@@ -231,6 +241,7 @@ if __name__ == "__main__":
         ('rules.emacs.ERC', ['']),
         ('rules.emacs.VarNames', ['']),
         ('rules.emacs.Pairs', ['']),
+        ('rules.emacs.Mic', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),   
