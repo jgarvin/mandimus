@@ -204,6 +204,8 @@ class EmacsMapping(MappingRule):
         # misc
         "start irc"                      : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
         "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
+        "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
+        "git status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
     }
 
     extras = [
@@ -227,7 +229,8 @@ class EmacsMapping(MappingRule):
 class Emacs(SeriesMappingRule):
     mapping  = {
         # general commands
-        "axe"                          : Key("c-g"),
+        "axe"                          : Cmd("(keyboard-quit)"),
+        "super axe"                    : Key("c-g"),
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),

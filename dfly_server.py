@@ -95,6 +95,7 @@ class DragonflyThread(DragonflyNode):
     def sendAllRules(self):
         for r in registeredRules().values():
             self.loadRule(r)
+        #self.sendMsg("all sent" )
 
     def enableRule(self, rule):
         if rule in self.enabledRules:
@@ -156,7 +157,7 @@ class DragonflyThread(DragonflyNode):
         if msg.startswith("MATCH"):
             self.parseMatchMsg(msg)
         elif msg.startswith("MICSTATE"):
-            log.info("Received mic event: %s" % msg)
+            #log.info("Received mic event: %s" % msg)
             self.pushQ.put(MicrophoneEvent(msg.split(ARG_DELIMETER)[1]))
         elif msg == "":
             log.debug("heartbeat")

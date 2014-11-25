@@ -13,16 +13,22 @@ log.info(alternative)
 if op.exists(alternative):
     EMACSCLIENT = alternative
 
-def runEmacsCmd(command, inFrame=True, dolog=False):
+
+
+def runEmacsCmd(command, inFrame=True, dolog=True):
     """Run command optionally in particular frame,
     set True for active frame."""
     args = []
     args += [EMACSCLIENT]
     args += ['-e']
+    # without this C-g can interrupt the running code
+    # with this any cancels are deferred until after
+    #wrapper = "(let ((inhibit-quit t)) %s)"
+    wrapper = "%s" # inhibit-quit doesn't seem to work
     if inFrame:
         cmd = '(with-current-buffer %s %s)'
         command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
-    args += [command]
+    args += [wrapper % command]
     if dolog:
         log.info('emacs cmd: ' + str(args))
     s = subprocess.Popen(args, shell=False,

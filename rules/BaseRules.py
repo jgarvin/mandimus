@@ -85,4 +85,6 @@ class SymRule(MappingRule):
         "ralp"        : "rparen",
         "dash"        : "hyphen",
         "bar"         : "bar",
+        "plus"        : "plus",
+        "underscore"  : "underscore",
     }

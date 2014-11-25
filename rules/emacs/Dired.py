@@ -28,6 +28,7 @@ class Dired(SeriesMappingRule):
         "ascend"              : Text("^"),
         "refresh"             : Key("g"),
         "open picks"          : Key("c-u,0,F"),
+        "copy"                : Key("C"),
     }
 
     @classmethod

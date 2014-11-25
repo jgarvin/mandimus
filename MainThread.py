@@ -14,7 +14,7 @@ import re
 import time
 import traceback
 from Events import GrammarEvent
-
+from EventList import MicrophoneEvent
 from rules.Rule import registerRule, registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
@@ -125,13 +125,34 @@ class MainThread(object):
     def put(self, p):
         self.events += [p]
 
-    def __call__(self):
+    def processEvent(self, ev):
         class MainRule(SeriesMappingRule):
             mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
                         "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
             def activeForWindow(self, w):
                 return True
 
+        if isinstance(ev, ConnectedEvent):
+            registerRule(MainRule)
+
+            # so that rules apply for whatever is focused on startup
+            self.determineRules(getFocusedWindow())
+        elif isinstance(ev, RestartEvent):
+            self.restart()
+        elif isinstance(ev, ExitEvent):
+            self.stop()
+            return
+        elif isinstance(ev, FocusChangeEvent):
+            self.determineRules(ev.window)
+        elif isinstance(ev, WindowListEvent):
+            self.handleWindowList(ev)
+        elif isinstance(ev, GrammarEvent):
+            self.handleGrammarEvent(ev)
+        elif type(ev) in self.eventSubscribers:
+            for h in self.eventSubscribers[type(ev)]:
+                h(ev)        
+
+    def __call__(self):
         try:
             while self.run:
                 time.sleep(self.timeout())
@@ -143,25 +164,7 @@ class MainThread(object):
                 except IndexError:
                     continue
 
-                if isinstance(ev, ConnectedEvent):
-                    registerRule(MainRule)
-
-                    # so that rules apply for whatever is focused on startup
-                    self.determineRules(getFocusedWindow())
-                elif isinstance(ev, RestartEvent):
-                    self.restart()
-                elif isinstance(ev, ExitEvent):
-                    self.stop()
-                    return
-                elif isinstance(ev, FocusChangeEvent):
-                    self.determineRules(ev.window)
-                elif isinstance(ev, WindowListEvent):
-                    self.handleWindowList(ev)
-                elif isinstance(ev, GrammarEvent):
-                    self.handleGrammarEvent(ev)
-                elif type(ev) in self.eventSubscribers:
-                    for h in self.eventSubscribers[type(ev)]:
-                        h(ev)
+                self.processEvent(ev)
         except KeyboardInterrupt:
             self.stop()
             sys.exit()
@@ -224,6 +227,9 @@ class MainThread(object):
         self.dfly.cleanup()
 
     def restart(self):
+        log.info("Restarting mandimus")
+        self.processEvent(MicrophoneEvent("server-disconnected"))
+        mdlog.flush()
         self.stop()
         sys.stdout.flush()
         sys.stderr.flush()
@@ -242,9 +248,10 @@ if __name__ == "__main__":
         ('rules.emacs.VarNames', ['']),
         ('rules.emacs.Pairs', ['']),
         ('rules.emacs.Mic', ['']),
+        ('rules.emacs.Magit', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
-        ('rules.Chrome', ['']),   
+        ('rules.Chrome', ['']),
     ]
 
     # TODO: catch syntax errors, make copies of module files, then

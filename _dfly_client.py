@@ -119,6 +119,7 @@ class DragonflyClient(DragonflyNode):
         # on disconnect unload all the rules
         self.unloadAllRules()
         self.pendingRules = []
+        self.lastMicState = None
         DragonflyNode.dumpOther(self)
 
     def _eventLoop(self):
@@ -160,12 +161,15 @@ class DragonflyClient(DragonflyNode):
                     pass
 
     def sendMicState(self):
-        # micState = natlink.getMicState()
-        # if self.lastMicState is None or micState != self.lastMicState:
-        #     self.lastMicState = micState
-        #     self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
-        log.info("Sending mic event %s" % natlink.getMicState())
-        self.sendMsg("MICSTATE" + ARG_DELIMETER + natlink.getMicState())
+        if not self.other:
+            return
+        
+        micState = natlink.getMicState()
+        if self.lastMicState is None or micState != self.lastMicState:
+            self.lastMicState = micState
+            self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
+        #log.info("Sending mic event %s" % natlink.getMicState())
+        #self.sendMsg("MICSTATE" + ARG_DELIMETER + natlink.getMicState())
 
     def unloadAllRules(self):
         if len(self.grammars) > 1:
