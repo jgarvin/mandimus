@@ -5,7 +5,6 @@ log = mdlog.getLogger(__name__)
 import os, sys
 from dfly_server import DragonflyThread
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, SelectWindow
-from DragonflyNode import ConnectedEvent
 from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent, WindowListEvent
 from Window import Window, getFocusedWindow
 from wordUtils import extractWords, buildSelectMapping, punc2Words
@@ -14,7 +13,7 @@ import re
 import time
 import traceback
 from Events import GrammarEvent
-from EventList import MicrophoneEvent
+from EventList import MicrophoneEvent, ConnectedEvent
 from rules.Rule import registerRule, registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
@@ -90,10 +89,20 @@ class MainThread(object):
 
         self.eventSubscribers = {}
 
-    def subscribeEvent(self, eventType, handler):
+        self.determineCallbacks = set()
+
+        self.subscribeEvent(ConnectedEvent, self.onConnect)
+        self.subscribeEvent(RestartEvent, self.restart)
+        self.subscribeEvent(ExitEvent, self.stop)
+        self.subscribeEvent(FocusChangeEvent, self.onFocusChange)
+        self.subscribeEvent(WindowListEvent, self.handleWindowList)
+        self.subscribeEvent(GrammarEvent, self.handleGrammarEvent)
+        
+    def subscribeEvent(self, eventType, handler, priority=100):
         if eventType not in self.eventSubscribers:
-            self.eventSubscribers[eventType] = set()
-        self.eventSubscribers[eventType].add(handler)
+            self.eventSubscribers[eventType] = []
+        self.eventSubscribers[eventType].append((priority, handler))
+        self.eventSubscribers[eventType].sort(key=lambda x: x[0])
 
     def subscribeTimer(self, seconds, cb):
         self.timers.append(TimerEntry(time.time() + seconds, cb, seconds))
@@ -115,7 +124,16 @@ class MainThread(object):
                 t.nextExpiration = now + t.seconds
                 t.callback()
     
+    def onFocusChange(self, ev):
+        self.determineRules(ev.window)
+
+    def onDetermineRules(self, handler):
+        self.determineCallbacks.add(handler)
+
     def determineRules(self, window):
+        for h in self.determineCallbacks:
+            h()
+
         active = set()
         for r in registeredRules().values():
             if r.activeForWindow(window):
@@ -126,31 +144,23 @@ class MainThread(object):
         self.events += [p]
 
     def processEvent(self, ev):
+        if type(ev) in self.eventSubscribers:
+            for h in self.eventSubscribers[type(ev)]:
+                h[1](ev)        
+
+    def onConnect(self, ev=None):
         class MainRule(SeriesMappingRule):
             mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
                         "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
             def activeForWindow(self, w):
                 return True
 
-        if isinstance(ev, ConnectedEvent):
-            registerRule(MainRule)
-
-            # so that rules apply for whatever is focused on startup
-            self.determineRules(getFocusedWindow())
-        elif isinstance(ev, RestartEvent):
-            self.restart()
-        elif isinstance(ev, ExitEvent):
-            self.stop()
-            return
-        elif isinstance(ev, FocusChangeEvent):
-            self.determineRules(ev.window)
-        elif isinstance(ev, WindowListEvent):
-            self.handleWindowList(ev)
-        elif isinstance(ev, GrammarEvent):
-            self.handleGrammarEvent(ev)
-        elif type(ev) in self.eventSubscribers:
-            for h in self.eventSubscribers[type(ev)]:
-                h(ev)        
+        
+        registerRule(MainRule)
+        # so that rules apply for whatever is focused on startup
+        self.determineRules(getFocusedWindow())
+        print "everything is set up"
+        self.dfly.requestStartupComplete()
 
     def __call__(self):
         try:
@@ -222,11 +232,11 @@ class MainThread(object):
 
         registerRule(WindowRule)
 
-    def stop(self):
+    def stop(self, ev=None):
         self.run = False
         self.dfly.cleanup()
 
-    def restart(self):
+    def restart(self, ev=None):
         log.info("Restarting mandimus")
         self.processEvent(MicrophoneEvent("server-disconnected"))
         mdlog.flush()

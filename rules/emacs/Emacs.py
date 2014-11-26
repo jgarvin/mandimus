@@ -51,7 +51,6 @@ class SelectCommand(SelectChoice):
         Key("c-x,c-m")()
         
 def updateBufferGrammar():
-    pass
     b = set(bufferList())
     channels = {k for k in b if k.startswith('#')}
     channels |= {k for k in b if k.startswith('irc')}
@@ -206,6 +205,7 @@ class EmacsMapping(MappingRule):
         "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
         "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
         "git status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
+        "submit"                         : Key("c-c,c-c"),
     }
 
     extras = [

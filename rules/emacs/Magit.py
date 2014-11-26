@@ -1,6 +1,6 @@
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd
+from rules.emacs.Cmd import runEmacsCmd, Cmd, getMajorMode
 from rules.Rule import registerRule
 from Actions import Key, Text
 
@@ -26,8 +26,7 @@ class MagitStatus(SeriesMappingRule):
         isemacs = Emacs.activeForWindow(window)
         if not isemacs:
             return False
-        out = runEmacsCmd("major-mode").strip()
-        return out == "magit-status-mode"
+        return getMajorMode() == "magit-status-mode"
 
 @registerRule
 class MagitKeyMode(SeriesMappingRule):
@@ -46,5 +45,4 @@ class MagitKeyMode(SeriesMappingRule):
         isemacs = Emacs.activeForWindow(window)
         if not isemacs:
             return False
-        out = runEmacsCmd("major-mode").strip()
-        return out == "magit-key-mode"
+        return getMajorMode() == "magit-key-mode"

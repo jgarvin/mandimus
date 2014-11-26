@@ -1,6 +1,7 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 
+from EventLoop import getLoop
 import traceback
 import os
 import os.path as op
@@ -13,9 +14,17 @@ log.info(alternative)
 if op.exists(alternative):
     EMACSCLIENT = alternative
 
+_majorMode = None
+def updateMajorMode():
+    global _majorMode
+    _majorMode = runEmacsCmd("major-mode").strip()
+    
+def getMajorMode():
+    return _majorMode
 
+getLoop().onDetermineRules(updateMajorMode)
 
-def runEmacsCmd(command, inFrame=True, dolog=True):
+def runEmacsCmd(command, inFrame=True, dolog=False):
     """Run command optionally in particular frame,
     set True for active frame."""
     args = []

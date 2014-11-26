@@ -24,8 +24,8 @@ class SexpFunctions(MappingRule):
     mapping = {
         "after"           : "sp-forward-sexp",
         "before"          : "sp-backward-sexp",
-        "in"              : "sp-down-sexp",
-        "before in"       : "sp-backward-down-sexp",
+        "dive"            : "sp-down-sexp",
+        "before dive"     : "sp-backward-down-sexp",
         "out"             : "sp-up-sexp",
         "before out"      : "sp-backward-up-sexp",
         "peak"            : "sp-next-sexp",

@@ -234,9 +234,10 @@ class DragonflyClient(DragonflyNode):
                 self.parseDisableMsg(msg)
             elif msg.startswith("ack"):
                 log.debug('received ack: ' + msg)
+            elif msg.startswith("REQUEST_STARTUP_COMPLETE"):
+                self.sendMsg("STARTUP_COMPLETE")
             elif len(msg) == 0:
                 log.debug('received heartbeat')
-                pass
             else:
                 log.info("Received unknown message type!: " + msg)
                 log.info('Message length %d' % (len(msg),))

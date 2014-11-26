@@ -8,10 +8,8 @@ import re
 def defaultExtract(w):
     return extractWords(w, translate={}, useDict=True)
 
-# def updateListGrammar(lst, leadingTerm, translate, action, clsname, filterFunction,
-#                       useDict=True):
 def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
-                      extractFunction=defaultExtract):
+                      extractFunction=defaultExtract, register=True):
     bufs = lst
     spokenForms = {}
     for b in bufs:
@@ -29,12 +27,19 @@ def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
         def activeForWindow(cls, window):
             return filterFunction(window)
     LocalMapping.__name__ = clsname
-    registerRule(LocalMapping)
-    w = getFocusedWindow()
-    if w:
-        getLoop().determineRules(w)
+    if register:
+        registerRule(LocalMapping)
+        w = getFocusedWindow()
+        if w:
+            getLoop().determineRules(w)
 
-    return omapping
+    return LocalMapping
+
+# (setq redisplay-dont-pause nil)
+# (setq redisplay-preemption-period nil)
+
+# (setq redisplay-dont-pause t)
+# (setq no-redraw-on-reenter t)
 
 def getStringList(output):
     output = re.findall('"[^"]*"', output)

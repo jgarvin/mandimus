@@ -10,13 +10,13 @@ import time
 import traceback
 
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER, KEY_VALUE_SEPARATOR
-from DragonflyNode import DragonflyNode, ConnectedEvent
+from DragonflyNode import DragonflyNode
 from namedtuple import namedtuple
 from Actions import Repeat
 from EventLoop import getLoop
 from rules.Rule import registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule, combineSeriesMappingRules
-from EventList import MicrophoneEvent, RuleMatchEvent
+from EventList import MicrophoneEvent, RuleMatchEvent, ConnectedEvent, StartupCompleteEvent
 
 BLOCK_TIME = 0.05
 
@@ -153,12 +153,17 @@ class DragonflyThread(DragonflyNode):
         self.sendAllRules()
         self.pushQ.put(ConnectedEvent())
 
+    def requestStartupComplete(self):
+        self.sendMsg("REQUEST_STARTUP_COMPLETE")
+
     def onMessage(self, msg):
         if msg.startswith("MATCH"):
             self.parseMatchMsg(msg)
         elif msg.startswith("MICSTATE"):
             #log.info("Received mic event: %s" % msg)
             self.pushQ.put(MicrophoneEvent(msg.split(ARG_DELIMETER)[1]))
+        elif msg.startswith("STARTUP_COMPLETE"):
+            self.pushQ.put(StartupCompleteEvent())
         elif msg == "":
             log.debug("heartbeat")
         elif msg.startswith("ack"):

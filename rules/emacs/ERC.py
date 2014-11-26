@@ -6,11 +6,12 @@ from EventLoop import getLoop
 from rules.Elements import Dictation, Integer
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd
+from rules.emacs.Cmd import runEmacsCmd, Cmd, getMajorMode
 from rules.Rule import registerRule
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
 from wordUtils import extractWords
+from Window import getFocusedWindow
 
 class SelectNick(SelectChoice):
     def _currentChoice(self):
@@ -36,16 +37,26 @@ def nickList():
 def nickExtractFunction(w):
     return extractWords(w, translate={}, useDict=True, detectBadConsonantPairs=True)
 
+_lastMapping = None
+
 def updateNickGrammar():
+    window = getFocusedWindow()
+    if window and not ERC.activeForWindow(window):
+        return
+
     nicks = set(nickList())
-    #log.info('building with : ' + str(nicks))
     mapping = updateListGrammar(nicks, 'nick',
                                 SelectNick, "EmacsNickMapping",
                                 ERC.activeForWindow,
-                                nickExtractFunction)
-    # if mapping:
-    #     log.info(mapping.keys())
+                                nickExtractFunction, register=False)
 
+    global _lastMapping
+    if (mapping and not _lastMapping) or  (_lastMapping and mapping and _lastMapping.mapping != mapping.mapping):  
+        print "registering"
+        registerRule(mapping)
+        getLoop().determineRules(window)
+    _lastMapping = mapping
+            
 getLoop().subscribeTimer(1, updateNickGrammar)
 
 @registerRule
@@ -74,5 +85,4 @@ class ERC(SeriesMappingRule):
         isemacs = Emacs.activeForWindow(window)
         if not isemacs:
             return False
-        out = runEmacsCmd("major-mode").strip()
-        return out == "erc-mode"
+        return getMajorMode() == "erc-mode"

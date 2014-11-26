@@ -2,14 +2,11 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 from hotCode import importOrReload
-from EventList import MicrophoneEvent
 
 import time, socket, errno
 
 importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR")
-
-class ConnectedEvent(object):
-    pass
+importOrReload("EventList", "MicrophoneEvent", "ConnectedEvent", "DisconnectedEvent")
 
 class DragonflyNode(object):
     def __init__(self, eventQ=None):
@@ -74,7 +71,7 @@ class DragonflyNode(object):
         self.other.close()
         self.other = None
         if self.eventQ:
-            self.eventQ.put(MicrophoneEvent("disconnected"))
+            self.eventQ.put(DisconnectedEvent)
 
     def sendMsg(self, msg):
         if self.other is None:
