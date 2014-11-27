@@ -270,6 +270,7 @@ class EmacsMapping(MappingRule):
         "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
         "git status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
         "submit"                         : Key("c-c,c-c"),
+        
     }
 
     extras = [
