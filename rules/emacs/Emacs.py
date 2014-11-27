@@ -61,7 +61,7 @@ openProjetileFileEl = """
 class SelectProjectFile(SelectChoice):
     @classmethod
     def getChoices(cls):
-        buffs = runEmacsCmd("(projectile-current-project-files)")
+        buffs = runEmacsCmd("(projectile-current-project-files)", allowError=True)
         return getStringList(buffs)
 
     def _currentChoice(self):

@@ -192,7 +192,7 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
     selectAction is the desired handler.
     """
     omapping = {}
-    word2Selects = {}
+    selector = selectAction(spokenSelects, leadingTerm)
     for w, spokenForms in spokenSelects.items():
         if deepEmpty(spokenForms):
             continue
@@ -204,14 +204,11 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
             if not first:
                 grammar += ["|"]
             for word in form:
-                if word not in word2Selects:
-                    word2Selects[word] = set()
-                word2Selects[word].add(w)
                 grammar.append("[%s]" % word)
             first = False
         grammar += [")"]
         grammar = ' '.join(grammar)
-        omapping[grammar] = selectAction(word2Selects, leadingTerm)
+        omapping[grammar] = selector 
 
     if not omapping:
         return None

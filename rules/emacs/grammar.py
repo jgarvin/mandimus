@@ -48,6 +48,9 @@ def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
 # (setq no-redraw-on-reenter t)
 
 def getStringList(output):
+    output = output.strip()
+    if output == "nil":
+        return []
     output = re.findall('"[^"]*"', output)
     output = [x.strip('"') for x in output]
     return output    

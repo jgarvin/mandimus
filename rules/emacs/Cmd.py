@@ -26,27 +26,36 @@ def getMajorMode():
 
 getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
-def runEmacsCmd(command, inFrame=True, dolog=False):
+def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
     """Run command optionally in particular frame,
     set True for active frame."""
     args = []
     args += [EMACSCLIENT]
     args += ['-e']
+
     # without this C-g can interrupt the running code
     # with this any cancels are deferred until after
     #wrapper = "(let ((inhibit-quit t)) %s)"
     wrapper = "%s" # inhibit-quit doesn't seem to work
+    if allowError:
+        wrapper = '(condition-case err %s (error nil))'
+    else:
+        wrapper = '(condition-case err %s (error (message (concat "Mandimus error: " (error-message-string err))) nil))'
+
     if inFrame:
         cmd = '(with-current-buffer %s %s)'
         command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
+
     args += [wrapper % command]
     if dolog:
         log.info('emacs cmd: ' + str(args))
+
     s = subprocess.Popen(args, shell=False,
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     (out, err) = s.communicate()
+
     if err:
         log.info("Emacs error!: " + err)
         traceback.print_stack()

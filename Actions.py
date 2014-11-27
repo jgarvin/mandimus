@@ -5,6 +5,7 @@ import subprocess
 import re
 import string
 import operator
+from copy import copy
 from listHelpers import dictReplace
 from Window import Window, getFocusedWindow
 from util import deepEmpty
@@ -157,24 +158,27 @@ class SelectChoice(Action):
             self._noChoice()
             return
 
-        # TODO: until we get rule references words is going
-        # to contain the word for activating the rule, which
-        # is not what we want
+        scores = {}
+        for k, v in self.data.items():
+            scores[k] = -1
+            for form in v:
+                # We need a copy because we're going to remove
+                # words as we find them, so that we can match
+                # better when the same word occurs twice, e.g.
+                # foo/foo.py should get matched if you say
+                # "foo foo py" instead of rules/foo.py
+                f = copy(form)
+                matches = 0.0
+                for word in words:
+                    if word in f:
+                        matches += 1
+                        f.remove(word)
+                score = matches / len(form)
+                scores[k] = max(score, scores[k])
 
-        # whichever choice matches the most words, choose
-        # TODO: should use percentage matching rather than total
-        counter = {}
-        for word in words:
-            if word not in self.data:
-                continue
-            for choice in self.data[word]:
-                if choice not in counter:
-                    counter[choice] = 0    
-                counter[choice] += 1
-
-        # get choice that tied on number of words
-        counter = counter.items()
+        counter = scores.items()
         counter.sort(key=lambda x: x[1], reverse=True)
+
         first = counter[0]
         ties = []
         for c in counter:

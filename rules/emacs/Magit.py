@@ -21,6 +21,7 @@ class MagitStatus(SeriesMappingRule):
         "discard"      : Key("k"),
         "next"         : Key("a-n"),
         "previous"     : Key("a-p"),
+        "branch"       : Key("b"),
     }
 
     @classmethod
