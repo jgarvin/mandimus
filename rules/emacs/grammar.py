@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from rules.MappingRule import MappingRule
 from rules.Rule import registerRule
 from wordUtils import buildSelectMapping, extractWords
@@ -6,14 +9,14 @@ from Window import getFocusedWindow
 import re
 
 def defaultExtract(w):
-    return extractWords(w, translate={}, useDict=True)
+    return extractWords(w, translate={})
 
 def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
-                      extractFunction=defaultExtract, register=True):
+                      extractFunction=defaultExtract, register=True, dolog=False):
     bufs = lst
     spokenForms = {}
     for b in bufs:
-        spokenForms[b] = [set(extractFunction(b))] 
+        spokenForms[b] = [extractFunction(b)] 
     omapping = buildSelectMapping(leadingTerm, spokenForms, action)
     
     if omapping is None:
@@ -32,6 +35,9 @@ def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
         w = getFocusedWindow()
         if w:
             getLoop().determineRules(w)
+
+    if dolog:
+        log.info(str(LocalMapping()))
 
     return LocalMapping
 

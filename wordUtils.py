@@ -108,13 +108,17 @@ def fixBadConsonantPairs(w):
     
 # TODO: maybe give translate a better default
 def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={},
-                 useDict=True, removeLeetSpeak=True, detectBadConsonantPairs=False):
+                 useDict=False, removeLeetSpeak=False, detectBadConsonantPairs=False,
+                 filterUnicode=True):
     """Split a string into a list using multiple delimeters, and optionally
     translating some characters to one or more words. Also lowercase everything."""
     splitters = splitters - set(translate.keys())
     all_words = []
     word = []
     strlen = len(wordstr)
+
+    if filterUnicode:
+        wordstr = ''.join([c for c in wordstr if c in string.printable])
 
     def finish(w):
         if removeLeetSpeak:

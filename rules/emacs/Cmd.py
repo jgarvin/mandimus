@@ -1,12 +1,14 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 
-from EventLoop import getLoop
 import traceback
 import os
 import os.path as op
 import subprocess
+
 from Actions import Action
+from EventLoop import getLoop
+from EventList import FocusChangeEvent
 
 EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
@@ -15,14 +17,14 @@ if op.exists(alternative):
     EMACSCLIENT = alternative
 
 _majorMode = None
-def updateMajorMode():
+def updateMajorMode(ev):
     global _majorMode
     _majorMode = runEmacsCmd("major-mode").strip()
     
 def getMajorMode():
     return _majorMode
 
-getLoop().onDetermineRules(updateMajorMode)
+getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
 def runEmacsCmd(command, inFrame=True, dolog=False):
     """Run command optionally in particular frame,

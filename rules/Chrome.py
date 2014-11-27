@@ -1,5 +1,6 @@
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action
 from Rule import commandTally, registerRule
+from MappingRule import MappingRule
 from SeriesMappingRule import SeriesMappingRule
 from Elements import Integer, Dictation
 
@@ -8,6 +9,34 @@ class WebSearch(Action):
         (Key("c-l, c-a, backspace")
          + Text(self.data + (" %(text)s" % extras))
          + Key("enter"))()
+
+@registerRule
+class ChromeSearch(MappingRule):
+    mapping = {
+        "wikipedia [<text>]"            : WebSearch("wk"),
+        "youtube [<text>]"              : WebSearch("yt"),
+        "dictionary [<text>]"           : WebSearch("dict"),
+        "thesaurus [<text>]"            : WebSearch("thes"),
+        "amazon [<text>]"               : WebSearch("az"),
+        "c plus plus [<text>]"          : WebSearch("cpp"),
+        "facebook [<text>]"             : WebSearch("fb"),
+        "game facks [<text>]"           : WebSearch("gfaqs"),
+        "images [<text>]"               : WebSearch("im"),
+        "stack overflow [<text>]"       : WebSearch("so"),
+    }
+
+    extras = [
+        Dictation("text"),
+        Integer("n", 2, 20),
+        ]
+
+    defaults = {
+        'n' : 1,
+        }
+    
+    @classmethod
+    def activeForWindow(cls, window):
+        return ChromeRule.activeForWindow(window)
 
 @registerRule
 class ChromeRule(SeriesMappingRule):
@@ -43,17 +72,6 @@ class ChromeRule(SeriesMappingRule):
         #misc
         "private browsing"              : Key("cs-n"),
         "link"                          : Key("f"),
-        # search types
-        "wikipedia [<text>]"            : WebSearch("wk"),
-        "youtube [<text>]"              : WebSearch("yt"),
-        "dictionary [<text>]"           : WebSearch("dict"),
-        "thesaurus [<text>]"            : WebSearch("thes"),
-        "amazon [<text>]"               : WebSearch("az"),
-        "c plus plus [<text>]"          : WebSearch("cpp"),
-        "facebook [<text>]"             : WebSearch("fb"),
-        "game facks [<text>]"           : WebSearch("gfaqs"),
-        "images [<text>]"               : WebSearch("im"),
-        "stack overflow"                : WebSearch("so"),
         }
 
     extras = [

@@ -2,14 +2,13 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 from EventLoop import getLoop
+from EventList import FocusChangeEvent, WindowListEvent
 from Window import Window, getWindowList, getFocusedWindow
 from namedtuple import namedtuple
 from copy import copy
 import time
 import re
 
-FocusChangeEvent = namedtuple("FocusChangeEvent", "window") 
-WindowListEvent = namedtuple("WindowListEvent", "windows") 
 
 REFRESH_TIME = 0.25
 
@@ -18,8 +17,8 @@ class WindowEventWatcher(object):
         self.filterFunc = filterFunc
         self.pushQ = eventQ
 
-        self.previousWindowId = getFocusedWindow().winId
-        self.previousWindowName = getFocusedWindow().name
+        self.previousWindowId = None
+        self.previousWindowName = None
         self.nextWindowList = getWindowList()
         self.previousWindowList = []
 
@@ -29,7 +28,8 @@ class WindowEventWatcher(object):
     def extractList(self, windowList):
         return [(w.winId, w.name) for w in windowList]
 
-    def __call__(self):
+    def getEvents(self):
+        events = []
         windowList = self.nextWindowList.result # force finishing        
         windowList = filter(self.filterFunc, windowList)
 
@@ -39,17 +39,21 @@ class WindowEventWatcher(object):
 
         newWindowList = self.extractList(windowList)
         if self.previousWindowList != newWindowList:
-            self.pushQ.put(WindowListEvent(windowList))
+            events.append(WindowListEvent(windowList))
         self.previousWindowList = newWindowList
 
         newWindow = getFocusedWindow()
         if (newWindow and self.previousWindowId != newWindow.winId) or self.previousWindowName != newWindow.name:
-            self.pushQ.put(FocusChangeEvent(newWindow))
+            events.append(FocusChangeEvent(newWindow))
         self.previousWindowId = newWindow.winId if newWindow else None
         self.previousWindowName = newWindow.name
 
         self.nextWindowList = getWindowList() # start async
+        return events
 
+    def __call__(self):
+        for e in self.getEvents():
+            self.pushQ.put(e)
         
 if __name__ == "__main__":
     import sys

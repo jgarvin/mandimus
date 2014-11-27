@@ -98,6 +98,13 @@ class MainThread(object):
         self.subscribeEvent(WindowListEvent, self.handleWindowList)
         self.subscribeEvent(GrammarEvent, self.handleGrammarEvent)
         
+        class MainRule(SeriesMappingRule):
+            mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
+                        "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
+            def activeForWindow(self, w):
+                return True
+        registerRule(MainRule)
+
     def subscribeEvent(self, eventType, handler, priority=100):
         if eventType not in self.eventSubscribers:
             self.eventSubscribers[eventType] = []
@@ -146,35 +153,32 @@ class MainThread(object):
     def processEvent(self, ev):
         if type(ev) in self.eventSubscribers:
             for h in self.eventSubscribers[type(ev)]:
-                h[1](ev)        
+                h[1](ev)
 
-    def onConnect(self, ev=None):
-        class MainRule(SeriesMappingRule):
-            mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
-                        "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
-            def activeForWindow(self, w):
-                return True
+    def drainEvents(self):
+        try:
+            while self.run:
+                try:
+                    ev = self.events.pop()
+                except IndexError:
+                    break
 
+                self.processEvent(ev)
+        except KeyboardInterrupt:
+            self.stop()
+            sys.exit()
         
-        registerRule(MainRule)
-        # so that rules apply for whatever is focused on startup
-        self.determineRules(getFocusedWindow())
-        print "everything is set up"
+    def onConnect(self, ev=None):
+        self.win()
+        self.drainEvents()
         self.dfly.requestStartupComplete()
 
     def __call__(self):
         try:
             while self.run:
                 time.sleep(self.timeout())
-                
                 self.dispatchTimers()
-
-                try:
-                    ev = self.events.pop()
-                except IndexError:
-                    continue
-
-                self.processEvent(ev)
+                self.drainEvents()
         except KeyboardInterrupt:
             self.stop()
             sys.exit()

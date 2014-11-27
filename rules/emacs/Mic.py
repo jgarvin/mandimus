@@ -11,6 +11,8 @@ class MicrophoneState(object):
     def updateState(self, ev):
         self.state = ev.state
         self.tellEmacs(self.state if self.connected else "disconnected")
+        if self.state == "sleeping":
+            self.connected = False
 
     def connectionChange(self, ev):
         self.connected = True if isinstance(ev, StartupCompleteEvent) else False

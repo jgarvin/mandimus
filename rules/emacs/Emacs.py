@@ -19,23 +19,56 @@ from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
 import string
 
-def bufferList():
-    buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
-    return getStringList(buffs)
-
 def currentBuffer():
     buf = runEmacsCmd("(buffer-name (current-buffer))")
     return buf.strip().strip('"')
 
-def showBuffer(buf):
-    runEmacsCmd("(switch-to-buffer \"%s\")" % buf)
-
 class SelectBuffer(SelectChoice):
+    @classmethod
+    def getChoices(cls):
+        buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
+        return getStringList(buffs)
+
     def _currentChoice(self):
         return currentBuffer()
 
     def _select(self, choice):
-        showBuffer(choice)
+        runEmacsCmd("(switch-to-buffer \"%s\")" % choice)
+
+    def _noChoice(self):
+        runEmacsCmd("(switch-to-buffer nil)")                
+
+openProjetileFileEl = """
+(find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))
+"""
+
+# class SelectProject(SelectChoice):
+#     @classmethod
+#     def getChoices(cls):
+#         buffs = runEmacsCmd("(projectile-relevant-known-projects)", inFrame=False)
+#         return getStringList(buffs)
+        
+#     def _currentChoice(self):
+#         return runEmacsCmd("(projectile-project-name)")
+
+#     def _select(self, choice):
+#         runEmacsCmd("(projectile-switch-project-by-name \"%s\")" % choice)
+
+#     def _noChoice(self):
+#         # TODO
+#         pass
+
+class SelectProjectFile(SelectChoice):
+    @classmethod
+    def getChoices(cls):
+        buffs = runEmacsCmd("(projectile-current-project-files)")
+        return getStringList(buffs)
+
+    def _currentChoice(self):
+        return currentBuffer()
+
+    def _select(self, choice):
+        runEmacsCmd(openProjetileFileEl % choice)
 
     def _noChoice(self):
         runEmacsCmd("(switch-to-buffer nil)")                
@@ -51,7 +84,9 @@ class SelectCommand(SelectChoice):
         Key("c-x,c-m")()
         
 def updateBufferGrammar():
-    b = set(bufferList())
+    b = set(SelectBuffer.getChoices())
+    #if not b:
+        #return
     channels = {k for k in b if k.startswith('#')}
     channels |= {k for k in b if k.startswith('irc')}
     special = {k for k in b if k.startswith(' *')}
@@ -67,6 +102,14 @@ def updateBufferGrammar():
     updateListGrammar(special, 'special',
                       SelectBuffer, "EmacsSpecialMapping",
                       Emacs.activeForWindow)
+
+    #print SelectProjectFile.getChoices()
+    updateListGrammar(SelectProjectFile.getChoices(), "file",
+                      SelectProjectFile, "EmacsProjFileMapping",
+                      Emacs.activeForWindow, dolog=True)
+    # updateListGrammar(SelectProject.getChoices(), "project",
+    #                   SelectProject, "EmacsProjectMapping",
+    #                   Emacs.activeForWindow)
 
 class SelectTypeClosest(SelectChoice):
     def _currentChoice(self):
@@ -176,15 +219,36 @@ class EmacsMapping(MappingRule):
         "other"                          : Key("c-x, o"),
         "collapse"                       : Key("c-x, 1"),
         "other collapse"                 : Key("c-x, o") + Key("c-x, 1"),
-        "new frame"                      : Key("c-x, 5, 2"),
+        "new frame [<n>]"                : Cmd("(make-frame-command)"),
         "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
 
         "search [<text>]"                : Key('c-s') + Text("%(text)s"),
         "lurch [<text>]"                 : Key('c-r') + Text("%(text)s"),
         "list buffs"                     : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
+#"(projectile-project-root)"
+        # projectile commands
+        "project"                        : Key("c-c,p,p"),
+        "open file"                      : Key("c-c,p,f"),
+        "open folder"                    : Key("c-c,p,d"),
+        "ack"                            : Key("c-c,p,s,a"),
+        "open project"                   : Key("c-c,p,b"),
+        "occur"                          : Key("c-c,p,o"),
+        "project replace"                : Key("c-c,p,r"),
+        "kill project"                   : Key("c-c,p,k"),
+        "project root"                   : Key("c-c,p,D"),
+        "compile"                        : Key("c-c,p,c"),
+        "invalidate projectile cache"    : Key("c-c,p,i"),
+
+        # compilation mode commands
+        # don't think I can make these mode specific...
+        "oops"                           : Key("a-g,n"),
+        "spoo"                           : Key("a-g,p"),
+        "file oops"                      : Key("a-rbrace"),
+        "file spoo"                      : Key("a-lbrace"),
+        "toggle oops trace"              : Key("c-c,c-f"),
                 
         # file commands
-        "open file"                      : Key("c-x,c-f"),
+        "plain open file"                : Key("c-x,c-f"),
         "alternate file"                 : Key("c-x,c-v"),
         "recent files"                   : Key("c-c,c-e"),
         "man page"                       : Key("a-x") + Text("man") + Key("enter"),
@@ -229,8 +293,9 @@ class EmacsMapping(MappingRule):
 class Emacs(SeriesMappingRule):
     mapping  = {
         # general commands
-        "axe"                          : Cmd("(keyboard-quit)"),
-        "super axe"                    : Key("c-g"),
+        # "axe"                        : Cmd("(keyboard-quit)"),
+        # "super axe"                  : Key("c-g"),
+        "axe"                          : Key("c-g"),
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),

@@ -162,7 +162,6 @@ class SelectChoice(Action):
         # is not what we want
 
         # whichever choice matches the most words, choose
-        # TODO: would be better if it regarded order
         # TODO: should use percentage matching rather than total
         counter = {}
         for word in words:

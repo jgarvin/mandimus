@@ -3,6 +3,7 @@ log = mdlog.getLogger(__name__)
 
 from Actions import Key, Text, SelectChoice
 from EventLoop import getLoop
+from EventList import FocusChangeEvent
 from rules.Elements import Dictation, Integer
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
@@ -35,11 +36,14 @@ def nickList():
     return getStringList(nicks)
 
 def nickExtractFunction(w):
-    return extractWords(w, translate={}, useDict=True, detectBadConsonantPairs=True)
+    return extractWords(w, translate={},
+                        useDict=True,
+                        detectBadConsonantPairs=True,
+                        removeLeetSpeak=True)
 
 _lastMapping = None
 
-def updateNickGrammar():
+def updateNickGrammar(ev=None):
     window = getFocusedWindow()
     if window and not ERC.activeForWindow(window):
         return
@@ -58,6 +62,7 @@ def updateNickGrammar():
     _lastMapping = mapping
             
 getLoop().subscribeTimer(1, updateNickGrammar)
+getLoop().subscribeEvent(FocusChangeEvent, updateNickGrammar)
 
 @registerRule
 class ERC(SeriesMappingRule):

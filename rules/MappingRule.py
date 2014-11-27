@@ -9,6 +9,16 @@ class MappingRule(EqualityMixin):
     isMergedSeries = False
     serializedType = "MappingRule"
 
+    def __str__(self):
+        maxKeyLen = len(max([str(x) for x in self.mapping.keys()], key=lambda x: len(x)))
+        maxValLen = len(max([str(x) for x in self.mapping.values()], key=lambda x: len(x)))
+        result = []
+        result.append("%s = {" % type(self))
+        for k, v in self.mapping.items():
+            result.append("    %*s    :    %*s" % (maxKeyLen, k, maxValLen, v))
+        result.append("}")
+        return "\n".join(result)
+
     def __eq__(self, other):
         return (self.name == other.name
                 and self.mapping == other.mapping

@@ -18,6 +18,7 @@ class DragonflyNode(object):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return sock
 
     def retrieveMessages(self):
@@ -83,7 +84,12 @@ class DragonflyNode(object):
 
         try:
             self.other.settimeout(None)
-            self.other.sendall((msg + MESSAGE_TERMINATOR).encode('utf-8'))
+            try:
+                self.other.sendall((msg + MESSAGE_TERMINATOR).encode('utf-8'))
+            except UnicodeDecodeError as e:
+                log.error(str(e))
+                log.error("attempted msg: [%s]" %msg)
+                #log.error("problem area: %s [%s]" % (msg[35683], msg[35680:35686]))
             self.lastMsgSendTime = time.time()
         except socket.error as e:
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
