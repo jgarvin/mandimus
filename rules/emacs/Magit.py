@@ -19,9 +19,9 @@ class MagitStatus(SeriesMappingRule):
         "more context" : Key("plus"),        
         "less context" : Key("hyphen"),
         "discard"      : Key("k"),
-        "next"         : Key("a-n"),
-        "previous"     : Key("a-p"),
         "branch"       : Key("b"),
+        "merge"        : Key("m"),
+        "diff"         : Key("d"),
     }
 
     @classmethod

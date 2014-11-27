@@ -106,7 +106,7 @@ def updateBufferGrammar():
     #print SelectProjectFile.getChoices()
     updateListGrammar(SelectProjectFile.getChoices(), "file",
                       SelectProjectFile, "EmacsProjFileMapping",
-                      Emacs.activeForWindow, dolog=True)
+                      Emacs.activeForWindow)
     # updateListGrammar(SelectProject.getChoices(), "project",
     #                   SelectProject, "EmacsProjectMapping",
     #                   Emacs.activeForWindow)
