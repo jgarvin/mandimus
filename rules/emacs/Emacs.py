@@ -269,8 +269,7 @@ class EmacsMapping(MappingRule):
         "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
         "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
         "git status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
-        "submit"                         : Key("c-c,c-c"),
-        
+        "submit"                         : Key("c-x,hash"),
     }
 
     extras = [
