@@ -170,9 +170,13 @@ class SelectChoice(Action):
                 f = copy(form)
                 matches = 0.0
                 for word in words:
+                    # this still ignores relative ordering
+                    # of different words
                     if word in f:
                         matches += 1
                         f.remove(word)
+                    else:
+                        matches = min(matches - 1, 0.0) 
                 score = matches / len(form)
                 scores[k] = max(score, scores[k])
 
@@ -303,6 +307,7 @@ class FormatState(object):
         ur"]\right-square-bracket" : ur"right square bracket",
         ur"{\left-curly-bracket" : ur"left curly bracket",
         ur"}\right-curly-bracket" : ur"right curly bracket",
+        ur"&\ampersand" : ur"ampersand",
         }
     
     formatting = {
@@ -341,6 +346,7 @@ class FormatState(object):
         ur"]\right-square-bracket" : ur"]",
         ur"{\left-curly-bracket" : ur"{",
         ur"}\right-curly-bracket" : ur"}",
+        ur"&\ampersand" : ur"&",
         }
 
     numeralmap = {

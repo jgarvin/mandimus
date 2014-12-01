@@ -23,7 +23,7 @@ class EmacsText(Text):
         if needSpace:
             log.info('need space')
             words = ' ' + words
-            
+        
         # There's no good elisp way to handle putting characters into
         # the search box AFAIK. You can get text in there but giving it
         # focus disables search as you type.

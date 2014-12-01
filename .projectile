@@ -1,0 +1,17 @@
+a.out
+*.d
+*.o
+*.gch
+core
+gmon.out
+*.log
+*.dvi
+*.aux
+*.pyc
+.\#*
+\#*
+vgcore.*
+massif.out
+.redo
+out
+*.wav

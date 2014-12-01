@@ -13,21 +13,30 @@ from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from rules.emacs.Cmd import Cmd, runEmacsCmd
+from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
 import string
+import SelectOption
+import EventList
+
+watchers = []
+selectors = []
 
 def currentBuffer():
     buf = runEmacsCmd("(buffer-name (current-buffer))")
     return buf.strip().strip('"')
 
-class SelectBuffer(SelectChoice):
-    @classmethod
-    def getChoices(cls):
-        buffs = runEmacsCmd("(mapcar 'buffer-name (buffer-list))", inFrame=False)
-        return getStringList(buffs)
+class BufferWatcher(EmacsCommandWatcher):
+    cmd = "(mapcar 'buffer-name (buffer-list))"
+    inFrame = False
+    eventType = EventList.BufferListEvent
+
+watchers.append(BufferWatcher())
+
+class SelectBufferBase(SelectOption.SelectOption):
+    eventType = EventList.BufferListEvent
 
     def _currentChoice(self):
         return currentBuffer()
@@ -36,11 +45,42 @@ class SelectBuffer(SelectChoice):
         runEmacsCmd("(switch-to-buffer \"%s\")" % choice)
 
     def _noChoice(self):
-        runEmacsCmd("(switch-to-buffer nil)")                
+        runEmacsCmd("(switch-to-buffer nil)")
 
-openProjetileFileEl = """
-(find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))
-"""
+    def _contextMatch(self, window):
+        return window and Emacs.activeForWindow(window)
+
+class SelectBuffer(SelectBufferBase):
+    leadingTerm = "buff"
+    
+    def _filterChoices(self, choices):
+        return [k for k in choices if (not k.startswith("#")
+                                       and not k.startswith("*")
+                                       and not k.startswith(" *"))]
+
+class SelectChannel(SelectBufferBase):
+    leadingTerm = "channel"
+
+    def _filterChoices(self, choices):
+        return [k for k in choices if k.startswith("#")]
+
+class SelectSpecial(SelectBufferBase):
+    leadingTerm = "special"
+
+    def _filterChoices(self, choices):
+        return [k for k in choices if k.startswith("*") or k.startswith(" *")]
+
+class SelectTerminal(SelectBufferBase):
+    leadingTerm = "term"
+
+    def _filterChoices(self, choices):
+        return [k for k in choices if k.startswith("*@")]
+
+selectors.append(SelectBuffer())
+selectors.append(SelectChannel())
+selectors.append(SelectSpecial())
+selectors.append(SelectTerminal())
+
 
 # class SelectProject(SelectChoice):
 #     @classmethod
@@ -58,12 +98,22 @@ openProjetileFileEl = """
 #         # TODO
 #         pass
 
-class SelectProjectFile(SelectChoice):
-    @classmethod
-    def getChoices(cls):
-        buffs = runEmacsCmd("(projectile-current-project-files)", allowError=True)
-        return getStringList(buffs)
+class ProjectFileWatcher(EmacsCommandWatcher):
+    cmd = "(projectile-current-project-files)"
+    inFrame = False
+    allowError = True
+    eventType = EventList.ProjectFileListEvent
 
+watchers.append(ProjectFileWatcher())
+
+openProjetileFileEl = """
+(find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))
+"""
+
+class SelectProjectFile(SelectOption.SelectOption):
+    leadingTerm = "file"
+    eventType = EventList.ProjectFileListEvent
+    
     def _currentChoice(self):
         return currentBuffer()
 
@@ -73,77 +123,44 @@ class SelectProjectFile(SelectChoice):
     def _noChoice(self):
         runEmacsCmd("(switch-to-buffer nil)")                
 
-class SelectCommand(SelectChoice):
+    def _contextMatch(self, window):
+        return window and Emacs.activeForWindow(window)
+
+selectors.append(SelectProjectFile())
+
+class WordWatcher(EmacsCommandWatcher):
+    cmd = "(md-get-buffer-words)"
+    eventType = EventList.EmacsWordEvent
+
+    def _postProcess(self, output):
+        lst = EmacsCommandWatcher._postProcess(self, output)
+        # filter unicode
+        lst = [''.join([c for c in n if c in string.printable]) for n in lst]
+        lst = [x for x in lst if len(x) > 1]
+        return lst
+
+watchers.append(WordWatcher())
+
+class SelectTypeClosest(SelectOption.SelectOption):
+    leadingTerm = "toke"
+    eventType = EventList.EmacsWordEvent
+
     def _currentChoice(self):
         return None
 
     def _select(self, choice):
-        runEmacsCmd("(call-interactively '%s)" % choice)
-
-    def _noChoice(self):
-        Key("c-x,c-m")()
-        
-def updateBufferGrammar():
-    b = set(SelectBuffer.getChoices())
-    #if not b:
-        #return
-    channels = {k for k in b if k.startswith('#')}
-    channels |= {k for k in b if k.startswith('irc')}
-    special = {k for k in b if k.startswith(' *')}
-    special |= {k for k in b if k.startswith('*')}
-    b -= channels
-    b -= special
-    updateListGrammar(b, 'buff',
-                      SelectBuffer, "EmacsBufferMapping",
-                      Emacs.activeForWindow)
-    updateListGrammar(channels, 'channel',
-                      SelectBuffer, "EmacsChannelMapping",
-                      Emacs.activeForWindow)
-    updateListGrammar(special, 'special',
-                      SelectBuffer, "EmacsSpecialMapping",
-                      Emacs.activeForWindow)
-
-    #print SelectProjectFile.getChoices()
-    updateListGrammar(SelectProjectFile.getChoices(), "file",
-                      SelectProjectFile, "EmacsProjFileMapping",
-                      Emacs.activeForWindow)
-    # updateListGrammar(SelectProject.getChoices(), "project",
-    #                   SelectProject, "EmacsProjectMapping",
-    #                   Emacs.activeForWindow)
-
-class SelectTypeClosest(SelectChoice):
-    def _currentChoice(self):
-        return None
-
-    def _select(self, choice):
-        log.info(type(choice))
         EmacsText("%s" % choice, lower=False)()        
 
     def _noChoice(self):
         pass
 
-def tokenList():
-#    tokens = runEmacsCmd("(md-get-buffer-words)")
-    tokens = runEmacsCmd("(md-get-window-words)")
-    tokens = getStringList(tokens)
-    # filter unicode crap
-    tokens = [''.join([c for c in n if c in string.printable]) for n in tokens]
-    return tokens
+    def _contextMatch(self, window):
+        return window and Emacs.activeForWindow(window)
 
-def extractTokeFunction(w):
-    return extractWords(w, translate={}, useDict=False)
+    def _extractWords(self, choice):
+        return extractWords(choice, translate={}, useDict=False)
 
-def updateTokenGrammar():
-    t = set(tokenList())
-    updateListGrammar(t, 'toke',
-                      SelectTypeClosest, "EmacsTokenMapping",
-                      Emacs.activeForWindow,
-                      extractTokeFunction)
-    
-getLoop().subscribeTimer(1, updateBufferGrammar)
-#getLoop().subscribeTimer(1, updateTokenGrammar)
-#getLoop().subscribeTimer(10, updateCommandGrammar)
-#updateCommandGrammar()
+selectors.append(SelectTypeClosest())
 
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
@@ -204,6 +221,7 @@ class EmacsMapping(MappingRule):
         "help function"                  : Key("c-h,f"),
         "help variable"                  : Key("c-h,v"),
         "help key"                       : Key("c-h,k"),
+        "help mode"                      : Key("c-h,m"),
         "help docks"                     : Key("c-h,d"),
         "help news"                      : Key("c-h,n"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
@@ -252,7 +270,7 @@ class EmacsMapping(MappingRule):
         "alternate file"                 : Key("c-x,c-v"),
         "recent files"                   : Key("c-c,c-e"),
         "man page"                       : Key("a-x") + Text("man") + Key("enter"),
-        
+
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
         "kill buff"                      : Key("c-x,k,enter"),
@@ -266,10 +284,13 @@ class EmacsMapping(MappingRule):
 
         # misc
         "start irc"                      : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
+        "stop irc"                       : Key("c-x,c-m") + Text("stop-irc") + Key("enter"),
         "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
         "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
         "git status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
         "submit"                         : Key("c-x,hash"),
+        "open terminal"                  : Cmd("(etc-start-or-open-terminal)"),
+        "show top"                       : Cmd("(etc-start-or-open-top)"),
     }
 
     extras = [
@@ -334,7 +355,7 @@ class Emacs(SeriesMappingRule):
         # mark commands
         "mark [(line | word | graph)]" : Mark(),
         "tark"                         : Cmd("(exchange-point-and-mark)"),
-        "select"                       : Key("c-equal"),
+        "select [<n>]"                 : Key("c-equal:%(n)d"),
         "contract"                     : Key("a-equal"),
         
         # text manip commands
@@ -354,10 +375,8 @@ class Emacs(SeriesMappingRule):
         
         "select all"                   : Key("c-a"),
         "fish"                         : Key("a-space"),
-        #"toke <text>"                 : Text("%(text)s") + Key("a-space"),
-        "undo"                         : Key("cs-underscore"),
-        "redo"                         : Key("as-underscore"),
-        "turf"                         : Key("enter,c-o"),
+        "undo [<n>]"                   : Key("cs-underscore:%(n)d"),
+        "redo [<n>]"                   : Key("as-underscore:%(n)d"),
 
         "shift right"                  : Cmd("(call-interactively 'python-indent-shift-right)"),
         "shift left"                   : Cmd("(call-interactively 'python-indent-shift-left)"),

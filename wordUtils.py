@@ -107,7 +107,7 @@ def fixBadConsonantPairs(w):
     return ''.join(word)
     
 # TODO: maybe give translate a better default
-def extractWords(wordstr, splitters={' '} | set(string.punctuation), translate={},
+def extractWords(wordstr, splitters={' ', '\n', '\t'} | set(string.punctuation), translate={},
                  useDict=False, removeLeetSpeak=False, detectBadConsonantPairs=False,
                  filterUnicode=True):
     """Split a string into a list using multiple delimeters, and optionally

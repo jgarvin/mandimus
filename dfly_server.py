@@ -16,7 +16,7 @@ from Actions import Repeat
 from EventLoop import getLoop
 from rules.Rule import registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule, combineSeriesMappingRules
-from EventList import MicrophoneEvent, RuleMatchEvent, ConnectedEvent, StartupCompleteEvent
+from EventList import MicrophoneEvent, RuleMatchEvent, ConnectedEvent, StartupCompleteEvent, WordEvent
 
 BLOCK_TIME = 0.05
 
@@ -93,6 +93,7 @@ class DragonflyThread(DragonflyNode):
             self.unloadRule(r)
 
     def sendAllRules(self):
+        log.info('Sending all rules.')
         for r in registeredRules().values():
             self.loadRule(r)
         #self.sendMsg("all sent" )
@@ -151,6 +152,7 @@ class DragonflyThread(DragonflyNode):
     def onConnect(self):
         self.clearAllRules()
         self.sendAllRules()
+        log.info("Pushing connected event.")
         self.pushQ.put(ConnectedEvent())
 
     def requestStartupComplete(self):
@@ -203,6 +205,7 @@ class DragonflyThread(DragonflyNode):
                         self.history.append(RuleMatchEvent(rule, extras))
 
                     log.info('match %s -- %s -- %s' % (g.name, rule, extras['words']))
+                    self.pushQ.put(WordEvent(extras['words']))
                     cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because

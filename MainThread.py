@@ -1,6 +1,7 @@
 import mdlog, os
 mdlog.initLogging("server", "/tmp", stdOut=True)
 log = mdlog.getLogger(__name__)
+log.setLevel(10)
 
 import os, sys
 from dfly_server import DragonflyThread
@@ -18,6 +19,7 @@ from rules.Rule import registerRule, registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
 from rules.Elements import Integer, Dictation
+import EventList
 
 badWindows = {
     "Desktop",
@@ -70,10 +72,11 @@ class RestartEvent(object): pass
 class ExitEvent(object): pass
 
 class TimerEntry(object):
-    def __init__(self, nextExpiration, callback, seconds):
+    def __init__(self, nextExpiration, callback, seconds, priority):
         self.nextExpiration = nextExpiration
         self.callback = callback
         self.seconds = seconds
+        self.priority = priority
 
 class MainThread(object):
     def __init__(self):
@@ -89,14 +92,13 @@ class MainThread(object):
 
         self.eventSubscribers = {}
 
-        self.determineCallbacks = set()
-
         self.subscribeEvent(ConnectedEvent, self.onConnect)
         self.subscribeEvent(RestartEvent, self.restart)
         self.subscribeEvent(ExitEvent, self.stop)
         self.subscribeEvent(FocusChangeEvent, self.onFocusChange)
         self.subscribeEvent(WindowListEvent, self.handleWindowList)
         self.subscribeEvent(GrammarEvent, self.handleGrammarEvent)
+        self.subscribeEvent(EventList.RuleChangeEvent, self.onRuleChange)
         
         class MainRule(SeriesMappingRule):
             mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
@@ -105,14 +107,18 @@ class MainThread(object):
                 return True
         registerRule(MainRule)
 
+    def onRuleChange(self, ev):
+        self.determineRules(getFocusedWindow())
+
     def subscribeEvent(self, eventType, handler, priority=100):
         if eventType not in self.eventSubscribers:
             self.eventSubscribers[eventType] = []
         self.eventSubscribers[eventType].append((priority, handler))
         self.eventSubscribers[eventType].sort(key=lambda x: x[0])
 
-    def subscribeTimer(self, seconds, cb):
-        self.timers.append(TimerEntry(time.time() + seconds, cb, seconds))
+    def subscribeTimer(self, seconds, cb, priority=100,):
+        self.timers.append(TimerEntry(time.time() + seconds, cb, seconds, priority))
+        self.timers.sort(key=lambda x: x.priority)
 
     def timeout(self):
         if self.timers:
@@ -132,19 +138,18 @@ class MainThread(object):
                 t.callback()
     
     def onFocusChange(self, ev):
+        log.debug("Focus change")
         self.determineRules(ev.window)
 
-    def onDetermineRules(self, handler):
-        self.determineCallbacks.add(handler)
-
     def determineRules(self, window):
-        for h in self.determineCallbacks:
-            h()
+        #log.debug("Determine rules")
 
         active = set()
-        for r in registeredRules().values():
-            if r.activeForWindow(window):
-                active.add(r)
+        if window:
+            for r in registeredRules().values():
+                #log.debug("found rule: %s" % type(r).__name__)
+                if r.activeForWindow(window):
+                    active.add(r)
         self.dfly.updateRuleEnabledness(active)
     
     def put(self, p):
@@ -169,8 +174,15 @@ class MainThread(object):
             sys.exit()
         
     def onConnect(self, ev=None):
+        log.debug("Got connected event, checking windows")
         self.win()
+        log.debug("Draining events")
         self.drainEvents()
+        log.debug("Requesting startup complete")
+        # running win was supposed to make this unnecessary,
+        # but sometimes the window watcher finishes first,
+        # and the events get cached and dismissed
+        self.determineRules(getFocusedWindow())
         self.dfly.requestStartupComplete()
 
     def __call__(self):
@@ -263,6 +275,8 @@ if __name__ == "__main__":
         ('rules.emacs.Pairs', ['']),
         ('rules.emacs.Mic', ['']),
         ('rules.emacs.Magit', ['']),
+        ('rules.emacs.Term', ['']),
+        ('rules.emacs.ModeLine', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),

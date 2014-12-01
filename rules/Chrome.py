@@ -58,8 +58,8 @@ class ChromeRule(SeriesMappingRule):
         "zoom out [<n>]"                : Key("c-minus:%(n)d"),
         # these are provided by the 'tabloid' extension
         # TODO                          : not necessary, cs-pgdown/pgup
-        "move right"                    : Key("as-l"),
-        "move left"                     : Key("as-h"),
+        "move right [<n>]"              : Key("as-l:%(n)d"),
+        "move left [<n>]"               : Key("as-h:%(n)d"),
         "move start"                    : Key("as-k"),
         "move end"                      : Key("as-j"),
         # these are provided by the 'tabasco' extension

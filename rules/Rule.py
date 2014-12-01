@@ -2,6 +2,8 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 from copy import copy
+import EventLoop
+import EventList
 
 registered_rules = {}
 
@@ -18,13 +20,15 @@ def registerRule(f):
     
     remove = set()
     for ruleName in registered_rules:
-        if newName == ruleName:
-            # log.info('removing old ' + getName(f))
-            remove.add(ruleName)
-    for r in remove:
-        del registered_rules[r]
+        if newName == ruleName and type(registered_rules[ruleName]) == type(f):
+            # you're reregistering the exact same rule
+            return
 
-    registered_rules[newName] = f()
+    newRule = f()
+    registered_rules[newName] = newRule
+    loop = EventLoop.getLoop()
+    if loop:
+        loop.put(EventList.RuleChangeEvent(newRule))
     return f
 
 def commandTally():

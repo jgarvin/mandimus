@@ -43,10 +43,12 @@ class WindowEventWatcher(object):
         self.previousWindowList = newWindowList
 
         newWindow = getFocusedWindow()
-        if (newWindow and self.previousWindowId != newWindow.winId) or self.previousWindowName != newWindow.name:
+        newWindowId = newWindow.winId if newWindow else -1
+        newWindowName = newWindow.name if newWindow else ""
+        if self.previousWindowId != newWindowId or self.previousWindowName != newWindowName:
             events.append(FocusChangeEvent(newWindow))
-        self.previousWindowId = newWindow.winId if newWindow else None
-        self.previousWindowName = newWindow.name
+        self.previousWindowId = newWindowId
+        self.previousWindowName = newWindowName
 
         self.nextWindowList = getWindowList() # start async
         return events

@@ -40,13 +40,13 @@ class DigitRule(MappingRule):
         "zero"  : "0",
         "one"   : "1",
         "two"   : "2",
-        "tree"  : "3",
+        "three" : "3",
         "four"  : "4",
-        "fife"  : "5",
+        "five"  : "5",
         "six"   : "6",
         "seven" : "7",
         "eight" : "8",
-        "niner" : "9",
+        "nine"  : "9",
     }
 
 @registerRule

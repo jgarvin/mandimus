@@ -50,21 +50,20 @@ class PressKey(object):
 @registerRule
 class AlwaysRule(SeriesMappingRule):
     mapping = {
-        "command tally"                                                   : (lambda x: Speak(str(commandTally()))()),
-        "[control] [alt] [shift] (<alpharule> | <digitrule> | <symrule>)" : PressKey(),
-        'rep [<n>]'                                                       : Repeat(),
-        'tab'                                                             : Key("tab"),
+        "command tally"                                     : (lambda x: Speak(str(commandTally()))()),
+        "[control] [alt] [shift] (<alpharule> | <symrule>)" : PressKey(),
+        'rep [<n>]'                                         : Repeat(),
+        'tab'                                               : Key("tab"),
     }
 
     alpharef = RuleRef(AlphaRule, "alpharule")
-    digitref = RuleRef(DigitRule, "digitrule")
     symref   = RuleRef(SymRule, "symrule")
 
     extras = [
         Integer("n", 2, 20),
+        Integer("digit", 0, 10),
         Dictation("text"),
         alpharef,
-        digitref,
         symref,
         ]
     

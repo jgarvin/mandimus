@@ -1,5 +1,6 @@
 import mdlog
 log = mdlog.getLogger(__name__)
+log.setLevel(20)
 
 import traceback
 import os
@@ -7,8 +8,10 @@ import os.path as op
 import subprocess
 
 from Actions import Action
+import EventLoop
 from EventLoop import getLoop
 from EventList import FocusChangeEvent
+import grammar
 
 EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
@@ -51,10 +54,14 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
         log.info('emacs cmd: ' + str(args))
 
     s = subprocess.Popen(args, shell=False,
-                         stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+                         #stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE)
+                         #stderr=subprocess.PIPE)
     (out, err) = s.communicate()
+
+    if dolog:
+        log.info('emacs output: [%s]' % out)
+        log.info('emacs error: [%s]' % err)
 
     if err:
         log.info("Emacs error!: " + err)
@@ -120,3 +127,32 @@ def updateCommandGrammar():
     #                   SelectCommand, "EmacsCommandMapping")
             
 
+class EmacsCommandWatcher(object):
+    cmd = None
+    allowError = False
+    inFrame = True
+    eventType = None
+    interval = 1
+    onTimer = True
+    onFocus = True
+    
+    def __init__(self):
+        self.output = None
+        if self.onTimer:
+            EventLoop.getLoop().subscribeTimer(self.interval, self.update, priority=0)
+        if self.onFocus:
+            EventLoop.getLoop().subscribeEvent(FocusChangeEvent, self.update, priority=0)
+
+    def _postProcess(self, output):
+        lst = grammar.getStringList(output)
+        lst.sort()
+        return lst
+
+    def update(self, ev=None):
+        log.debug(self.cmd)
+        newOutput = runEmacsCmd(self.cmd, inFrame=self.inFrame, allowError=self.allowError)
+        newOutput = self._postProcess(newOutput)
+        if newOutput == self.output:
+            return
+        self.output = newOutput
+        EventLoop.getLoop().put(self.eventType(newOutput))

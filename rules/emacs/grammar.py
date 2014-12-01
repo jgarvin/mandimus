@@ -41,12 +41,6 @@ def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
 
     return LocalMapping
 
-# (setq redisplay-dont-pause nil)
-# (setq redisplay-preemption-period nil)
-
-# (setq redisplay-dont-pause t)
-# (setq no-redraw-on-reenter t)
-
 def getStringList(output):
     output = output.strip()
     if output == "nil":
