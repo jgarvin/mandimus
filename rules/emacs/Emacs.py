@@ -100,7 +100,6 @@ selectors.append(SelectTerminal())
 
 class ProjectFileWatcher(EmacsCommandWatcher):
     cmd = "(projectile-current-project-files)"
-    inFrame = False
     allowError = True
     eventType = EventList.ProjectFileListEvent
 
@@ -129,7 +128,8 @@ class SelectProjectFile(SelectOption.SelectOption):
 selectors.append(SelectProjectFile())
 
 class WordWatcher(EmacsCommandWatcher):
-    cmd = "(md-get-buffer-words)"
+    #cmd = "(md-get-buffer-words)"
+    cmd = "(md-get-window-words)"
     eventType = EventList.EmacsWordEvent
 
     def _postProcess(self, output):
@@ -291,6 +291,7 @@ class EmacsMapping(MappingRule):
         "submit"                         : Key("c-x,hash"),
         "open terminal"                  : Cmd("(etc-start-or-open-terminal)"),
         "show top"                       : Cmd("(etc-start-or-open-top)"),
+        "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
     }
 
     extras = [
@@ -336,8 +337,8 @@ class Emacs(SeriesMappingRule):
         "window bottom"                : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
         "post [<n>]"                   : Key("a-f:%(n)d"),
         "pre [<n>]"                    : Key("a-b:%(n)d"),
-        "pade"                         : Key("a-v"),
-        "page"                         : Key("c-v"),
+        "pade [<n>]"                   : Key("a-v:%(n)d"),
+        "page [<n>]"                   : Key("c-v:%(n)d"),
         "center"                       : Key("c-l"),
         "gruff [<n>]"                  : Key("c-up:%(n)d"),
         "graph [<n>]"                  : Key("c-down:%(n)d"),

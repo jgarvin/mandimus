@@ -3,4 +3,4 @@
 # note on ubuntu you need to install postfix to get proper logging of this
 00 04 * * * /usr/bin/VBoxManage controlvm Dragon\ Resized acpipowerbutton  
 05 04 * * * /usr/bin/VBoxManage startvm Dragon\ Resized
-06 04 * * * /usr/bin/xdotool search --name Oracle search --name Dragon set_desktop_for_window 8
+06 04 * * * DISPLAY=:0 /usr/bin/xdotool search --name Oracle search --name Dragon set_desktop_for_window 8

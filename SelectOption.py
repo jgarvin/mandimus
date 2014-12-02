@@ -69,6 +69,7 @@ class SelectOption(Actions.Action):
         if self.ruleClass == newRuleClass:
             log.debug("Rule change check failed.")
             return
+        log.info("%s" % newRuleClass())
         self.ruleClass = newRuleClass
         log.debug("Registering rule")
         Rule.registerRule(self.ruleClass)
