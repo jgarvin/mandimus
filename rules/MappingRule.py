@@ -10,8 +10,12 @@ class MappingRule(EqualityMixin):
     serializedType = "MappingRule"
 
     def __str__(self):
-        maxKeyLen = len(max([str(x) for x in self.mapping.keys()], key=lambda x: len(x)))
-        maxValLen = len(max([str(x) for x in self.mapping.values()], key=lambda x: len(x)))
+        if self.mapping:
+            maxKeyLen = len(max([str(x) for x in self.mapping.keys()], key=lambda x: len(x)))
+            maxValLen = len(max([str(x) for x in self.mapping.values()], key=lambda x: len(x)))
+        else:
+            maxKeyLen = 0
+            maxValLen = 0
         result = []
         result.append("%s = {" % type(self))
         for k, v in self.mapping.items():

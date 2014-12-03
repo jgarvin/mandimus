@@ -1,4 +1,12 @@
+import StringIO
 import collections
+
+def isNumber(s):
+    try:
+        int(s)
+    except ValueError:
+        return False
+    return True
 
 def deepEmpty(x):
     if not isinstance(x, collections.Iterable):
@@ -30,3 +38,4 @@ class EqualityMixin(object):
     def __hash__(self):
         """Override the default hash behavior (that returns the id or the object)"""
         return hash(tuple(sorted(self.__dict__.items())))
+

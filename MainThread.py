@@ -20,6 +20,7 @@ from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
 from rules.Elements import Integer, Dictation
 import EventList
+import select
 
 badWindows = {
     "Desktop",
@@ -289,6 +290,6 @@ if __name__ == "__main__":
             __import__(module, globals(), locals(), fromlist)
         except Exception as e:
             log.info("Couldn't import %s" % module)
-            traceback.print_exc()
+            log.error(traceback.format_exception())
 
     main()

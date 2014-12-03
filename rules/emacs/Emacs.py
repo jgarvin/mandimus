@@ -13,17 +13,22 @@ from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher
+from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommandLogging
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
 import string
 import SelectOption
 import EventList
+import util
 
 watchers = []
 selectors = []
 
+class EmacsOption(SelectOption.SelectOption):
+    def _contextMatch(self, window):
+        return window and Emacs.activeForWindow(window)
+    
 def currentBuffer():
     buf = runEmacsCmd("(buffer-name (current-buffer))")
     return buf.strip().strip('"')
@@ -35,7 +40,7 @@ class BufferWatcher(EmacsCommandWatcher):
 
 watchers.append(BufferWatcher())
 
-class SelectBufferBase(SelectOption.SelectOption):
+class SelectBufferBase(EmacsOption):
     eventType = EventList.BufferListEvent
 
     def _currentChoice(self):
@@ -46,9 +51,6 @@ class SelectBufferBase(SelectOption.SelectOption):
 
     def _noChoice(self):
         runEmacsCmd("(switch-to-buffer nil)")
-
-    def _contextMatch(self, window):
-        return window and Emacs.activeForWindow(window)
 
 class SelectBuffer(SelectBufferBase):
     leadingTerm = "buff"
@@ -97,9 +99,8 @@ selectors.append(SelectTerminal())
 #     def _noChoice(self):
 #         # TODO
 #         pass
-
 class ProjectFileWatcher(EmacsCommandWatcher):
-    cmd = "(projectile-current-project-files)"
+    cmd = "(if buffer-file-name (projectile-current-project-files) nil)"
     allowError = True
     eventType = EventList.ProjectFileListEvent
 
@@ -109,7 +110,7 @@ openProjetileFileEl = """
 (find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))
 """
 
-class SelectProjectFile(SelectOption.SelectOption):
+class SelectProjectFile(EmacsOption):
     leadingTerm = "file"
     eventType = EventList.ProjectFileListEvent
     
@@ -122,11 +123,8 @@ class SelectProjectFile(SelectOption.SelectOption):
     def _noChoice(self):
         runEmacsCmd("(switch-to-buffer nil)")                
 
-    def _contextMatch(self, window):
-        return window and Emacs.activeForWindow(window)
-
 selectors.append(SelectProjectFile())
-
+    
 class WordWatcher(EmacsCommandWatcher):
     #cmd = "(md-get-buffer-words)"
     cmd = "(md-get-window-words)"
@@ -136,12 +134,12 @@ class WordWatcher(EmacsCommandWatcher):
         lst = EmacsCommandWatcher._postProcess(self, output)
         # filter unicode
         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
-        lst = [x for x in lst if len(x) > 1]
+        lst = [x for x in lst if len(x) > 1 and not util.isNumber(x)]
         return lst
 
 watchers.append(WordWatcher())
 
-class SelectTypeClosest(SelectOption.SelectOption):
+class SelectTypeClosest(EmacsOption):
     leadingTerm = "toke"
     eventType = EventList.EmacsWordEvent
 
@@ -153,10 +151,7 @@ class SelectTypeClosest(SelectOption.SelectOption):
 
     def _noChoice(self):
         pass
-
-    def _contextMatch(self, window):
-        return window and Emacs.activeForWindow(window)
-
+    
     def _extractWords(self, choice):
         return extractWords(choice, translate={}, useDict=False)
 
@@ -292,6 +287,7 @@ class EmacsMapping(MappingRule):
         "open terminal"                  : Cmd("(etc-start-or-open-terminal)"),
         "show top"                       : Cmd("(etc-start-or-open-top)"),
         "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
+        "toggle command logging"         : toggleCommandLogging,
     }
 
     extras = [

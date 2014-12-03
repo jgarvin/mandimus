@@ -29,6 +29,11 @@ def getMajorMode():
 
 getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
+logCommands = False
+def toggleCommandLogging(*args):
+    global logCommands
+    logCommands = not logCommands
+
 def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
     """Run command optionally in particular frame,
     set True for active frame."""
@@ -50,7 +55,7 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
         command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
 
     args += [wrapper % command]
-    if dolog:
+    if dolog or logCommands:
         log.info('emacs cmd: ' + str(args))
 
     s = subprocess.Popen(args, shell=False,
@@ -59,13 +64,13 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
                          #stderr=subprocess.PIPE)
     (out, err) = s.communicate()
 
-    if dolog:
+    if dolog or logCommands:
         log.info('emacs output: [%s]' % out)
         log.info('emacs error: [%s]' % err)
 
     if err:
         log.info("Emacs error!: " + err)
-        traceback.print_stack()
+        log.error(traceback.format_stack())
     return out
 
 class Cmd(Action):
@@ -149,10 +154,17 @@ class EmacsCommandWatcher(object):
         return lst
 
     def update(self, ev=None):
-        log.debug(self.cmd)
-        newOutput = runEmacsCmd(self.cmd, inFrame=self.inFrame, allowError=self.allowError)
-        newOutput = self._postProcess(newOutput)
+        if self._contextMatch:
+            log.debug(self.cmd)
+            newOutput = runEmacsCmd(self.cmd, inFrame=self.inFrame, allowError=self.allowError)
+            newOutput = self._postProcess(newOutput)
+        else:
+            newOutput = "nil"
+
         if newOutput == self.output:
             return
         self.output = newOutput
         EventLoop.getLoop().put(self.eventType(newOutput))
+
+    def _contextMatch(self, window):
+        return window and Emacs.activeForWindow(window)
