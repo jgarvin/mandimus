@@ -7,7 +7,7 @@ from rules.MappingRule import MappingRule
 from Actions import (
     Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic,
     splitKeyString, FormatState, ActionList)
-from rules.Elements import Integer, Dictation
+from rules.Elements import Integer, Dictation, RuleRef
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
@@ -17,6 +17,8 @@ from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommand
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
+from rules.emacs.Base import EmacsBase
+import rules.BaseRules as BaseRules
 import string
 import SelectOption
 import EventList
@@ -300,7 +302,7 @@ class EmacsMapping(MappingRule):
         return Emacs.activeForWindow(window)
 
 @registerRule
-class Emacs(SeriesMappingRule):
+class Emacs(EmacsBase):
     mapping  = {
         # general commands
         "axe [<n>]"                    : Key("cs-g:%(n)d"),
@@ -311,6 +313,8 @@ class Emacs(SeriesMappingRule):
         "mack"                         : Key("F4"),
         "other"                        : Key("c-x, o"),
         "collapse"                     : Key("c-x, 1"),
+        "other collapse"               : Key("c-x, o") + Key("c-x, 1"),
+
         "help function"                : Key("c-h,f"),
         "help variable"                : Key("c-h,v"),
         "help key"                     : Key("c-h,k"),
@@ -319,8 +323,8 @@ class Emacs(SeriesMappingRule):
         "help news"                    : Key("c-h,n"),
         
         # navigation commands
-        "fluff [<n>]"                  : Cmd("(md-next-whitespace-separated-thing)"),
-        "fleece [<n>]"                 : Cmd("(md-previous-whitespace-separated-thing)"),
+        "slof [<n>]"                   : Cmd("(md-next-whitespace-separated-thing)"),
+        "slop [<n>]"                   : Cmd("(md-previous-whitespace-separated-thing)"),
         "ace"                          : Key("c-c,space"),
         "ace care"                     : Key("c-u,c-c,space"),
 
@@ -399,20 +403,4 @@ class Emacs(SeriesMappingRule):
         "num <big>"                    : EmacsText("%(big)d"),
     }
 
-    extras = [
-        Integer("n", 2, 20),
-        Dictation("text"),
-        Dictation("match"),
-        Dictation("replace"),
-        Integer("big", 0, 2**14),
-    ]
-
-    defaults = {
-        "n"    : 1,
-        "text" : "",
-        }    
-
-    @classmethod
-    def activeForWindow(cls, window)     :
-        return "emacs" in window.wmclass or "Emacs" in window.wmclass    
 

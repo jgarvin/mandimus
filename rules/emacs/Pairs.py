@@ -5,6 +5,7 @@ from rules.MappingRule import MappingRule
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from Actions import Key, Text
+from rules.emacs.Base import EmacsBase
 
 @registerRule
 class SexpPairs(MappingRule):
@@ -60,7 +61,7 @@ class PairCmd(Cmd):
         return "(%s)" % func
 
 @registerRule
-class PairRule(SeriesMappingRule):
+class PairRule(EmacsBase):
     mapping  = {
         "<sexpFunction> [<sexpPair>] [<n>]" : PairCmd(),
     }
@@ -68,16 +69,8 @@ class PairRule(SeriesMappingRule):
     sexpPairRef = RuleRef(SexpPairs, "sexpPair")
     sexpFunctionRef = RuleRef(SexpFunctions, "sexpFunction")
 
-    extras = [
+    extras = EmacsBase.extras + [
         sexpPairRef,
         sexpFunctionRef,
-        Integer("n", 2, 20),
     ]
-
-    defaults = {
-        "n"    : 1,
-    }    
-
-    def activeForWindow(self, w):
-        return Emacs.activeForWindow(w)
 

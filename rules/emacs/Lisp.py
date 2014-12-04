@@ -2,24 +2,20 @@ from Actions import Text
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
 from rules.emacs.Text import EmacsText
-from rules.emacs.Cmd import runEmacsCmd, Cmd, getMajorMode
+from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
+from rules.emacs.Base import EmacsBase
 
 @registerRule
-class Lisp(SeriesMappingRule):
+class Lisp(EmacsBase):
+    majorMode = "emacs-lisp-mode"
+    
     mapping = {
         "conned"        : EmacsText("cond", lower=False),
         "cooder"        : EmacsText("cdr", lower=False),
         "set Q"         : EmacsText("setq", lower=False),
         "set Q default" : EmacsText("setq-default", lower=False),
     }
-
-    @classmethod
-    def activeForWindow(cls, window):
-        isemacs = Emacs.activeForWindow(window)
-        if not isemacs:
-            return False
-        return getMajorMode() == "emacs-lisp-mode"
 
 mainWords = {
     "and",

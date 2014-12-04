@@ -127,7 +127,7 @@ class DragonflyClient(DragonflyNode):
             self.eventLoop()
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             self.cleanup()
             #raise
 
@@ -175,7 +175,7 @@ class DragonflyClient(DragonflyNode):
     def unloadAllRules(self):
         if len(self.grammars) > 1:
             log.info('Unloading all rules.')
-        for key, val in self.grammars.items():
+        for key, val in self.rules.items():
             if key != "GlobalRules":
                 self.removeRule(key)
         
@@ -246,7 +246,7 @@ class DragonflyClient(DragonflyNode):
             if isinstance(e, NeedsDependency):
                 raise
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
 
     def onMessage(self, msg):
@@ -305,7 +305,7 @@ class DragonflyClient(DragonflyNode):
             self.addRule(new_rule, rule_name, flags)
         except SyntaxError:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
             log.info("Mapping rule %s: " % rule_name)
             log.info(rules)
             log.info("Extras:")

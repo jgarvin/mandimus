@@ -175,6 +175,8 @@ class DragonflyThread(DragonflyNode):
         self.sendMsg("ack " + msg)
 
     def parseMatchMsg(self, msg):
+        log.info(msg)
+
         msg = msg.split("MATCH")[1]
         tokens = msg.split(ARG_DELIMETER)
         rule, words = tokens[:2]
@@ -211,7 +213,7 @@ class DragonflyThread(DragonflyNode):
                     # don't want the whole thing to crash just because
                     # of one bad rule
                     exc_type, exc_value, exc_traceback = sys.exc_info()
-                    log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                    log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
     def parseExtras(self, extras):
         parsed = {}

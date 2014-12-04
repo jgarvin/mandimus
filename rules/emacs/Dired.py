@@ -1,11 +1,14 @@
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd, getMajorMode
+from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 from Actions import Key, Text
+from rules.emacs.Base import EmacsBase
 
 @registerRule
-class Dired(SeriesMappingRule):
+class Dired(EmacsBase):
+    majorMode = "dired-mode"
+    
     mapping = {
         "rename"              : Key("R"),
         "toggle read only"    : Key("c-x,c-q"),
@@ -31,9 +34,3 @@ class Dired(SeriesMappingRule):
         "copy"                : Key("C"),
     }
 
-    @classmethod
-    def activeForWindow(cls, window):
-        isemacs = Emacs.activeForWindow(window)
-        if not isemacs:
-            return False
-        return getMajorMode() == "dired-mode"

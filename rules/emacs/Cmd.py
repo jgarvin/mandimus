@@ -12,22 +12,13 @@ import EventLoop
 from EventLoop import getLoop
 from EventList import FocusChangeEvent
 import grammar
+import rules.BaseRules as BaseRules
 
 EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
 log.info(alternative)
 if op.exists(alternative):
     EMACSCLIENT = alternative
-
-_majorMode = None
-def updateMajorMode(ev):
-    global _majorMode
-    _majorMode = runEmacsCmd("major-mode").strip()
-    
-def getMajorMode():
-    return _majorMode
-
-getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
 logCommands = False
 def toggleCommandLogging(*args):
@@ -40,6 +31,9 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
     args = []
     args += [EMACSCLIENT]
     args += ['-e']
+
+    # have to escape percent signs so python doesn't process them
+    command.replace("%", "%%")
 
     # without this C-g can interrupt the running code
     # with this any cancels are deferred until after
@@ -70,10 +64,12 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
 
     if err:
         log.info("Emacs error!: " + err)
-        log.error(traceback.format_stack())
+        log.error(''.join(traceback.format_stack()))
     return out
 
 class Cmd(Action):
+    classLog = False
+    
     def __init__(self, data=None, log=False):
         Action.__init__(self, data)
         self.log = log
@@ -83,20 +79,22 @@ class Cmd(Action):
         fulldata = (self.data % extras)
         return fulldata    
 
-    def __call__(self, extras={}):
+    def _repetitions(self, extras={}):
         repeat = 1
         if 'n' in extras and isinstance(extras['n'], int):
             repeat = extras['n']
-            
+        return repeat
+
+    def __call__(self, extras={}):
         code = self._lisp(extras)
         if code is None:
-            if self.log:
+            if self.log or self.classLog:
                 log.info("%s no lisp code" % (type(self).__name__))
             return
-        if self.log:
+        if self.log or self.classLog:
             log.info("%s lisp code: [%s]" % (type(self).__name__, code))
             
-        for i in range(repeat):
+        for i in range(self._repetitions()):
             runEmacsCmd(code)
 
 getCommandsEl = """

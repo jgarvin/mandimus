@@ -1,11 +1,12 @@
 from MappingRule import MappingRule
 from Rule import registerRule
+from Elements import RuleRef
 
 @registerRule
 class AlphaRule(MappingRule):
     refOnly = True
     mapping = {
-        "alpha"    : "a",
+        "ash"      : "a",
         "bravo"    : "b",
         "charlie"  : "c",
         "delta"    : "d",
@@ -61,7 +62,6 @@ class SymRule(MappingRule):
         "question"    : "question",
         "at"          : "at",
         "pound"       : "hash",
-        "dollar"      : "dollar",
         "cash"        : "dollar",
         "percent"     : "percent",
         "caret"       : "caret",
@@ -69,7 +69,6 @@ class SymRule(MappingRule):
         "star"        : "asterisk",
         "cool"        : "colon",
         "cusp"        : "semicolon",
-        "period"      : "period",
         "dot"         : "period",
         "arg"         : "comma",
         "tilde"       : "tilde",
@@ -88,3 +87,67 @@ class SymRule(MappingRule):
         "plus"        : "plus",
         "underscore"  : "underscore",
     }
+
+    literalMapping = {
+        "backtick"    : "``",
+        "backslash"   : "\\",
+        "equal"       : "=",
+        "slash"       : "/",
+        "exclamation" : "!",
+        "question"    : "?",
+        "at"          : "@",
+        "pound"       : "#",
+        "cash"        : "$",
+        "percent"     : "%",
+        "caret"       : "^",
+        "ampersand"   : "&",
+        "star"        : "*",
+        "cool"        : ":",
+        "cusp"        : ";",
+        "dot"         : ".",
+        "arg"         : ",",
+        "tilde"       : "~",
+        "soot"        : "'",
+        "quote"       : "\"",
+        "lesser"      : "<",
+        "greater"     : ">",
+        "lace"        : "{",
+        "race"        : "}",
+        "lack"        : "[",
+        "rack"        : "]",
+        "larp"        : "(",
+        "ralp"        : ")",
+        "dash"        : "-",
+        "bar"         : "|",
+        "plus"        : "+",
+        "underscore"  : "_",
+    }
+
+
+@registerRule
+class CharRule(MappingRule):
+    refOnly = True
+    mapping = {
+        "(<alpharule> | num <digitrule> | <symrule>)" : ""
+    }
+
+    @classmethod
+    def lookup(cls, i):
+        for rule in [AlphaRule, DigitRule]:
+            try:
+                return rule.mapping[i]
+            except KeyError:
+                pass
+        return SymRule.literalMapping[i]
+
+    alpharef = RuleRef(AlphaRule, "alpharule")
+    digitref = RuleRef(DigitRule, "digitrule")
+    symref   = RuleRef(SymRule, "symrule")
+
+    extras = [
+        alpharef,
+        digitref,
+        symref,
+        ]
+
+

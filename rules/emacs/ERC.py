@@ -8,13 +8,14 @@ from EventList import FocusChangeEvent
 from rules.Elements import Dictation, Integer
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd, getMajorMode, EmacsCommandWatcher
+from rules.emacs.Cmd import runEmacsCmd, Cmd, EmacsCommandWatcher
 from rules.Rule import registerRule
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
 from wordUtils import extractWords
 import SelectOption
 from Window import getFocusedWindow
+from rules.emacs.Base import EmacsBase
 
 class NickWatcher(EmacsCommandWatcher):
     cmd = "(md-get-active-erc-nicknames)"
@@ -47,7 +48,9 @@ class SelectNick(SelectOption.SelectOption):
 nickSelect = SelectNick()
         
 @registerRule
-class ERC(SeriesMappingRule):
+class ERC(EmacsBase):
+    majorMode = "erc-mode"
+    
     mapping = {
         "hiss"               : Key("a-p"),
         "piss"               : Key("a-n"),
@@ -56,21 +59,5 @@ class ERC(SeriesMappingRule):
         "smiley tongue"      : EmacsText(":P", lower=False),
         "smiley wink tongue" : EmacsText(";P", lower=False),
         "part"               : EmacsText("/part"),
+        "kick dragon"        : EmacsText("/me kicks Dragon"),
     }
-
-    extras = [
-        Integer("n", 2, 20),
-        Dictation("text"),
-        ]
-
-    defaults = {
-        "n"    : 1,
-        "text" : "",
-        }        
-
-    @classmethod
-    def activeForWindow(cls, window):
-        isemacs = Emacs.activeForWindow(window)
-        if not isemacs:
-            return False
-        return getMajorMode() == "erc-mode"

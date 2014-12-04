@@ -272,6 +272,7 @@ if __name__ == "__main__":
         ('rules.emacs.Emacs', ['']),
         ('rules.emacs.Python', ['']),
         ('rules.emacs.Lisp', ['']),
+        ('rules.emacs.Edit', ['']),
         ('rules.emacs.ERC', ['']),
         ('rules.emacs.VarNames', ['']),
         ('rules.emacs.Pairs', ['']),
@@ -292,7 +293,7 @@ if __name__ == "__main__":
         except Exception as e:
             log.info("Couldn't import %s" % module)
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
 
     main()
