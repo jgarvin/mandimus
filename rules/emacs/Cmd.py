@@ -43,12 +43,12 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
 
     # without this C-g can interrupt the running code
     # with this any cancels are deferred until after
-    #wrapper = "(let ((inhibit-quit t)) %s)"
+    #wrapper = "(let ((md-inhibit-quit t) (inhibit-quit t)) %s)"
     wrapper = "%s" # inhibit-quit doesn't seem to work
     if allowError:
-        wrapper = '(condition-case err %s (error nil))'
+        wrapper %= '(condition-case err %s (error nil))'
     else:
-        wrapper = '(condition-case err %s (error (message (concat "Mandimus error: " (error-message-string err))) nil))'
+        wrapper %= '(condition-case err %s (error (message (concat "Mandimus error: " (error-message-string err))) nil))'
 
     if inFrame:
         cmd = '(with-current-buffer %s %s)'

@@ -42,7 +42,7 @@ class ChromeSearch(MappingRule):
 class ChromeRule(SeriesMappingRule):
     mapping  = {
         "new"                           : Key("c-t"),
-        "close"                         : Key("c-w"),
+        "close [<n>]"                   : Key("c-w:%(n)d"),
         "address"                       : Key("c-l"),
         "post [<n>]"                    : Key("c-tab:%(n)d"),
         "pre [<n>]"                     : Key("cs-tab:%(n)d"),

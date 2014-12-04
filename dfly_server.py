@@ -210,7 +210,8 @@ class DragonflyThread(DragonflyNode):
                 except Exception as e:
                     # don't want the whole thing to crash just because
                     # of one bad rule
-                    log.error(traceback.format_exception())
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
 
     def parseExtras(self, extras):
         parsed = {}

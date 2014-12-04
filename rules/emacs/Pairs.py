@@ -14,7 +14,7 @@ class SexpPairs(MappingRule):
         "lace"   : "{",
         "lack"   : "[",
         "quote"  : "\\\"",
-        "soak"   : "'",
+        "soot"   : "'",
         "lesser" : "<",
     }
 

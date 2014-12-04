@@ -126,7 +126,8 @@ class DragonflyClient(DragonflyNode):
         try:
             self.eventLoop()
         except Exception as e:
-            log.error(traceback.format_exception())
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
             self.cleanup()
             #raise
 
@@ -244,7 +245,9 @@ class DragonflyClient(DragonflyNode):
         except Exception as e:
             if isinstance(e, NeedsDependency):
                 raise
-            log.error(traceback.format_exception())
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
+
 
     def onMessage(self, msg):
         try:
@@ -301,7 +304,8 @@ class DragonflyClient(DragonflyNode):
             new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
             self.addRule(new_rule, rule_name, flags)
         except SyntaxError:
-            log.error(traceback.format_exception())
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(traceback.format_exception(exc_type, exc_value, exc_traceback))
             log.info("Mapping rule %s: " % rule_name)
             log.info(rules)
             log.info("Extras:")

@@ -100,7 +100,7 @@ selectors.append(SelectTerminal())
 #         # TODO
 #         pass
 class ProjectFileWatcher(EmacsCommandWatcher):
-    cmd = "(if buffer-file-name (projectile-current-project-files) nil)"
+    cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
     allowError = True
     eventType = EventList.ProjectFileListEvent
 
@@ -213,12 +213,6 @@ class EmacsMapping(MappingRule):
     mapping = {
         "command"                        : Key("c-x,c-m"),
         "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
-        "help function"                  : Key("c-h,f"),
-        "help variable"                  : Key("c-h,v"),
-        "help key"                       : Key("c-h,k"),
-        "help mode"                      : Key("c-h,m"),
-        "help docks"                     : Key("c-h,d"),
-        "help news"                      : Key("c-h,n"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
 
@@ -229,9 +223,7 @@ class EmacsMapping(MappingRule):
         
         # window commands
         "kill window"                    : Cmd("(delete-window)"),
-        "other"                          : Key("c-x, o"),
-        "collapse"                       : Key("c-x, 1"),
-        "other collapse"                 : Key("c-x, o") + Key("c-x, 1"),
+
         "new frame [<n>]"                : Cmd("(make-frame-command)"),
         "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
 
@@ -311,12 +303,20 @@ class EmacsMapping(MappingRule):
 class Emacs(SeriesMappingRule):
     mapping  = {
         # general commands
-        # "axe"                        : Cmd("(keyboard-quit)"),
-        # "super axe"                  : Key("c-g"),
+        "axe [<n>]"                    : Key("cs-g:%(n)d"),
+        "super [<n>] axe"              : Key("c-g:%(n)d"),
         "axe"                          : Key("c-g"),
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),
+        "other"                        : Key("c-x, o"),
+        "collapse"                     : Key("c-x, 1"),
+        "help function"                : Key("c-h,f"),
+        "help variable"                : Key("c-h,v"),
+        "help key"                     : Key("c-h,k"),
+        "help mode"                    : Key("c-h,m"),
+        "help docks"                   : Key("c-h,d"),
+        "help news"                    : Key("c-h,n"),
         
         # navigation commands
         "fluff [<n>]"                  : Cmd("(md-next-whitespace-separated-thing)"),
@@ -333,7 +333,7 @@ class Emacs(SeriesMappingRule):
         "window bottom"                : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
         "post [<n>]"                   : Key("a-f:%(n)d"),
         "pre [<n>]"                    : Key("a-b:%(n)d"),
-        "pade [<n>]"                   : Key("a-v:%(n)d"),
+        "paid [<n>]"                   : Key("a-v:%(n)d"),
         "page [<n>]"                   : Key("c-v:%(n)d"),
         "center"                       : Key("c-l"),
         "gruff [<n>]"                  : Key("c-up:%(n)d"),
@@ -342,7 +342,7 @@ class Emacs(SeriesMappingRule):
         "right [<n>]"                  : Key("right:%(n)d"),
         "up [<n>]"                     : Key("up:%(n)d"),
         "down [<n>]"                   : Key("down:%(n)d"),
-        "pa"                           : Key("space"),
+        "pa [<n>]"                     : Key("space:%(n)d"),
         
         "slap [<n>]"                   : Key("enter:%(n)d"),
         "pals [<n>]"                   : Cmd("(md-new-line-anywhere)"),
@@ -367,7 +367,7 @@ class Emacs(SeriesMappingRule):
         "squeeze"                      : Cmd('(cycle-spacing)'),
 
         "yank"                         : Key("c-y"),
-        "yank pop"                     : Key("a-y"),
+        "yank pop [<n>]"               : Key("a-y:%(n)d"),
         "term (yank | paste)"          : Key("s-insert"),
         
         "select all"                   : Key("c-a"),
@@ -393,8 +393,8 @@ class Emacs(SeriesMappingRule):
         "lower"                        : Key("a-l"),
 
         "push"                         : Key("c-space,c-space"),
-        "snap"                         : Key("c-u,c-space"),
-        "big snap"                     : Key("c-x,c-space"),
+        "snap [<n>]"                   : Key("c-u,c-space:%(n)d"),
+        "big snap [<n>]"               : Key("c-x,c-space:%(n)d"),
 
         "num <big>"                    : EmacsText("%(big)d"),
     }

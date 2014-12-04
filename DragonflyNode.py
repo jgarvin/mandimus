@@ -3,7 +3,7 @@ log = mdlog.getLogger(__name__)
 
 from hotCode import importOrReload
 
-import time, socket, errno
+import time, socket, errno, select
 
 importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR")
 importOrReload("EventList", "MicrophoneEvent", "ConnectedEvent", "DisconnectedEvent")
@@ -13,6 +13,8 @@ class DragonflyNode(object):
         self.other = None
         self.lastMsgSendTime = time.time()
         self.eventQ = eventQ
+
+        self.outgoing = []
 
     def makeSocket(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

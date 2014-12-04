@@ -53,7 +53,8 @@ class AlwaysRule(SeriesMappingRule):
         "command tally"                                     : (lambda x: Speak(str(commandTally()))()),
         "[control] [alt] [shift] (<alpharule> | <symrule>)" : PressKey(),
         'rep [<n>]'                                         : Repeat(),
-        'tab'                                               : Key("tab"),
+        'scoot [<n>]'                                       : Key("tab:%(n)d"),
+        'tooks [<n>]'                                       : Key("s-tab:%(n)d"),
     }
 
     alpharef = RuleRef(AlphaRule, "alpharule")
