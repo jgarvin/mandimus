@@ -42,11 +42,11 @@ class PressKey(object):
             keystring.append('-')
                                   
         finalkey = words[i]
-        log.info('finalkey1: %s' % finalkey)
+        #log.info('finalkey1: %s' % finalkey)
         finalkey = dictReplace(finalkey, dict(AlphaRule.mapping.items() + DigitRule.mapping.items() + SymRule.mapping.items()))
-        log.info('finalkey2: %s' % finalkey)
+        #log.info('finalkey2: %s' % finalkey)
         keystring.append(finalkey)
-        log.info("keystring: %s" % keystring)
+        #log.info("keystring: %s" % keystring)
         for r in range(repetitions):
             Key(''.join(keystring))()
 

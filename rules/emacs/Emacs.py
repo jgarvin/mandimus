@@ -301,13 +301,33 @@ class EmacsMapping(MappingRule):
     def activeForWindow(cls, window):
         return Emacs.activeForWindow(window)
 
+class Axe(Action):
+    def _repetitions(self, extras={}):
+        repeat = 1
+        if 'n' in extras and isinstance(extras['n'], int):
+            repeat = extras['n']
+        return repeat
+
+    def __call__(self, extras={}):
+        for i in range(self._repetitions(extras)):
+            inMiniBuffer = '*Minibuf-' in getFocusedWindow().name
+            if inMiniBuffer:
+                # hack to work around often canceling emacsclient requests,
+                # first keypress cancels the request, and the second
+                # cancels what we actually intended
+                Key("c-g:2")()
+                return
+            # on rare occasions this will cancel and emacsclient request,
+            # but it's rare enough that we don't try to handle it
+            Key("cs-g")()
+    
 @registerRule
 class Emacs(EmacsBase):
     mapping  = {
         # general commands
-        "axe [<n>]"                    : Key("cs-g:%(n)d"),
-        "super [<n>] axe"              : Key("c-g:%(n)d"),
-        "axe"                          : Key("c-g"),
+        "axe [<n>]"                    : Axe(),
+        #"super [<n>] axe"              : Key("c-g:%(n)d"),
+        #"axe"                          : Key("c-g"),
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),

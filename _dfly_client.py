@@ -214,7 +214,7 @@ class DragonflyClient(DragonflyNode):
 
         rules = args[1:]
         for name in rules:
-            log.info("attempting to enable %s" % name)
+            #log.info("attempting to enable %s" % name)
             rule = self.getRule(name)
             if not r:
                 log.info("Can't enable %s, can't find it." % name)
@@ -233,14 +233,14 @@ class DragonflyClient(DragonflyNode):
 
         active = {self.rules[name] for name in self.enabledRules if name in self.rules}
 
-        log.info("active: %s" % [i.name for i in active])
+        #log.info("active: %s" % [i.name for i in active])
 
         combine_series = []
         
         for l in active:
             allowCombining = "ALLOWCOMBINING" in l.mandimusFlags
             if isinstance(l, SeriesMappingRule) and allowCombining and not l.isMergedSeries:
-                log.info("including in combo: %s" % l.name)
+                #log.info("including in combo: %s" % l.name)
                 combine_series.append(l)
 
         # can't be separately enabled in the series rule and on its own at
@@ -273,20 +273,20 @@ class DragonflyClient(DragonflyNode):
             if u.name not in self.grammars:
                 continue
             if u.enabled:
-                log.info("disabling for real %s" % u.name)
+                #log.info("disabling for real %s" % u.name)
                 u.disable()
             else:
-                log.info("not disabling for real %s" % u.name)
+                #log.info("not disabling for real %s" % u.name)
                 pass
 
         for l in active:
             if l.name not in self.grammars:
                 self.makeRuleGrammar(l, l.name)
             if not l.enabled:
-                log.info("Enabling for real %s" % l.name)
+                #log.info("Enabling for real %s" % l.name)
                 l.enable()
             else:
-                log.info("not Enabling for real %s" % l.name)
+                #log.info("not Enabling for real %s" % l.name)
                 pass
 
 

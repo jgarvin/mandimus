@@ -94,7 +94,7 @@ class Cmd(Action):
         if self.log or self.classLog:
             log.info("%s lisp code: [%s]" % (type(self).__name__, code))
             
-        for i in range(self._repetitions()):
+        for i in range(self._repetitions(extras)):
             runEmacsCmd(code)
 
 getCommandsEl = """

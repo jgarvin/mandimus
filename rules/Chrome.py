@@ -71,7 +71,7 @@ class ChromeRule(SeriesMappingRule):
         "duplicate"                     : Key("as-d"),
         #misc
         "private browsing"              : Key("cs-n"),
-        "link"                          : Key("f"),
+        "link"                          : Key("escape") + Key("f"),
         }
 
     extras = [
