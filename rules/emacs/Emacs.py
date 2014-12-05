@@ -346,7 +346,6 @@ class Emacs(EmacsBase):
         "right [<n>]"                  : Key("right:%(n)d"),
         "up [<n>]"                     : Key("up:%(n)d"),
         "down [<n>]"                   : Key("down:%(n)d"),
-        "pa [<n>]"                     : Key("space:%(n)d"),
         
         "slap [<n>]"                   : Key("enter:%(n)d"),
         "pals [<n>]"                   : Cmd("(md-new-line-anywhere)"),

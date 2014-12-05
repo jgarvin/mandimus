@@ -48,21 +48,18 @@ class ActionRule(MappingRule):
 
 
 class CharCmd(Cmd):
-    classLog = True
-    def _lisp(self, extras={}):
-        char = CharRule.lookup(extras['words'].split()[1]) 
-        return self.data % char
-    
-class Zap(Cmd):
-    #classLog = True
+    classLog = False
     def _lisp(self, extras={}):
         char = CharRule.lookup(extras['words'].split()[1])
-        return "(zap-to-char 1 ?%s)" % char
-
+        return self.data % char
+    
 @registerRule
 class EditRules(EmacsBase):
     mapping = {
-        "zap <charrule> [<n>]"         : CharCmd("(zap-to-char 1 ?%s)"),
+        "zap <charrule> [<n>]"  : CharCmd("(zap-up-to-char 1 ?%s)"),
+        "taze <charrule> [<n>]" : CharCmd("(zap-up-to-char -1 ?%s)"),
+        "fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 ?%s)"),
+        "buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 ?%s)"),
     }
 
     

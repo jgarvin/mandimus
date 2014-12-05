@@ -38,7 +38,11 @@ class SexpFunctions(MappingRule):
         #"after close"    : "sp-end-of-next-sexp",
         #"before close"   : "sp-end-of-previous-sexp",
         "select next"     : "sp-select-next-thing",
-        "select previous" : "sp-select-previous-thing",    
+        "select previous" : "sp-select-previous-thing",
+        "slurp"           : "sp-forward-slurp-sexp",
+        "gulp"            : "sp-backward-slurp-sexp",
+        "barf"            : "sp-forward-barf-sexp",
+        "chuck"           : "sp-backward-barf-sexp",
     }
 
 class PairCmd(Cmd):

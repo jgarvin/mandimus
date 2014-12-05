@@ -29,7 +29,6 @@ class CUARule(SeriesMappingRule):
         "down [<n>]"            : Key("down:%(n)d"),
         "pat [<n>]"             : Key("delete:%(n)d"),
         "tap [<n>]"             : Key("backspace:%(n)d"),
-        "pa [<n>]"              : Key("space:%(n)d"),
         "slap [<n>]"            : Key("enter:%(n)d"),
         "num <big>"             : Text("%(big)d"),
     }

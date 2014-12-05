@@ -86,6 +86,7 @@ class SymRule(MappingRule):
         "bar"         : "bar",
         "plus"        : "plus",
         "underscore"  : "underscore",
+        "pa"          : "space",
     }
 
     literalMapping = {
@@ -121,8 +122,13 @@ class SymRule(MappingRule):
         "bar"         : "|",
         "plus"        : "+",
         "underscore"  : "_",
+        "pa"          : " ",
     }
 
+
+# TODO: another rule for all the keys that *don't*
+# have a character, so you can request shift+pgdown
+# and ctrl+enter
 
 @registerRule
 class CharRule(MappingRule):
