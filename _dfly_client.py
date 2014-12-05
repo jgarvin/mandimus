@@ -68,7 +68,9 @@ class DragonflyClient(DragonflyNode):
 
         self.rules = {}
         self.grammars = {}
-        self.pendingRules = []
+
+        # maps needed rule name to the message that needs it
+        self.pendingRules = {}
 
         self.globalRule = GlobalRules() 
 
@@ -89,6 +91,19 @@ class DragonflyClient(DragonflyNode):
 
         self.rules[name] = rule
         rule.disable()
+
+        if name in self.pendingRules:
+            pendingLst = self.pendingRules[name]
+            for msg in pendingLst:
+                while pendingLst:
+                    x = pendingLst.pop()
+                    try:
+                        self._parseMessage(x)
+                    except NeedsDependency as e:
+                        # may have more deps needed
+                        if e.message not in self.pendingRules:
+                            self.pendingRules[e.message] = []
+                        self.pendingRules[e.message].append(x)
 
     def addMsgTypeHandler(self, leadingTerm, handler):
         self.msgTypeHandlers[leadingTerm] = handler
@@ -118,7 +133,7 @@ class DragonflyClient(DragonflyNode):
     def dumpOther(self):
         # on disconnect unload all the rules
         self.unloadAllRules()
-        self.pendingRules = []
+        self.pendingRules = {}
         self.lastMicState = None
         DragonflyNode.dumpOther(self)
 
@@ -150,16 +165,6 @@ class DragonflyClient(DragonflyNode):
         self.retrieveMessages()
         self.heartbeat()
         self.sendMicState()
-
-        if self.pendingRules:
-            toParse = copy(self.pendingRules)
-            while toParse:
-                x = toParse.pop()
-                try:
-                    self._parseMessage(x)
-                    self.pendingRules.remove(x)
-                except NeedsDependency:
-                    pass
 
     def sendMicState(self):
         if not self.other:
@@ -252,9 +257,11 @@ class DragonflyClient(DragonflyNode):
     def onMessage(self, msg):
         try:
             self._parseMessage(msg)
-        except NeedsDependency:
+        except NeedsDependency as e:
             log.info("Waiting to parse [%s ...], needs dependency" % msg[:min(len(msg), 30)]) 
-            self.pendingRules.append(msg)
+            if e.message not in self.pendingRules:
+                self.pendingRules[e.message] = []
+            self.pendingRules[e.message].append(msg)
             return False
 
     def parseUnloadMsg(self, msg):
@@ -340,7 +347,7 @@ class DragonflyClient(DragonflyNode):
                 r = self.getRule(e[1])
                 if not r:
                     log.info("Missing dependency!: %s" % e[1]) 
-                    raise NeedsDependency()
+                    raise NeedsDependency(e[1])
                 parsed.append(RuleRef(rule=r, name=e[2]))
             else:
                 raise Exception("Unknown element: %s" % e)
