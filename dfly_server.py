@@ -15,8 +15,9 @@ from namedtuple import namedtuple
 from Actions import Repeat
 from EventLoop import getLoop
 from rules.Rule import registeredRules
-from rules.SeriesMappingRule import SeriesMappingRule, combineSeriesMappingRules
+from rules.SeriesMappingRule import SeriesMappingRule
 from EventList import MicrophoneEvent, RuleMatchEvent, ConnectedEvent, StartupCompleteEvent, WordEvent
+from copy import copy
 
 BLOCK_TIME = 0.05
 
@@ -32,8 +33,6 @@ class DragonflyThread(DragonflyNode):
         self.server_socket.listen(1)
         self.other = None
         self.buf = ''
-
-        self.combinedSeries = None
 
         self.rules = {}
         self.enabledRules = set()
@@ -67,6 +66,10 @@ class DragonflyThread(DragonflyNode):
                 return
             else:
                 log.info('rule changed: ' + rule.name)
+                # log.info("new rule")
+                # log.info(str(rule))
+                # log.info("old rule")
+                # log.info(str(self.rules[rule.name]))
                 self.unloadRule(self.rules[rule.name])
         
         log.info('Loading rule: ' + rule.name)
@@ -102,17 +105,21 @@ class DragonflyThread(DragonflyNode):
         if rule in self.enabledRules:
             return
         log.info('Enabling rule: ' + rule.name)        
-        self.sendMsg('enable' + ARG_DELIMETER + rule.name)
         self.enabledRules.add(rule)
         
     def disableRule(self, rule):
         if rule not in self.enabledRules:
             return
         log.info('Disabling rule: ' + rule.name)        
-        self.sendMsg('disable' + ARG_DELIMETER + rule.name)
         self.enabledRules.remove(rule)
 
+    def commitRuleEnabledness(self):
+        log.info("Committing rule enabledness")
+        self.sendMsg(ARG_DELIMETER.join(['enable'] + [rule.name for rule in self.enabledRules]))
+
     def updateRuleEnabledness(self, active):
+        oldEnabled = copy(self.enabledRules)
+
         # load anything new that was registered or that changed
         registered = set(registeredRules().values())
         for r in registered:
@@ -120,34 +127,15 @@ class DragonflyThread(DragonflyNode):
 
         allRules = set(self.rules.values())
 
-        combine_series = []
-        
-        for l in active:
-            if isinstance(l, SeriesMappingRule) and l.allowCombining and not l.isMergedSeries:
-                combine_series.append(l)
-        for s in combine_series:
-            active.remove(s)
-
-        # sort so they'll compare reliably
-        combine_series.sort(key=lambda x: type(x).__name__)
-        combine_series_name = ','.join([type(x).__name__ for x in combine_series])
-
-        if combine_series:
-            if combine_series_name in self.rules:
-                self.combinedSeries = self.rules[combine_series_name]
-                active.add(self.combinedSeries)
-            else:
-                self.combinedSeries = combineSeriesMappingRules(combine_series)()
-                log.info("Series combining: %s" % [type(x).__name__ for x in self.combinedSeries.parts]) 
-                self.loadRule(self.combinedSeries)
-                active.add(self.combinedSeries)
-
         inactive = allRules - active        
         for u in inactive:
             self.disableRule(u)
 
         for l in active:
             self.enableRule(l)
+
+        if oldEnabled != self.enabledRules:
+            self.commitRuleEnabledness()
 
     def onConnect(self):
         self.clearAllRules()

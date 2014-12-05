@@ -17,6 +17,7 @@ import socket
 import sys, os, traceback
 from functools import partial
 from copy import copy
+from util import deepEmpty
 
 #log.setLevel(0)
 
@@ -31,7 +32,7 @@ from copy import copy
 
 importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIMETER",
                "MATCH_MSG_START", "KEY_VALUE_SEPARATOR")
-importOrReload("SeriesMappingRule", "SeriesMappingRule")
+importOrReload("SeriesMappingRule", "SeriesMappingRule", "combineSeriesMappingRules")
 importOrReload("DragonflyNode", "DragonflyNode")
 
 def reloadClient():
@@ -67,22 +68,34 @@ class DragonflyClient(DragonflyNode):
         self.buf = ""
 
         self.rules = {}
+        self.enabledRules = set() # set of names, not including combined series
         self.grammars = {}
 
         # maps needed rule name to the message that needs it
         self.pendingRules = {}
 
-        self.globalRule = GlobalRules() 
+        self.globalRule = GlobalRules(name="GlobalRules") 
+
+        self.rulesNewThisTick = []
 
         self.addRule(self.globalRule, "GlobalRules")
         #self.makeRuleGrammar(self.globalRule, "GlobalRules")
-        self.enableRule(self.globalRule)
+        self.enableRule(self.globalRule.name)
 
         self.msgTypeHandlers = {}
 
         self.lastMicState = None
 
-    def addRule(self, rule, name, flags=[]):
+        # We always have one master SeriesMappingRule that is a
+        # combination of all the active series rules. This way
+        # you can say many commands together without pausing,
+        # but still define them in separate files and having
+        # separate contexts.
+        self.combinedSeries = None
+
+        self.startupCompleteRequested = False
+
+    def addRule(self, rule, name):
         log.info('adding rule: %s %s' % (rule.name, name))
 
         if name in self.rules:
@@ -91,19 +104,7 @@ class DragonflyClient(DragonflyNode):
 
         self.rules[name] = rule
         rule.disable()
-
-        if name in self.pendingRules:
-            pendingLst = self.pendingRules[name]
-            for msg in pendingLst:
-                while pendingLst:
-                    x = pendingLst.pop()
-                    try:
-                        self._parseMessage(x)
-                    except NeedsDependency as e:
-                        # may have more deps needed
-                        if e.message not in self.pendingRules:
-                            self.pendingRules[e.message] = []
-                        self.pendingRules[e.message].append(x)
+        self.rulesNewThisTick.append(name)
 
     def addMsgTypeHandler(self, leadingTerm, handler):
         self.msgTypeHandlers[leadingTerm] = handler
@@ -166,6 +167,26 @@ class DragonflyClient(DragonflyNode):
         self.heartbeat()
         self.sendMicState()
 
+        for name in self.rulesNewThisTick:
+            if name in self.pendingRules:
+                pendingLst = self.pendingRules[name]
+                for msg in pendingLst:
+                    while pendingLst:
+                        x = pendingLst.pop()
+                        try:
+                            self._parseMessage(x)
+                        except NeedsDependency as e:
+                            # may have more deps needed
+                            if e.message not in self.pendingRules:
+                                self.pendingRules[e.message] = []
+                            self.pendingRules[e.message].append(x)
+        if self.rulesNewThisTick:
+            self.commitRuleEnabledness()
+        if deepEmpty(self.pendingRules) and self.startupCompleteRequested:
+            self.startupCompleteRequested = False
+            self.sendMsg("STARTUP_COMPLETE")
+        self.rulesNewThisTick = []
+            
     def sendMicState(self):
         if not self.other:
             return
@@ -185,45 +206,96 @@ class DragonflyClient(DragonflyNode):
                 self.removeRule(key)
         
     def parseEnableMsg(self, msg):
+        log.info("Received enable message: %s" % msg)
+        
         args = msg.split(ARG_DELIMETER)
-        rule = args[1]
-        r = self.getRule(rule)
-        if not r:
-            log.info("Can't enable %s, can't find it." % rule)
-            return
-        self.enableRule(r)
+        for r in copy(self.enabledRules):
+            self.disableRule(r)
 
-    def parseDisableMsg(self, msg):
-        args = msg.split(ARG_DELIMETER)
-        rule = args[1]
-        r = self.getRule(rule)
-        if not r:
-            log.info("Can't disable %s, can't find it." % rule)
-            return
-        self.disableRule(r)
+        rules = args[1:]
+        for name in rules:
+            log.info("attempting to enable %s" % name)
+            rule = self.getRule(name)
+            if not r:
+                log.info("Can't enable %s, can't find it." % name)
+                return
+            self.enableRule(name)
+
+        self.commitRuleEnabledness()
 
     def enableRule(self, rule):
-        log.info("Enabling %s" % rule.name)
-        if rule.name not in self.grammars:
-            self.makeRuleGrammar(rule, rule.name)
-        if not self.rules[rule.name].enabled:
-            #log.info("Enabling for real %s" % rule.name)
-            self.rules[rule.name].enable()
-        else:
-            #log.info("not Enabling for real %s" % rule.name)
-            pass
+        log.info("Enabling %s" % rule)
+        self.enabledRules.add(rule)
+
+    def commitRuleEnabledness(self):
+        # load anything new that was registered or that changed
+        allRules = set([v for k, v in self.rules.items()])
+
+        active = {self.rules[name] for name in self.enabledRules if name in self.rules}
+
+        log.info("active: %s" % [i.name for i in active])
+
+        combine_series = []
+        
+        for l in active:
+            allowCombining = "ALLOWCOMBINING" in l.mandimusFlags
+            if isinstance(l, SeriesMappingRule) and allowCombining and not l.isMergedSeries:
+                log.info("including in combo: %s" % l.name)
+                combine_series.append(l)
+
+        # can't be separately enabled in the series rule and on its own at
+        # the same time
+        for s in combine_series:
+            active.remove(s)
+
+        # sort so they'll compare reliably
+        combine_series.sort(key=lambda x: x.name)
+        combine_series_name = ','.join([x.name for x in combine_series])
+
+        if combine_series:
+            if combine_series_name in self.rules:
+                # just make sure the already existing rule stays in the active set
+                self.combinedSeries = self.rules[combine_series_name]
+            else:
+                # build a new combined rule
+                self.combinedSeries = combineSeriesMappingRules(combine_series)
+                log.info("Series combining: %s" % [x.name for x in self.combinedSeries.parts]) 
+                self.addRule(self.combinedSeries, self.combinedSeries.name)
+            active.add(self.combinedSeries)
+
+        # note that these 'enabled' checks are for dragon,
+        # separate from our own concept of enabledness. We
+        # might have a rule 'enabled' as part of a series,
+        # but it will be disabled here because the combined
+        # series containing it already has it
+        inactive = allRules - active        
+        for u in inactive:
+            if u.name not in self.grammars:
+                continue
+            if u.enabled:
+                log.info("disabling for real %s" % u.name)
+                u.disable()
+            else:
+                log.info("not disabling for real %s" % u.name)
+                pass
+
+        for l in active:
+            if l.name not in self.grammars:
+                self.makeRuleGrammar(l, l.name)
+            if not l.enabled:
+                log.info("Enabling for real %s" % l.name)
+                l.enable()
+            else:
+                log.info("not Enabling for real %s" % l.name)
+                pass
+
 
     def disableRule(self, rule):
-        log.info("Disabling %s" % rule.name)
-        if rule.name not in self.grammars:
+        if rule == "GlobalRules":
             return
-        if self.rules[rule.name].enabled:
-            #log.info("disabling for real %s" % rule.name)
-            self.rules[rule.name].disable()
-        else:
-            #log.info("not disabling for real %s" % rule.name)
-            pass
-            
+        log.info("Disabling %s" % rule)
+        self.enabledRules.remove(rule)
+
     def _parseMessage(self, msg):
         try:
             if msg.startswith("MappingRule"):
@@ -236,12 +308,10 @@ class DragonflyClient(DragonflyNode):
                 self.parseUnloadMsg(msg)
             elif msg.startswith("enable"):
                 self.parseEnableMsg(msg)
-            elif msg.startswith("disable"):
-                self.parseDisableMsg(msg)
             elif msg.startswith("ack"):
                 log.debug('received ack: ' + msg)
             elif msg.startswith("REQUEST_STARTUP_COMPLETE"):
-                self.sendMsg("STARTUP_COMPLETE")
+                self.startupCompleteRequested = True
             elif len(msg) == 0:
                 log.debug('received heartbeat')
             else:
@@ -309,7 +379,12 @@ class DragonflyClient(DragonflyNode):
 
         try:
             new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
-            self.addRule(new_rule, rule_name, flags)
+            setattr(new_rule, "mandimusFlags", flags)
+            setattr(new_rule, "isMergedSeries", False)
+            setattr(new_rule, "mapping", rules)
+            setattr(new_rule, "extras", extras)
+            setattr(new_rule, "defaults", defaults)
+            self.addRule(new_rule, rule_name)
         except SyntaxError:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
@@ -417,6 +492,8 @@ def snore_and_unload():
     #unload()
 
 class GlobalRules(MappingRule):
+    mandimusFlags = []
+    isMergedSeries = False
     mapping = {
         "reload client code" : Function(reloadClient),
         "snore" : Function(snore_and_unload),

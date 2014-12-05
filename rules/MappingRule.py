@@ -5,6 +5,7 @@ class MappingRule(EqualityMixin):
     mapping = {}
     extras = []
     defaults = {}
+    allowCombining = False
     refOnly = False
     isMergedSeries = False
     serializedType = "MappingRule"
@@ -51,6 +52,9 @@ class MappingRule(EqualityMixin):
         if self.refOnly:
             msg += [ARG_DELIMETER]
             msg += "REFONLY"
+        if self.allowCombining:
+            msg += [ARG_DELIMETER]
+            msg += "ALLOWCOMBINING"
         msg += [ARG_DELIMETER]
         return ''.join(msg)
 

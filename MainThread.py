@@ -151,6 +151,7 @@ class MainThread(object):
                 #log.debug("found rule: %s" % type(r).__name__)
                 if r.activeForWindow(window):
                     active.add(r)
+        log.info("updating rule enabledness")
         self.dfly.updateRuleEnabledness(active)
     
     def put(self, p):
