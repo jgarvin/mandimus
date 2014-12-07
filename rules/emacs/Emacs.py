@@ -217,6 +217,8 @@ class EmacsMapping(MappingRule):
         "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
+        "debug function"                 : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
+        "cancel debug function"          : Key("c-x,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
 
         "ace line"                       : Key("c-u,c-u,c-c,space"),
 
@@ -302,7 +304,7 @@ class EmacsMapping(MappingRule):
         return Emacs.activeForWindow(window)
 
 class Axe(Action):
-    def _repetitions(self, extras={}):
+    def _repetitions(self, extras):
         repeat = 1
         if 'n' in extras and isinstance(extras['n'], int):
             repeat = extras['n']
@@ -326,8 +328,6 @@ class Emacs(EmacsBase):
     mapping  = {
         # general commands
         "axe [<n>]"                    : Axe(),
-        #"super [<n>] axe"              : Key("c-g:%(n)d"),
-        #"axe"                          : Key("c-g"),
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),
@@ -415,7 +415,9 @@ class Emacs(EmacsBase):
         "upper"                        : Key("a-u"),
         "lower"                        : Key("a-l"),
 
-        "push"                         : Key("c-space,c-space"),
+        # save mark, almost never use, need to get used to
+        #"push"                         : Key("c-space,c-space"),
+        
         "snap [<n>]"                   : Key("c-u,c-space:%(n)d"),
         "big snap [<n>]"               : Key("c-x,c-space:%(n)d"),
 

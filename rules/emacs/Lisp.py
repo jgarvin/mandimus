@@ -26,7 +26,7 @@ mainWords = {
     "defadvice",
     "defconst",
     "defmacro",
-    "defun"
+    "defun",
     "defvar",
     "defvar-local",
     "dolist",

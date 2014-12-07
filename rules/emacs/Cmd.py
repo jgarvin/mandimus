@@ -75,7 +75,7 @@ class Cmd(Action):
         self.log = log
         # self.log = True
     
-    def _lisp(self, extras={}):
+    def _lisp(self, extras):
         fulldata = (self.data % extras)
         return fulldata    
 
