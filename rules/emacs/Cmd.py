@@ -97,6 +97,15 @@ class Cmd(Action):
         for i in range(self._repetitions(extras)):
             runEmacsCmd(code)
 
+class CharCmd(Cmd):
+    classLog = False
+    def _lisp(self, extras={}):
+        word = extras['words'].split()[1]
+        if word == "num":
+            word = extras['words'].split()[2]
+        char = BaseRules.CharRule.lookup(word)
+        return self.data % char
+
 getCommandsEl = """
 (let ((y '()))
   (mapatoms 

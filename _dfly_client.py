@@ -99,8 +99,13 @@ class DragonflyClient(DragonflyNode):
         log.info('adding rule: %s %s' % (rule.name, name))
 
         if name in self.rules:
-            log.info('Already have rule: ' + name)
-            return
+            log.info("Rule already exists: " + name)
+            if self.rules[name].mapping.keys() == rule.mapping.keys():
+                log.info("Rule hasn't changed, ignoring.")
+                return
+
+            log.info("Removing existing copy of rule.")
+            self.removeRule(name, replacing=True)
 
         self.rules[name] = rule
         rule.disable()
@@ -109,8 +114,10 @@ class DragonflyClient(DragonflyNode):
     def addMsgTypeHandler(self, leadingTerm, handler):
         self.msgTypeHandlers[leadingTerm] = handler
 
-    def removeRule(self, name):
+    def removeRule(self, name, replacing=False):
         log.info('Removing rule: ' + name)
+        if not replacing:
+            self.disableRule(name)
         try:
             del self.rules[name]
         except KeyError:
@@ -213,6 +220,7 @@ class DragonflyClient(DragonflyNode):
             self.disableRule(r)
 
         rules = args[1:]
+        #log.info("rule list from server: %s" % rules)
         for name in rules:
             #log.info("attempting to enable %s" % name)
             rule = self.getRule(name)
@@ -295,6 +303,7 @@ class DragonflyClient(DragonflyNode):
             return
         log.info("Disabling %s" % rule)
         self.enabledRules.remove(rule)
+
 
     def _parseMessage(self, msg):
         try:

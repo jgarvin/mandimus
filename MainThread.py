@@ -279,6 +279,7 @@ if __name__ == "__main__":
         ('rules.emacs.Pairs', ['']),
         ('rules.emacs.Mic', ['']),
         ('rules.emacs.Magit', ['']),
+        ('rules.emacs.Nav', ['']),
         ('rules.emacs.Term', ['']),
         ('rules.emacs.ModeLine', ['']),
         ('rules.XMonad', ['']),

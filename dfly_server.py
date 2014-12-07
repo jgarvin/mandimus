@@ -66,11 +66,6 @@ class DragonflyThread(DragonflyNode):
                 return
             else:
                 log.info('rule changed: ' + rule.name)
-                # log.info("new rule")
-                # log.info(str(rule))
-                # log.info("old rule")
-                # log.info(str(self.rules[rule.name]))
-                self.unloadRule(self.rules[rule.name])
         
         log.info('Loading rule: ' + rule.name)
         self.sendMsg(rule.textSerialize())
@@ -101,40 +96,31 @@ class DragonflyThread(DragonflyNode):
             self.loadRule(r)
         #self.sendMsg("all sent" )
 
-    def enableRule(self, rule):
-        if rule in self.enabledRules:
-            return
-        log.info('Enabling rule: ' + rule.name)        
-        self.enabledRules.add(rule)
-        
-    def disableRule(self, rule):
-        if rule not in self.enabledRules:
-            return
-        log.info('Disabling rule: ' + rule.name)        
-        self.enabledRules.remove(rule)
-
     def commitRuleEnabledness(self):
-        log.info("Committing rule enabledness")
+        log.info("Committing rule enabledness: %s" % [rule.name for rule in self.enabledRules])
         self.sendMsg(ARG_DELIMETER.join(['enable'] + [rule.name for rule in self.enabledRules]))
 
     def updateRuleEnabledness(self, active):
-        oldEnabled = copy(self.enabledRules)
+        oldEnabledNames = [rule.name for rule in self.enabledRules]
+
+        self.enabledRules = set()
 
         # load anything new that was registered or that changed
         registered = set(registeredRules().values())
+        log.info([c.name for c in registeredRules().values()])
         for r in registered:
             self.loadRule(r)
 
         allRules = set(self.rules.values())
 
-        inactive = allRules - active        
-        for u in inactive:
-            self.disableRule(u)
-
         for l in active:
-            self.enableRule(l)
+            self.enabledRules.add(l)
 
-        if oldEnabled != self.enabledRules:
+        newEnabledNames = [rule.name for rule in self.enabledRules]
+
+        # We do this by name rather than value because equality depends on the
+        # definitions being the same.
+        if oldEnabledNames != newEnabledNames:
             self.commitRuleEnabledness()
 
     def onConnect(self):
