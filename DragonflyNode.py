@@ -94,10 +94,15 @@ class DragonflyNode(object):
                 #log.error("problem area: %s [%s]" % (msg[35683], msg[35680:35686]))
             self.lastMsgSendTime = time.time()
         except socket.error as e:
+            log.info("Socket error: %s" % e)
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
                 self.dumpOther()
             else:
                 raise
+        except Exception as e:
+            log.info("Unknown error while sending: %s" % e)
+            self.dumpOther()
+            raise
 
 ### DRAGONSHARE RSYNC
 

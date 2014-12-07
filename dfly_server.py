@@ -107,7 +107,6 @@ class DragonflyThread(DragonflyNode):
 
         # load anything new that was registered or that changed
         registered = set(registeredRules().values())
-        log.info([c.name for c in registeredRules().values()])
         for r in registered:
             self.loadRule(r)
 

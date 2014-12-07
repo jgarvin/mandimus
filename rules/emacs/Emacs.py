@@ -343,8 +343,6 @@ class Emacs(EmacsBase):
         "help news"                    : Key("c-h,n"),
         
         # navigation commands
-        "slof [<n>]"                   : Cmd("(md-next-whitespace-separated-thing)"),
-        "slop [<n>]"                   : Cmd("(md-previous-whitespace-separated-thing)"),
         "ace"                          : Key("c-c,space"),
         "ace care"                     : Key("c-u,c-c,space"),
 

@@ -79,8 +79,8 @@ class DragonflyClient(DragonflyNode):
         self.rulesNewThisTick = []
 
         self.addRule(self.globalRule, "GlobalRules")
+        self.resetEnabledRules()
         #self.makeRuleGrammar(self.globalRule, "GlobalRules")
-        self.enableRule(self.globalRule.name)
 
         self.msgTypeHandlers = {}
 
@@ -94,6 +94,10 @@ class DragonflyClient(DragonflyNode):
         self.combinedSeries = None
 
         self.startupCompleteRequested = False
+
+    def resetEnabledRules(self):
+        self.enabledRules = set()
+        self.enabledRules.add(self.globalRule.name)
 
     def addRule(self, rule, name):
         log.info('adding rule: %s %s' % (rule.name, name))
@@ -117,7 +121,10 @@ class DragonflyClient(DragonflyNode):
     def removeRule(self, name, replacing=False):
         log.info('Removing rule: ' + name)
         if not replacing:
-            self.disableRule(name)
+            try:
+                self.enabledRules.remove(name)
+            except KeyError:
+                pass
         try:
             del self.rules[name]
         except KeyError:
@@ -216,24 +223,18 @@ class DragonflyClient(DragonflyNode):
         log.info("Received enable message: %s" % msg)
         
         args = msg.split(ARG_DELIMETER)
-        for r in copy(self.enabledRules):
-            self.disableRule(r)
+        self.resetEnabledRules()
 
         rules = args[1:]
         #log.info("rule list from server: %s" % rules)
         for name in rules:
             #log.info("attempting to enable %s" % name)
             rule = self.getRule(name)
-            if not r:
-                log.info("Can't enable %s, can't find it." % name)
-                return
-            self.enableRule(name)
+            if not rule:
+                log.info("Marking %s as enabled, but can't find it yet." % name)
+            self.enabledRules.add(name)
 
         self.commitRuleEnabledness()
-
-    def enableRule(self, rule):
-        log.info("Enabling %s" % rule)
-        self.enabledRules.add(rule)
 
     def commitRuleEnabledness(self):
         # load anything new that was registered or that changed
@@ -296,14 +297,6 @@ class DragonflyClient(DragonflyNode):
             else:
                 #log.info("not Enabling for real %s" % l.name)
                 pass
-
-
-    def disableRule(self, rule):
-        if rule == "GlobalRules":
-            return
-        log.info("Disabling %s" % rule)
-        self.enabledRules.remove(rule)
-
 
     def _parseMessage(self, msg):
         try:
@@ -473,10 +466,13 @@ class DragonflyClient(DragonflyNode):
         self.sendMsg(u''.join(msg))
 
     def cleanup(self):
-        self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
-        self.timer.stop()
         for name, grammar in self.grammars.items():
             grammar.unload()
+        self.timer.stop()
+        try:
+            self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
+        except socket.error:
+            pass
         DragonflyNode.cleanup(self)
 
     def transformMapping(self, grammarList):
