@@ -54,7 +54,7 @@ class FailureReportingGrammar(Grammar):
         self.client.setRecognitionState('failure')
 
     def process_recognition_other(self, words):
-        pass
+        self.client.setRecognitionState('success')
 
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
@@ -476,8 +476,6 @@ class DragonflyClient(DragonflyNode):
     def onMatch(self, grammarString, data):
         if natlink.getMicState() != 'on':
             return
-
-        self.setRecognitionState('success')
 
         log.info('match -- %s -- %s -- %s' %
                  (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))

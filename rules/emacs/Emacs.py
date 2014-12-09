@@ -13,7 +13,7 @@ from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommandLogging, Minibuf
+from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommandLogging, Minibuf, toggleCommandClient
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
@@ -285,6 +285,9 @@ class EmacsMapping(MappingRule):
         "show top"                       : Cmd("(etc-start-or-open-top)"),
         "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
         "toggle command logging"         : toggleCommandLogging,
+        "toggle command client"         : toggleCommandClient,
+        "profiler start"                 : Cmd("(call-interactively 'profiler-start)"),
+        "profiler report"                : Cmd("(call-interactively 'profiler-report)"),
     }
 
     extras = [

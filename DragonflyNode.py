@@ -85,8 +85,8 @@ class DragonflyNode(object):
             pass
 
         try:
-            self.other.settimeout(None)
             try:
+                self.other.settimeout(None)
                 self.other.sendall((msg + MESSAGE_TERMINATOR).encode('utf-8'))
             except UnicodeDecodeError as e:
                 log.error(str(e))

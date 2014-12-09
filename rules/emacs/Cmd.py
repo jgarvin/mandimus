@@ -13,6 +13,8 @@ from EventLoop import getLoop
 from EventList import FocusChangeEvent
 import grammar
 import rules.BaseRules as BaseRules
+import socket
+import errno
 
 EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
@@ -25,7 +27,119 @@ def toggleCommandLogging(*args):
     global logCommands
     logCommands = not logCommands
 
+
+class CommandClient(object):
+    def __init__(self):
+        self.sock = None
+        self.sock = self.makeSocket()
+
+    def makeSocket(self):
+        if self.sock:
+            self.sock.close()
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+    def tryConnect(self):
+        if not self.sock:
+            self.makeSocket()
+
+        self.sock.settimeout(0.05)
+        try:
+            self.sock.connect(("localhost", 23233))
+            log.info("Connected to emacs!")
+            return True
+        except socket.error as e:
+            log.error("Error connecting to emacs: %s" % e)
+        except socket.timeout as e:
+            log.error("Connection to emacs timed out.")
+        return False
+
+    def dumpOther(self):
+        self.sock.close()
+        self.sock = None
+
+    def sendMsg(self, msg):
+        try:
+            self.sock.settimeout(None)
+            try:
+                self.sock.sendall((msg + "\n").encode('utf-8'))
+                return True
+            except UnicodeDecodeError as e:
+                log.error(str(e))
+                return False
+        except socket.error as e:
+            log.info("Socket error: %s" % e)
+            if e.errno == errno.EPIPE or e.errno == errno.EBADF:
+                self.dumpOther()
+                return False
+            else:
+                raise
+        except Exception as e:
+            log.info("Unknown error while sending: %s" % e)
+            self.dumpOther()
+            raise
+
+    def runCmd(self, command, inFrame=True, dolog=False, allowError=False):
+        """Run command optionally in particular frame,
+        set True for active frame."""
+
+        if not self.sock:
+            if not self.tryConnect():
+                log.error("Can't run command, not connected: [%s]" % command)
+                return
+
+        # have to escape percent signs so python doesn't process them
+        command = command.replace("%", "%%")
+
+        # without this C-g can interrupt the running code
+        # with this any cancels are deferred until after
+        #wrapper = "(let ((md-inhibit-quit t) (inhibit-quit t)) %s)"
+        # wrapper = "(let ((redisplay-dont-pause nil) (redisplay-preemption-period nil)) %s)"
+        wrapper = "%s" # inhibit-quit doesn't seem to work
+        if allowError:
+            wrapper %= '(condition-case err %s (error nil))'
+        else:
+            wrapper %= '(condition-case err %s (error (message (concat "Mandimus error: " (error-message-string err))) nil))'
+
+        if inFrame:
+            wrapper %= "(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) %s)"
+
+        command = wrapper % command
+
+        # have to delete newlines since they're the protocol delimeter
+        command = command.replace("\n", "")
+
+        if dolog or logCommands:
+            log.info('emacs cmd: ' + command)
+
+        self.sock.settimeout(None)
+        if not self.sendMsg(command):
+            log.info("Couldn't send message: [%s]" % command)
+            return "nil"
+        out = ""
+        #self.sock.settimeout()
+        while "\n" not in out:
+            # print "in recv loop"
+            out += unicode(self.sock.recv(4096), 'utf-8')
+            
+        if dolog or logCommands:
+            log.info('emacs output: [%s]' % out)
+        return out
+
+clientInst = CommandClient()
+useCommandClient = True
+
+def toggleCommandClient(extras={}):
+    global useCommandClient, clientInst
+    useCommandClient = not useCommandClient
+    
 def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
+    global useCommandClient, clientInst
+    if useCommandClient:
+        return clientInst.runCmd(command, inFrame, dolog, allowError)
+
     """Run command optionally in particular frame,
     set True for active frame."""
     args = []
@@ -38,6 +152,7 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
     # without this C-g can interrupt the running code
     # with this any cancels are deferred until after
     #wrapper = "(let ((md-inhibit-quit t) (inhibit-quit t)) %s)"
+    # wrapper = "(let ((redisplay-dont-pause nil) (redisplay-preemption-period nil)) %s)"
     wrapper = "%s" # inhibit-quit doesn't seem to work
     if allowError:
         wrapper %= '(condition-case err %s (error nil))'
@@ -66,6 +181,8 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
         log.info("Emacs error!: " + err)
         log.error(''.join(traceback.format_stack()))
     return out
+
+
 
 class Minibuf(Action):
     def __call__(self, extras={}):
