@@ -145,7 +145,8 @@ class DragonflyThread(DragonflyNode):
         elif msg.startswith("START_RECOGNITION"):
             self.utterance = []
         elif msg.startswith("STOP_RECOGNITION"):
-            self.pushQ.put(WordEvent(' '.join(self.utterance)))
+            if self.utterance:
+                self.pushQ.put(WordEvent(' '.join(self.utterance)))
         elif msg == "":
             log.debug("heartbeat")
         elif msg.startswith("ack"):

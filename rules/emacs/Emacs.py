@@ -279,7 +279,7 @@ class EmacsMapping(MappingRule):
         "stop irc"                       : Key("c-x,c-m") + Text("stop-irc") + Key("enter"),
         "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
         "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
-        "git status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
+        "get status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
         "submit"                         : Key("c-x,hash"),
         "open terminal"                  : Cmd("(etc-start-or-open-terminal)"),
         "show top"                       : Cmd("(etc-start-or-open-top)"),
