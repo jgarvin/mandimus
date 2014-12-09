@@ -7,7 +7,7 @@ import os
 import os.path as op
 import subprocess
 
-from Actions import Action
+from Actions import Action, Key, Text
 import EventLoop
 from EventLoop import getLoop
 from EventList import FocusChangeEvent
@@ -66,6 +66,12 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
         log.info("Emacs error!: " + err)
         log.error(''.join(traceback.format_stack()))
     return out
+
+class Minibuf(Action):
+    def __call__(self, extras={}):
+        Key("a-x")()
+        Text(self.data % extras)()
+        Key("enter")()
 
 class Cmd(Action):
     classLog = False

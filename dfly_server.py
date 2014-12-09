@@ -37,6 +37,8 @@ class DragonflyThread(DragonflyNode):
         self.rules = {}
         self.enabledRules = set()
 
+        self.utterance = []
+
         getLoop().subscribeTimer(BLOCK_TIME, self)
 
     def __call__(self):
@@ -132,6 +134,7 @@ class DragonflyThread(DragonflyNode):
         self.sendMsg("REQUEST_STARTUP_COMPLETE")
 
     def onMessage(self, msg):
+        log.info(msg)
         if msg.startswith("MATCH"):
             self.parseMatchMsg(msg)
         elif msg.startswith("MICSTATE"):
@@ -139,6 +142,10 @@ class DragonflyThread(DragonflyNode):
             self.pushQ.put(MicrophoneEvent(msg.split(ARG_DELIMETER)[1]))
         elif msg.startswith("STARTUP_COMPLETE"):
             self.pushQ.put(StartupCompleteEvent())
+        elif msg.startswith("START_RECOGNITION"):
+            self.utterance = []
+        elif msg.startswith("STOP_RECOGNITION"):
+            self.pushQ.put(WordEvent(' '.join(self.utterance)))
         elif msg == "":
             log.debug("heartbeat")
         elif msg.startswith("ack"):
@@ -180,7 +187,7 @@ class DragonflyThread(DragonflyNode):
                         self.history.append(RuleMatchEvent(rule, extras))
 
                     log.info('match %s -- %s -- %s' % (g.name, rule, extras['words']))
-                    self.pushQ.put(WordEvent(extras['words']))
+                    self.utterance.append(extras['words'])
                     cb(extras)
                 except Exception as e:
                     # don't want the whole thing to crash just because

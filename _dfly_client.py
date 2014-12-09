@@ -43,6 +43,21 @@ def reloadClient():
 
 class NeedsDependency(Exception): pass
 
+class FailureReportingGrammar(Grammar):
+    def setClient(self, client):
+        self.client = client
+
+    def _process_begin(self, executable, title, handle):
+        self.client.sendMsg("START_RECOGNITION")
+        self.client.setRecognitionState('thinking')
+
+    def process_recognition_failure(self):
+        self.client.setRecognitionState('failure')
+        self.client.sendMsg("STOP_RECOGNITION")
+
+    def process_recognition_other(self, words):
+        self.client.sendMsg("STOP_RECOGNITION")
+
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
     informs the server that grammar rules have been matched.
@@ -95,6 +110,8 @@ class DragonflyClient(DragonflyNode):
 
         self.startupCompleteRequested = False
 
+        self.recognitionState = "success"
+
     def resetEnabledRules(self):
         self.enabledRules = set()
         self.enabledRules.add(self.globalRule.name)
@@ -137,7 +154,11 @@ class DragonflyClient(DragonflyNode):
 
     def makeRuleGrammar(self, rule, name):
         #log.info("making grammar %s" % rule.name)
-        grammar = Grammar(name)
+        if name == "GlobalRules":
+            grammar = FailureReportingGrammar(name)
+            grammar.setClient(self)
+        else:
+            grammar = Grammar(name)
         grammar.add_rule(rule)
         #grammar.disable()
         grammar.load()
@@ -201,11 +222,18 @@ class DragonflyClient(DragonflyNode):
             self.sendMsg("STARTUP_COMPLETE")
         self.rulesNewThisTick = []
             
+    def setRecognitionState(self, state):
+        self.recognitionState = state
+        self.sendMicState()
+
     def sendMicState(self):
         if not self.other:
             return
         
         micState = natlink.getMicState()
+        if micState == "on":
+            micState = self.recognitionState
+        
         if self.lastMicState is None or micState != self.lastMicState:
             self.lastMicState = micState
             self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
@@ -443,6 +471,8 @@ class DragonflyClient(DragonflyNode):
     def onMatch(self, grammarString, data):
         if natlink.getMicState() != 'on':
             return
+
+        self.setRecognitionState('success')
 
         log.info('match -- %s -- %s -- %s' %
                  (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))

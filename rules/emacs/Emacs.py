@@ -13,7 +13,7 @@ from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommandLogging
+from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommandLogging, Minibuf
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
@@ -261,6 +261,7 @@ class EmacsMapping(MappingRule):
         "alternate file"                 : Key("c-x,c-v"),
         "recent files"                   : Key("c-c,c-e"),
         "man page"                       : Key("a-x") + Text("man") + Key("enter"),
+        "find file"                      : Minibuf("find-name-dired"), 
 
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),

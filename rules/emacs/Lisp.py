@@ -32,6 +32,7 @@ mainWords = {
     "dolist",
     "format",
     "function",
+    "funcall"
     "if",
     "interactive",
     "lambda",
@@ -45,6 +46,8 @@ mainWords = {
     "prog1",
     "prog2",
     "progn",
+    "provide",
+    "require",
     #"quote",
     "save-current-buffer",
     "save-excursion",

@@ -23,6 +23,7 @@ class ChromeSearch(MappingRule):
         "game facks [<text>]"           : WebSearch("gfaqs"),
         "images [<text>]"               : WebSearch("im"),
         "stack overflow [<text>]"       : WebSearch("so"),
+        "search <text>"                 : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter"),
     }
 
     extras = [
@@ -53,7 +54,6 @@ class ChromeRule(SeriesMappingRule):
         "reopen tab"                    : Key("cs-t"),
         "reload"                        : Key("c-r"),
         "refresh"                       : Key("c-r"),
-        "search <text>"                 : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter"),
         "zoom in [<n>]"                 : Key("c-plus:%(n)d"),
         "zoom out [<n>]"                : Key("c-minus:%(n)d"),
         # these are provided by the 'tabloid' extension

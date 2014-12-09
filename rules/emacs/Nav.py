@@ -23,14 +23,18 @@ from Window import getFocusedWindow
 @registerRule
 class NavRules(EmacsBase):
     mapping = {
-        "go <charrule> [<n>]" : CharCmd("(md-move-up-to-char 1 ?%s)"),
-        "og <charrule> [<n>]" : CharCmd("(md-move-up-to-char -1 ?%s)"),
-        "tuck [<n>]"          : Cmd("(md-find-indentation-change 1 '>)"),
-        "snug [<n>]"          : Cmd("(md-find-indentation-change -1 '>)"),
-        "slack [<n>]"         : Cmd("(md-find-indentation-change 1 '<)"),
-        "lacks [<n>]"         : Cmd("(md-find-indentation-change -1 '<)"),
-        "sled [<n>]"          : Cmd("(md-next-whitespace-separated-thing)"),
-        "dels [<n>]"          : Cmd("(md-previous-whitespace-separated-thing)"),
+        "go <charrule> [<n>]"   : CharCmd("(md-move-up-to-char 1 ?%s)"),
+        "og <charrule> [<n>]"   : CharCmd("(md-move-up-to-char -1 ?%s)"),
+        "tuck [<n>]"            : Cmd("(md-find-indentation-change 1 '>)"),
+        "snug [<n>]"            : Cmd("(md-find-indentation-change -1 '>)"),
+        "slack [<n>]"           : Cmd("(md-find-indentation-change 1 '<)"),
+        "lacks [<n>]"           : Cmd("(md-find-indentation-change -1 '<)"),
+        "sled [<n>]"            : Cmd("(md-next-whitespace-separated-thing)"),
+        "dels [<n>]"            : Cmd("(md-previous-whitespace-separated-thing)"),
+        "sym <charrule> [<n>]"  : CharCmd("(md-move-up-to-symbol-starting-with-char 1 ?%s)"),
+        "miss <charrule> [<n>]" : CharCmd("(md-move-up-to-symbol-starting-with-char -1 ?%s)"),
+        "line <charrule> [<n>]" : CharCmd("(md-find-line-starting-with-char 1 ?%s)"),
+        "Nile <charrule> [<n>]" : CharCmd("(md-find-line-starting-with-char -1 ?%s)"),
     }
 
     

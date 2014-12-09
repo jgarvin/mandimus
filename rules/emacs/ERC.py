@@ -52,12 +52,14 @@ class ERC(EmacsBase):
     majorMode = "erc-mode"
     
     mapping = {
-        "hiss"               : Key("a-p"),
-        "piss"               : Key("a-n"),
-        "join [<text>]"      : EmacsText("/join #%(text)s"),
-        "smiley wink"        : EmacsText(";)"),
-        "smiley tongue"      : EmacsText(":P", lower=False),
-        "smiley wink tongue" : EmacsText(";P", lower=False),
-        "part"               : EmacsText("/part"),
-        "kick dragon"        : EmacsText("/me kicks Dragon"),
+        "hiss"                : Key("a-p"),
+        "piss"                : Key("a-n"),
+        "slash join [<text>]" : EmacsText("/join #%(text)s"),
+        "smiley wink"         : EmacsText(";)"),
+        "smiley tongue"       : EmacsText(":P", lower=False),
+        "smiley wink tongue"  : EmacsText(";P", lower=False),
+        "slash part"          : EmacsText("/part"),
+        "kick dragon"         : EmacsText("/me kicks Dragon"),
+        "slash me [<text>]"   : EmacsText("/me %(text)s"),
+        "slash message"       : EmacsText("/msg"),
     }
