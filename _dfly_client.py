@@ -48,15 +48,13 @@ class FailureReportingGrammar(Grammar):
         self.client = client
 
     def _process_begin(self, executable, title, handle):
-        self.client.sendMsg("START_RECOGNITION")
         self.client.setRecognitionState('thinking')
 
     def process_recognition_failure(self):
         self.client.setRecognitionState('failure')
-        self.client.sendMsg("STOP_RECOGNITION")
 
     def process_recognition_other(self, words):
-        self.client.sendMsg("STOP_RECOGNITION")
+        pass
 
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
@@ -224,6 +222,13 @@ class DragonflyClient(DragonflyNode):
             
     def setRecognitionState(self, state):
         self.recognitionState = state
+
+        micOn = (natlink.getMicState() == "on")
+        if self.recognitionState == "thinking" and micOn:
+            self.sendMsg("START_RECOGNITION")
+        elif self.recognitionState in ["failure", "success"] and micOn:
+            self.sendMsg("STOP_RECOGNITION")
+
         self.sendMicState()
 
     def sendMicState(self):

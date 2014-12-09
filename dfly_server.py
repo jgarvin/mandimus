@@ -134,7 +134,7 @@ class DragonflyThread(DragonflyNode):
         self.sendMsg("REQUEST_STARTUP_COMPLETE")
 
     def onMessage(self, msg):
-        log.info(msg)
+        log.debug(msg)
         if msg.startswith("MATCH"):
             self.parseMatchMsg(msg)
         elif msg.startswith("MICSTATE"):
