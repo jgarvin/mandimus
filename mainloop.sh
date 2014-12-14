@@ -6,7 +6,7 @@ while true; do
     kill -9 $(jobs -p)
     rm **/*.pyc
     rm ~/dragonshare/NatLink/NatLink/MacroSystem/*.pyc
-    touch ~/dragonshare/NatLink/NatLink/MacroSystem/*.py
+    #touch ~/dragonshare/NatLink/NatLink/MacroSystem/*.py
 
     # Let ctrl-c pass through to python so we can use it
     # to trigger restarts

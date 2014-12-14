@@ -20,7 +20,7 @@ class Python(EmacsBase):
     }
 
 import keyword
-Python.mapping.update({i : EmacsText("%s" % i, lower=False) for i in keyword.kwlist})
+Python.mapping.update({"key " + i : EmacsText("%s" % i, lower=False) for i in keyword.kwlist})
 
 otherMainWords = {"True", "False", "set", "list", "dict", "None", "self", "print", "object"}
-Python.mapping.update({i : EmacsText("%s" % i, lower=False) for i in otherMainWords})
+Python.mapping.update({"key " + i : EmacsText("%s" % i, lower=False) for i in otherMainWords})

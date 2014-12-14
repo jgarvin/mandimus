@@ -277,6 +277,7 @@ if __name__ == "__main__":
         ('rules.emacs.ERC', ['']),
         ('rules.emacs.VarNames', ['']),
         ('rules.emacs.Pairs', ['']),
+        ('rules.emacs.Profiling', ['']),
         ('rules.emacs.Mic', ['']),
         ('rules.emacs.Magit', ['']),
         ('rules.emacs.Nav', ['']),
@@ -285,6 +286,8 @@ if __name__ == "__main__":
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),
+
+        ('RefreshClient', ['']),
     ]
 
     # TODO: catch syntax errors, make copies of module files, then

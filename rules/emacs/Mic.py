@@ -12,7 +12,10 @@ class MicrophoneState(object):
         self.state = ev.state
         self.tellEmacs(self.state if self.connected else "disconnected")
         if self.state == "sleeping":
-            self.connected = False
+            # waking from sleep use to always reload the client, but that got
+            # to be annoying and slow
+            #self.connected = False
+            pass
 
     def connectionChange(self, ev):
         self.connected = True if isinstance(ev, StartupCompleteEvent) else False

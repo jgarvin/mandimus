@@ -15,8 +15,9 @@ class EmacsText(Text):
     def _print(self, words):
         needCapital = False
         if self.capitalCheck:
-            needCapital = runEmacsCmd("(md-need-capitalization)").strip() is 't'
-        needSpace = runEmacsCmd("(md-need-space \"%s\")" % words).strip() is 't'
+            needCapital = runEmacsCmd("(md-need-capitalization)") == 't'
+        spaceOutput = runEmacsCmd("(md-need-space \"%s\")" % words) 
+        needSpace = spaceOutput == 't'
         if needCapital:
             log.info('capitalize')
             words = words[0].upper() + words[1:]

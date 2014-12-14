@@ -19,7 +19,7 @@ class Dired(EmacsBase):
         "pick links"          : Text("*@"),
         "pick folders"        : Text("*/"),
         "post pick"           : Key("a-rbrace"),
-        "pre pick"            : Key("a-lbrace"),
+        "per pick"            : Key("a-lbrace"),
         "toggle picks"        : Text("*t"),
         "pick regex"          : Text("%m"),
         "pick contents regex" : Text("%g"),

@@ -18,7 +18,7 @@ class XMonadRule(SeriesMappingRule):
         "desktop <d>"                 : Key("ca-%(d)d"),
         "move desktop <d>"            : Key("csa-%(d)d"),
         "post win [<n>]"              : Key("ca-e:%(n)d"),
-        "pre win [<n>]"               : Key("ca-o:%(n)d"),
+        "per win [<n>]"               : Key("ca-o:%(n)d"),
         "move next [<n>]"             : Key("cas-e:%(n)d"),
         "move previous [<n>]"         : Key("cas-o:%(n)d"),
         "expand [<n>]"                : Key("ca-i:%(n)d"),

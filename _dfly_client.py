@@ -326,7 +326,12 @@ class DragonflyClient(DragonflyNode):
                 self.makeRuleGrammar(l, l.name)
             if not l.enabled:
                 #log.info("Enabling for real %s" % l.name)
-                l.enable()
+                try:
+                    l.enable()
+                except natlink.BadGrammar as e:
+                    log.error("Grammar was too complex: %s" % l.name)
+                    self.removeRule(l)
+                    continue
             else:
                 #log.info("not Enabling for real %s" % l.name)
                 pass
@@ -358,6 +363,14 @@ class DragonflyClient(DragonflyNode):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
+    # def messageBatch(self, messages):
+    #     index = []
+    #     for i, m in enumerate(messages):
+    #         parts = m.split(ARG_DELIMETER, 3)
+    #         if len(parts) < 3:
+    #             continue
+    #         msgtype, msgname = parts[0], parts[1] 
+    #         index.append((i, msgtype, msgname))
 
     def onMessage(self, msg):
         try:

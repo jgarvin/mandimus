@@ -1,4 +1,4 @@
-from Actions import Key, Text, SelectChoice
+from Actions import Key, Text
 from EventLoop import getLoop
 import EventList
 from EventList import FocusChangeEvent

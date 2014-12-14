@@ -23,6 +23,7 @@ import string
 import SelectOption
 import EventList
 import util
+from RefreshClient import toggleRefreshClientSources
 
 watchers = []
 selectors = []
@@ -129,14 +130,25 @@ selectors.append(SelectProjectFile())
     
 class WordWatcher(EmacsCommandWatcher):
     #cmd = "(md-get-buffer-words)"
-    cmd = "(md-get-window-words)"
+    #cmd = "(md-safe-get-symbols (window-start) (window-end))"
+    # cmd = "(md-safe-get-symbols (point-min) (point-max))"
+    cmd = "(md-safe-get-symbols-frequency (point-min) (point-max))"
+    # cmd = "(md-safe-get-symbols-frequency (window-start) (window-end))"
     eventType = EventList.EmacsWordEvent
+
+    def filter(self, x):
+        x = ''.join(c for c in x if c not in string.punctuation + string.digits)
+        if len(x) <= 2:
+            return False
+        return True
 
     def _postProcess(self, output):
         lst = EmacsCommandWatcher._postProcess(self, output)
         # filter unicode
         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
-        lst = [x for x in lst if len(x) > 1 and not util.isNumber(x)]
+        lst = [x for x in lst if self.filter(x)]
+        # log.info(lst)
+        # log.info(len(lst))
         return lst
 
 watchers.append(WordWatcher())
@@ -272,6 +284,7 @@ class EmacsMapping(MappingRule):
         "replace <match> with <replace>" : Key('as-percent') + Text("%(match)s") + Key('enter') + Text("%(replace)s"),
 
         "open client log"                : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
+
         "open server log"                : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
 
         # misc
@@ -285,9 +298,8 @@ class EmacsMapping(MappingRule):
         "show top"                       : Cmd("(etc-start-or-open-top)"),
         "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
         "toggle command logging"         : toggleCommandLogging,
-        "toggle command client"         : toggleCommandClient,
-        "profiler start"                 : Cmd("(call-interactively 'profiler-start)"),
-        "profiler report"                : Cmd("(call-interactively 'profiler-report)"),
+        "toggle command client"          : toggleCommandClient,
+        "toggle refresh client"          : toggleRefreshClientSources,
     }
 
     extras = [
@@ -358,9 +370,11 @@ class Emacs(EmacsBase):
         "window top"                   : Cmd("(goto-char (window-start))"),
         "window bottom"                : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
         "post [<n>]"                   : Key("a-f:%(n)d"),
-        "pre [<n>]"                    : Key("a-b:%(n)d"),
-        "paid [<n>]"                   : Key("a-v:%(n)d"),
-        "page [<n>]"                   : Key("c-v:%(n)d"),
+        "per [<n>]"                    : Key("a-b:%(n)d"),
+        "leaf [<n>]"                   : Key("c-v:%(n)d"),
+        "feel [<n>]"                   : Key("a-v:%(n)d"),
+        # "paid [<n>]"                 : Key("a-v:%(n)d"),
+        # "page [<n>]"                 : Key("c-v:%(n)d"),
         "center"                       : Key("c-l"),
         "gruff [<n>]"                  : Key("c-up:%(n)d"),
         "graph [<n>]"                  : Key("c-down:%(n)d"),
@@ -418,7 +432,7 @@ class Emacs(EmacsBase):
         "lower"                        : Key("a-l"),
 
         # save mark, almost never use, need to get used to
-        #"push"                         : Key("c-space,c-space"),
+        #"push"                        : Key("c-space,c-space"),
         
         "snap [<n>]"                   : Key("c-u,c-space:%(n)d"),
         "big snap [<n>]"               : Key("c-x,c-space:%(n)d"),

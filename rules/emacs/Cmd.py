@@ -126,7 +126,7 @@ class CommandClient(object):
             
         if dolog or logCommands:
             log.info('emacs output: [%s]' % out)
-        return out
+        return out.rstrip() # delete trailing new line
 
 clientInst = CommandClient()
 useCommandClient = True
@@ -181,8 +181,6 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
         log.info("Emacs error!: " + err)
         log.error(''.join(traceback.format_stack()))
     return out
-
-
 
 class Minibuf(Action):
     def __call__(self, extras={}):

@@ -40,6 +40,9 @@ class DragonflyNode(object):
                 self.dumpOther()
                 return
 
+        self.messageBatch(messages)
+
+    def messageBatch(self, messages):
         for msg in messages:
             self.onMessage(msg)
 
@@ -54,8 +57,22 @@ class DragonflyNode(object):
 
     def recv(self):
         #log.info('receiving...')
-        self.other.settimeout(0.05)
-        return unicode(self.other.recv(4096), 'utf-8')            
+        self.other.setblocking(0)
+        buf = []
+        received = True
+        try:
+            while received:
+                received = unicode(self.other.recv(4096 * 1000), 'utf-8')
+                buf.append(received)
+                # log.info("received: %s" % received)
+        except socket.error as e:
+            if e.errno == errno.EWOULDBLOCK:
+                pass
+            else:
+                raise
+            
+        # log.info("buf: [%s]" % buf)
+        return u''.join(buf)
 
     def cleanup(self):
         if self.other is not None:
