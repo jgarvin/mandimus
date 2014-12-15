@@ -15,6 +15,7 @@ import grammar
 import rules.BaseRules as BaseRules
 import socket
 import errno
+from Window import getFocusedWindow
 
 EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
 alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
@@ -260,39 +261,3 @@ def updateCommandGrammar():
     #                   SelectCommand, "EmacsCommandMapping")
             
 
-class EmacsCommandWatcher(object):
-    cmd = None
-    allowError = False
-    inFrame = True
-    eventType = None
-    interval = 1
-    onTimer = True
-    onFocus = True
-    
-    def __init__(self):
-        self.output = None
-        if self.onTimer:
-            EventLoop.getLoop().subscribeTimer(self.interval, self.update, priority=0)
-        if self.onFocus:
-            EventLoop.getLoop().subscribeEvent(FocusChangeEvent, self.update, priority=0)
-
-    def _postProcess(self, output):
-        lst = grammar.getStringList(output)
-        lst.sort()
-        return lst
-
-    def update(self, ev=None):
-        if self._contextMatch:
-            log.debug(self.cmd)
-            newOutput = runEmacsCmd(self.cmd, inFrame=self.inFrame, allowError=self.allowError)
-            newOutput = self._postProcess(newOutput)
-        else:
-            newOutput = "nil"
-
-        if newOutput == self.output:
-            return
-        self.output = newOutput
-        EventLoop.getLoop().put(self.eventType(newOutput))
-
-    def _contextMatch(self, window):
-        return window and Emacs.activeForWindow(window)

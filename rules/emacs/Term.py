@@ -17,6 +17,8 @@ from rules.emacs.Base import EmacsBase
 
 @registerRule
 class Term(EmacsBase):
+    majorMode = "term-mode"
+
     mapping = {
         "line mode" : Key("c-c,c-j"),
         "care mode" : Key("c-c,c-k"),

@@ -11,10 +11,10 @@ class Lisp(EmacsBase):
     majorMode = "emacs-lisp-mode"
     
     mapping = {
-        "conned"        : EmacsText("cond", lower=False),
-        "cooder"        : EmacsText("cdr", lower=False),
-        "set Q"         : EmacsText("setq", lower=False),
-        "set Q default" : EmacsText("setq-default", lower=False),
+        "key conned"        : EmacsText("cond", lower=False),
+        "key cooder"        : EmacsText("cdr", lower=False),
+        "key set Q"         : EmacsText("setq", lower=False),
+        "key set Q default" : EmacsText("setq-default", lower=False),
     }
 
 mainWords = {
@@ -48,7 +48,7 @@ mainWords = {
     "progn",
     "provide",
     "require",
-    #"quote",
+    "quote",
     "save-current-buffer",
     "save-excursion",
     "save-restriction",
@@ -56,7 +56,7 @@ mainWords = {
     "unless",
     "unwind-protect",
     "with-selected-frame",
-    #"when",
+    "when",
     "while",
 }
-Lisp.mapping.update({i : EmacsText("%s" % i, lower=False) for i in mainWords})
+Lisp.mapping.update({"key " + i : EmacsText("%s" % i, lower=False) for i in mainWords})

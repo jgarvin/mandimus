@@ -57,7 +57,7 @@ class AlwaysRule(SeriesMappingRule):
         'rep [<n>]'                                : Repeat(),
         "[control] [alt] [shift] <charrule> [<n>]" : PressKey(),
         'scoot [<n>]'                              : Key("tab:%(n)d"),
-        'tooks [<n>]'                              : Key("s-tab:%(n)d"),
+        'shift scoot [<n>]'                        : Key("s-tab:%(n)d"),
     }
 
     charref = RuleRef(CharRule, "charrule")

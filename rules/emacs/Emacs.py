@@ -13,7 +13,8 @@ from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from rules.emacs.Cmd import Cmd, runEmacsCmd, EmacsCommandWatcher, toggleCommandLogging, Minibuf, toggleCommandClient
+from rules.emacs.Cmd import Cmd, runEmacsCmd, toggleCommandLogging, Minibuf, toggleCommandClient
+from rules.emacs.CommandWatcher import EmacsCommandWatcher
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
@@ -131,8 +132,8 @@ selectors.append(SelectProjectFile())
 class WordWatcher(EmacsCommandWatcher):
     #cmd = "(md-get-buffer-words)"
     #cmd = "(md-safe-get-symbols (window-start) (window-end))"
-    # cmd = "(md-safe-get-symbols (point-min) (point-max))"
-    cmd = "(md-safe-get-symbols-frequency (point-min) (point-max))"
+    cmd = "(md-safe-get-symbols (point-min) (point-max))"
+    #cmd = "(md-safe-get-symbols-frequency (point-min) (point-max))"
     # cmd = "(md-safe-get-symbols-frequency (window-start) (window-end))"
     eventType = EventList.EmacsWordEvent
 
@@ -147,8 +148,6 @@ class WordWatcher(EmacsCommandWatcher):
         # filter unicode
         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
         lst = [x for x in lst if self.filter(x)]
-        # log.info(lst)
-        # log.info(len(lst))
         return lst
 
 watchers.append(WordWatcher())

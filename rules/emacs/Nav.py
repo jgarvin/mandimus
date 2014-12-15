@@ -6,7 +6,7 @@ from rules.Elements import Dictation, Integer
 from rules.MappingRule import MappingRule
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd, EmacsCommandWatcher
+from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText

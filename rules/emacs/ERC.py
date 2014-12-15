@@ -8,7 +8,8 @@ from EventList import FocusChangeEvent
 from rules.Elements import Dictation, Integer
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd, EmacsCommandWatcher
+from rules.emacs.Cmd import runEmacsCmd, Cmd
+from rules.emacs.CommandWatcher import EmacsCommandWatcher
 from rules.Rule import registerRule
 from rules.emacs.grammar import updateListGrammar, getStringList
 from rules.emacs.Text import EmacsText
@@ -20,6 +21,9 @@ from rules.emacs.Base import EmacsBase
 class NickWatcher(EmacsCommandWatcher):
     cmd = "(md-get-active-erc-nicknames)"
     eventType = EventList.NickEvent
+
+    def _contextMatch(self, window):
+        return window and ERC.activeForWindow(window)
 
 watchers = []
 watchers.append(NickWatcher())
@@ -63,3 +67,4 @@ class ERC(EmacsBase):
         "slash me [<text>]"   : EmacsText("/me %(text)s"),
         "slash message"       : EmacsText("/msg"),
     }
+
