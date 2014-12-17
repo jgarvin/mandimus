@@ -10,7 +10,7 @@ import subprocess
 from Actions import Action, Key, Text
 import EventLoop
 from EventLoop import getLoop
-from EventList import FocusChangeEvent
+from EventList import FocusChangeEvent, EmacsConnectedEvent
 import grammar
 import rules.BaseRules as BaseRules
 import socket
@@ -49,6 +49,7 @@ class CommandClient(object):
         try:
             self.sock.connect(("localhost", 23233))
             log.info("Connected to emacs!")
+            getLoop().put(EmacsConnectedEvent())
             return True
         except socket.error as e:
             log.error("Error connecting to emacs: %s" % e)

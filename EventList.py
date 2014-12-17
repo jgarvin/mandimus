@@ -5,13 +5,14 @@ MicrophoneEvent = namedtuple("MicrophoneEvent", "state")
 RuleMatchEvent = namedtuple("RuleMatchEvent", "rule, extras")
 FocusChangeEvent = namedtuple("FocusChangeEvent", "window") 
 WindowListEvent = namedtuple("WindowListEvent", "windows") 
-WordEvent = namedtuple("WordEvent", "words") 
+WordEvent = namedtuple("WordEvent", "words")
+EmacsConnectedEvent = namedtuple("EmacsConnectedEvent", [])
 
 # choice events
 BufferListEvent = namedtuple("BufferListEvent", "choices") 
 ProjectFileListEvent = namedtuple("BufferListEvent", "choices") 
-NickEvent = namedtuple("NickEvent", "choices") 
-EmacsWordEvent = namedtuple("EmacsWordEvent", "choices") 
+NickEvent = namedtuple("NickEvent", "choices")
+EmacsWordEvent = namedtuple("EmacsWordEvent", "choices")
 
 class DisconnectedEvent(object): pass
 class ConnectedEvent(object): pass
