@@ -2,7 +2,7 @@
 
 
 while true; do
-    sleep 3
+    sleep 1
     kill -9 $(jobs -p)
     rm **/*.pyc
     rm ~/dragonshare/NatLink/NatLink/MacroSystem/*.pyc

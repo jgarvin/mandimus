@@ -21,8 +21,6 @@ class CUARule(SeriesMappingRule):
         "find next [<n>]"       : Key("F3:%(n)d"),
         "leaf [<n>]"            : Key("pgdown:%(n)d"),
         "feel [<n>]"            : Key("pgup:%(n)d"),
-        # "paid [<n>]"            : Key("pgup:%(n)d"),
-        # "page [<n>]"            : Key("pgdown:%(n)d"),
         "home"                  : Key("home"),
         "edge"                  : Key("end"),
         "left [<n>]"            : Key("left:%(n)d"),

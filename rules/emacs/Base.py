@@ -1,3 +1,6 @@
+import mdlog, os
+log = mdlog.getLogger(__name__)
+
 from rules.Elements import Dictation, Integer, RuleRef
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Cmd import runEmacsCmd
@@ -8,7 +11,7 @@ from EventList import FocusChangeEvent
 _majorMode = None
 def updateMajorMode(ev):
     global _majorMode
-    _majorMode = runEmacsCmd("major-mode").strip()
+    _majorMode = runEmacsCmd("major-mode")
     
 def getMajorMode():
     return _majorMode

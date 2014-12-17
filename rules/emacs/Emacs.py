@@ -13,7 +13,7 @@ from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
 from Events import GrammarEvent
 from util import deepEmpty
-from rules.emacs.Cmd import Cmd, runEmacsCmd, toggleCommandLogging, Minibuf, toggleCommandClient
+from rules.emacs.Cmd import Cmd, runEmacsCmd, toggleCommandLogging, Minibuf
 from rules.emacs.CommandWatcher import EmacsCommandWatcher
 from rules.emacs.Key import Key as EmacsKey
 from rules.emacs.grammar import updateListGrammar, getStringList
@@ -297,7 +297,6 @@ class EmacsMapping(MappingRule):
         "show top"                       : Cmd("(etc-start-or-open-top)"),
         "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
         "toggle command logging"         : toggleCommandLogging,
-        "toggle command client"          : toggleCommandClient,
         "toggle refresh client"          : toggleRefreshClientSources,
     }
 
@@ -356,6 +355,7 @@ class Emacs(EmacsBase):
         "help mode"                    : Key("c-h,m"),
         "help docks"                   : Key("c-h,d"),
         "help news"                    : Key("c-h,n"),
+        "help info"                    : Key("c-h,i"),
         
         # navigation commands
         "ace"                          : Key("c-c,space"),
@@ -372,8 +372,6 @@ class Emacs(EmacsBase):
         "per [<n>]"                    : Key("a-b:%(n)d"),
         "leaf [<n>]"                   : Key("c-v:%(n)d"),
         "feel [<n>]"                   : Key("a-v:%(n)d"),
-        # "paid [<n>]"                 : Key("a-v:%(n)d"),
-        # "page [<n>]"                 : Key("c-v:%(n)d"),
         "center"                       : Key("c-l"),
         "gruff [<n>]"                  : Key("c-up:%(n)d"),
         "graph [<n>]"                  : Key("c-down:%(n)d"),

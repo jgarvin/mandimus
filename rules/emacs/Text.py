@@ -28,8 +28,8 @@ class EmacsText(Text):
         # There's no good elisp way to handle putting characters into
         # the search box AFAIK. You can get text in there but giving it
         # focus disables search as you type.
-        inSearchMode = runEmacsCmd("isearch-mode").strip() != 'nil'
-        inMiniBuffer = '*Minibuf-' in runEmacsCmd("(with-current-buffer (buffer-name))").strip()
+        inSearchMode = runEmacsCmd("isearch-mode") != 'nil'
+        inMiniBuffer = '*Minibuf-' in runEmacsCmd("(with-current-buffer (buffer-name))")
         if inSearchMode or inMiniBuffer:
             Text._print(self, words)
         else:

@@ -51,7 +51,7 @@ class Window(object):
             "WM_ICON_NAME",
             "WM_CLASS",
             "WM_WINDOW_ROLE"
-        ]                    
+        ]
 
         self.xpropJob = Xprop(self.winId, properties)
         self.xpropResult = None

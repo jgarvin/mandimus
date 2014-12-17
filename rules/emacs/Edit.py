@@ -55,6 +55,6 @@ class EditRules(EmacsBase):
         "buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 ?%s)"),
         "flip [<n>]"            : Cmd("(transpose-sexps 1)"),
         "pilf [<n>]"            : Cmd("(transpose-sexps -1)"),
-        "lift [<n>]"            : Key("a-up:%(n)d"),
+        "rise [<n>]"            : Key("a-up:%(n)d"),
         "drop [<n>]"            : Key("a-down:%(n)d"),
     }

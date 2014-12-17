@@ -33,7 +33,7 @@ class SelectNick(SelectOption.SelectOption):
     eventType = EventList.NickEvent
     
     def _select(self, choice):
-        if runEmacsCmd("(md-at-start-of-erc-input-line)").strip() == 't':
+        if runEmacsCmd("(md-at-start-of-erc-input-line)") == 't':
             # we're addressing them, include the colon
             EmacsText("%s: " % choice, lower=False, capitalCheck=False)()
         else:

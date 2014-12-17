@@ -68,6 +68,7 @@ class PairCmd(Cmd):
 class PairRule(EmacsBase):
     mapping  = {
         "<sexpFunction> [<sexpPair>] [<n>]" : PairCmd(),
+        "rewrap" : Cmd("(sp-rewrap-sexp)"),
     }
 
     sexpPairRef = RuleRef(SexpPairs, "sexpPair")

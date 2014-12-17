@@ -28,7 +28,6 @@ def toggleCommandLogging(*args):
     global logCommands
     logCommands = not logCommands
 
-
 class CommandClient(object):
     def __init__(self):
         self.sock = None
@@ -71,7 +70,7 @@ class CommandClient(object):
                 log.error(str(e))
                 return False
         except socket.error as e:
-            log.info("Socket error: %s" % e)
+            log.info("Socket error while sending: %s" % e)
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
                 self.dumpOther()
                 return False
@@ -82,6 +81,28 @@ class CommandClient(object):
             self.dumpOther()
             raise
 
+    def recvMsg(self):
+        self.sock.settimeout(None)
+        out = ""
+
+        try:
+            while "\n" not in out:
+                # print "in recv loop"
+                out += unicode(self.sock.recv(4096), 'utf-8')
+        except socket.error as e:
+            log.info("Socket error while receiving: %s" % e)
+            if e.errno == errno.EPIPE or e.errno == errno.EBADF:
+                self.dumpOther()
+                return False
+            else:
+                raise
+        except Exception as e:
+            log.info("Unknown error while receiving: %s" % e)
+            self.dumpOther()
+            raise
+            
+        return out
+
     def runCmd(self, command, inFrame=True, dolog=False, allowError=False):
         """Run command optionally in particular frame,
         set True for active frame."""
@@ -89,7 +110,7 @@ class CommandClient(object):
         if not self.sock:
             if not self.tryConnect():
                 log.error("Can't run command, not connected: [%s]" % command)
-                return
+                return "nil"
 
         # have to escape percent signs so python doesn't process them
         command = command.replace("%", "%%")
@@ -119,69 +140,18 @@ class CommandClient(object):
         if not self.sendMsg(command):
             log.info("Couldn't send message: [%s]" % command)
             return "nil"
-        out = ""
-        #self.sock.settimeout()
-        while "\n" not in out:
-            # print "in recv loop"
-            out += unicode(self.sock.recv(4096), 'utf-8')
+
+        out = self.recvMsg()
             
         if dolog or logCommands:
             log.info('emacs output: [%s]' % out)
         return out.rstrip() # delete trailing new line
 
 clientInst = CommandClient()
-useCommandClient = True
 
-def toggleCommandClient(extras={}):
-    global useCommandClient, clientInst
-    useCommandClient = not useCommandClient
-    
 def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
-    global useCommandClient, clientInst
-    if useCommandClient:
-        return clientInst.runCmd(command, inFrame, dolog, allowError)
-
-    """Run command optionally in particular frame,
-    set True for active frame."""
-    args = []
-    args += [EMACSCLIENT]
-    args += ['-e']
-
-    # have to escape percent signs so python doesn't process them
-    command.replace("%", "%%")
-
-    # without this C-g can interrupt the running code
-    # with this any cancels are deferred until after
-    #wrapper = "(let ((md-inhibit-quit t) (inhibit-quit t)) %s)"
-    # wrapper = "(let ((redisplay-dont-pause nil) (redisplay-preemption-period nil)) %s)"
-    wrapper = "%s" # inhibit-quit doesn't seem to work
-    if allowError:
-        wrapper %= '(condition-case err %s (error nil))'
-    else:
-        wrapper %= '(condition-case err %s (error (message (concat "Mandimus error: " (error-message-string err))) nil))'
-
-    if inFrame:
-        cmd = '(with-current-buffer %s %s)'
-        command = cmd % ("(window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window)))", command)
-
-    args += [wrapper % command]
-    if dolog or logCommands:
-        log.info('emacs cmd: ' + str(args))
-
-    s = subprocess.Popen(args, shell=False,
-                         #stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE)
-                         #stderr=subprocess.PIPE)
-    (out, err) = s.communicate()
-
-    if dolog or logCommands:
-        log.info('emacs output: [%s]' % out)
-        log.info('emacs error: [%s]' % err)
-
-    if err:
-        log.info("Emacs error!: " + err)
-        log.error(''.join(traceback.format_stack()))
-    return out
+    global clientInst
+    return clientInst.runCmd(command, inFrame, dolog, allowError)
 
 class Minibuf(Action):
     def __call__(self, extras={}):

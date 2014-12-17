@@ -136,8 +136,15 @@ class MainThread(object):
         for t in self.timers:
             if now >= t.nextExpiration:
                 t.nextExpiration = now + t.seconds
-                t.callback()
-    
+                try:
+                    t.callback()
+                except KeyboardInterrupt:
+                    raise
+                except Exception:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+                    continue
+                    
     def onFocusChange(self, ev):
         log.debug("Focus change")
         self.determineRules(ev.window)
@@ -160,7 +167,14 @@ class MainThread(object):
     def processEvent(self, ev):
         if type(ev) in self.eventSubscribers:
             for h in self.eventSubscribers[type(ev)]:
-                h[1](ev)
+                try:
+                    h[1](ev)
+                except KeyboardInterrupt:
+                    raise
+                except Exception as e:
+                    exc_type, exc_value, exc_traceback = sys.exc_info()
+                    log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+                    continue
 
     def drainEvents(self):
         try:

@@ -42,7 +42,6 @@ def updateListGrammar(lst, leadingTerm, action, clsname, filterFunction,
     return LocalMapping
 
 def getStringList(output):
-    output = output.strip()
     if output == "nil":
         return []
     output = re.findall('"[^"]*"', output)

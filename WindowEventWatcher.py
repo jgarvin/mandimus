@@ -31,11 +31,14 @@ class WindowEventWatcher(object):
     def getEvents(self):
         events = []
         windowList = self.nextWindowList.result # force finishing        
-        windowList = filter(self.filterFunc, windowList)
 
         for window in windowList:
             if time.time() - window.lastXpropTime > REFRESH_TIME:
                 window.refreshInfo()        
+
+        # we only do filtering after refreshing, because otherwise
+        # once a window is filtered it will stay filtered forever
+        windowList = filter(self.filterFunc, windowList)
 
         newWindowList = self.extractList(windowList)
         if self.previousWindowList != newWindowList:

@@ -27,5 +27,6 @@ class ProfilingRule(EmacsBase):
         "instrument restore"     : Minibuf("elp-restore-function"),          
         "instrument restore all" : Minibuf("elp-restore-all"),      
         "instrument master"      : Minibuf("elp-set-master"),         
-        "instrument package"     : Minibuf("elp-instrument-package"),          
+        "instrument package"     : Minibuf("elp-instrument-package"),
+        "macro expand"           : Minibuf("macroexpand-point"),
     }
