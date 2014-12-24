@@ -67,4 +67,3 @@ class ERC(EmacsBase):
         "slash me [<text>]"   : EmacsText("/me %(text)s"),
         "slash message"       : EmacsText("/msg"),
     }
-

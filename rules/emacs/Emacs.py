@@ -387,7 +387,7 @@ class Emacs(EmacsBase):
 
         # mark commands
         "mark [(line | word | graph)]" : Mark(),
-        "tark"                         : Cmd("(exchange-point-and-mark)"),
+        "exchange"                     : Cmd("(exchange-point-and-mark)"),
         "select [<n>]"                 : Key("c-equal:%(n)d"),
         "contract"                     : Key("a-equal"),
         

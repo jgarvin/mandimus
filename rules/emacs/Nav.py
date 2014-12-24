@@ -35,6 +35,8 @@ class NavRules(EmacsBase):
         "miss <charrule> [<n>]" : CharCmd("(md-move-up-to-symbol-starting-with-char -1 ?%s)"),
         "line <charrule> [<n>]" : CharCmd("(md-find-line-starting-with-char 1 ?%s)"),
         "Nile <charrule> [<n>]" : CharCmd("(md-find-line-starting-with-char -1 ?%s)"),
+        "store <charrule>"      : CharCmd("(point-to-register ?%s)"),
+        "load <charrule>"       : CharCmd("(jump-to-register ?%s)"),
     }
 
     

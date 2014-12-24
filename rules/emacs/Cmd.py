@@ -116,21 +116,19 @@ class CommandClient(object):
         # have to escape percent signs so python doesn't process them
         command = command.replace("%", "%%")
 
-        # without this C-g can interrupt the running code
-        # with this any cancels are deferred until after
-        #wrapper = "(let ((md-inhibit-quit t) (inhibit-quit t)) %s)"
-        # wrapper = "(let ((redisplay-dont-pause nil) (redisplay-preemption-period nil)) %s)"
-        wrapper = "%s" # inhibit-quit doesn't seem to work
+        wrapper = ["{}"]
+
         if allowError:
-            wrapper %= '(condition-case err %s (error nil))'
+            wrapper += ['(condition-case err {} (error nil))']
         else:
-            wrapper %= '(condition-case err %s (error (message (concat "Mandimus error: " (error-message-string err))) nil))'
+            wrapper += ['(condition-case err {0} (error (message "Mandimus error: [%S] in [%S]" (error-message-string err) "{0}") nil))']
 
         if inFrame:
-            wrapper %= "(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) %s)"
+            wrapper += ['(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) {})']
 
-        command = wrapper % command
-
+        for w in reversed(wrapper):
+            command = w.format(command)
+            
         # have to delete newlines since they're the protocol delimeter
         command = command.replace("\n", "")
 
@@ -142,11 +140,11 @@ class CommandClient(object):
             log.info("Couldn't send message: [%s]" % command)
             return "nil"
 
-        out = self.recvMsg()
+        out = self.recvMsg().rstrip()
             
         if dolog or logCommands:
             log.info('emacs output: [%s]' % out)
-        return out.rstrip() # delete trailing new line
+        return out
 
 clientInst = CommandClient()
 

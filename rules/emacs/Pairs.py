@@ -43,6 +43,8 @@ class SexpFunctions(MappingRule):
         "gulp"            : "sp-backward-slurp-sexp",
         "barf"            : "sp-forward-barf-sexp",
         "chuck"           : "sp-backward-barf-sexp",
+        "strip"           : "sp-splice-sexp",
+        "split"           : "sp-split-sexp",
     }
 
 class PairCmd(Cmd):
@@ -62,7 +64,7 @@ class PairCmd(Cmd):
 
         if pair:
             return "(single-pair-only-sexp \"%s\" '%s)" % (pair, func)
-        return "(%s)" % func
+        return "(call-interactively '%s)" % func
 
 @registerRule
 class PairRule(EmacsBase):

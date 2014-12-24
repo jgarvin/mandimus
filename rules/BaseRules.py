@@ -71,7 +71,7 @@ class SymRule(MappingRule):
         "cusp"        : "semicolon",
         "point"       : "period",
         "arg"         : "comma",
-        "tilde"       : "tilde",
+        "squiggle"    : "tilde",
         "soot"        : "squote",
         "quote"       : "dquote",
         "lesser"      : "langle",
