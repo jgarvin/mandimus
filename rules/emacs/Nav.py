@@ -23,7 +23,7 @@ from Window import getFocusedWindow
 @registerRule
 class NavRules(EmacsBase):
     mapping = {
-        "go <charrule> [<n>]"   : CharCmd("(md-move-up-to-char 1 ?%s)"),
+        "go <charrule> [<n>]"   : CharCmd("(md-move-up-to-char 1 ?%s)", log=True),
         "og <charrule> [<n>]"   : CharCmd("(md-move-up-to-char -1 ?%s)"),
         "tuck [<n>]"            : Cmd("(md-find-indentation-change 1 '>)"),
         "snug [<n>]"            : Cmd("(md-find-indentation-change -1 '>)"),

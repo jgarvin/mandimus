@@ -113,8 +113,9 @@ class CommandClient(object):
                 log.error("Can't run command, not connected: [%s]" % command)
                 return "nil"
 
-        # have to escape percent signs so python doesn't process them
-        command = command.replace("%", "%%")
+        # have to escape so python doesn't process them
+        # command = command.replace("{", "{{")
+        # command = command.replace("}", "}}")
 
         wrapper = ["{}"]
 
@@ -194,7 +195,9 @@ class CharCmd(Cmd):
         word = extras['words'].split()[1]
         if word == "num":
             word = extras['words'].split()[2]
-        char = BaseRules.CharRule.lookup(word)
+        # most characters don't need escaping, but some do
+        # and when it's not necessary it's harmless
+        char = "\\" + BaseRules.CharRule.lookup(word)
         return self.data % char
 
 getCommandsEl = """

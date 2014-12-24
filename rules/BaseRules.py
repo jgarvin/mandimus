@@ -90,7 +90,7 @@ class SymRule(MappingRule):
     }
 
     literalMapping = {
-        "backtick"    : "``",
+        "backtick"    : "`",
         "backslash"   : "\\",
         "equal"       : "=",
         "slash"       : "/",
