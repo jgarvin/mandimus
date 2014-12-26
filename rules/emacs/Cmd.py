@@ -29,6 +29,8 @@ def toggleCommandLogging(*args):
     logCommands = not logCommands
 
 class CommandClient(object):
+    EMACS_TIMEOUT = 5
+    
     def __init__(self):
         self.sock = None
         self.sock = self.makeSocket()
@@ -63,7 +65,7 @@ class CommandClient(object):
 
     def sendMsg(self, msg):
         try:
-            self.sock.settimeout(None)
+            self.sock.settimeout(self.EMACS_TIMEOUT)
             try:
                 self.sock.sendall((msg + "\n").encode('utf-8'))
                 return True
@@ -83,7 +85,7 @@ class CommandClient(object):
             raise
 
     def recvMsg(self):
-        self.sock.settimeout(None)
+        self.sock.settimeout(self.EMACS_TIMEOUT)
         out = ""
 
         try:
@@ -121,8 +123,6 @@ class CommandClient(object):
 
         if allowError:
             wrapper += ['(condition-case err {} (error nil))']
-        else:
-            wrapper += ['(condition-case err {0} (error (message "Mandimus error: [%S] in [%S]" (error-message-string err) "{0}") nil))']
 
         if inFrame:
             wrapper += ['(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) {})']
@@ -195,9 +195,10 @@ class CharCmd(Cmd):
         word = extras['words'].split()[1]
         if word == "num":
             word = extras['words'].split()[2]
+        char = BaseRules.CharRule.lookup(word)
         # most characters don't need escaping, but some do
-        # and when it's not necessary it's harmless
-        char = "\\" + BaseRules.CharRule.lookup(word)
+        if char in " \n\t()\\|;'`\"#.,\a\b\f\r":
+            char = "\\" + char
         return self.data % char
 
 getCommandsEl = """

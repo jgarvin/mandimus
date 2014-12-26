@@ -15,7 +15,7 @@ def getEmacsList(x):
 _majorMode = None
 def updateMajorMode(ev):
     global _majorMode
-    _majorMode = runEmacsCmd("(cons major-mode (loop as m = major-mode then p while m as p = (get m 'derived-mode-parent) collect p))", dolog=True)
+    _majorMode = runEmacsCmd("(cons major-mode (loop as m = major-mode then p while m as p = (get m 'derived-mode-parent) collect p))")
     _majorMode = getEmacsList(_majorMode)
     
 def getMajorMode():

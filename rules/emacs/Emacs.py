@@ -117,9 +117,10 @@ openProjetileFileEl = """
 class SelectProjectFile(EmacsOption):
     leadingTerm = "file"
     eventType = EventList.ProjectFileListEvent
+    #classLog = True
     
     def _currentChoice(self):
-        return currentBuffer()
+        return runEmacsCmd("(file-relative-name (buffer-file-name) (projectile-project-root))").strip("\"")
 
     def _select(self, choice):
         runEmacsCmd(openProjetileFileEl % choice)
@@ -237,7 +238,7 @@ class EmacsMapping(MappingRule):
         "go to line <line>"              : Key("a-g,a-g") + Text("%(line)d") + Key("enter"),
         
         # window commands
-        "kill window"                    : Cmd("(delete-window)"),
+        "destroy emacs window"           : Cmd("(delete-window)"),
 
         "new frame [<n>]"                : Cmd("(make-frame-command)"),
         "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
@@ -245,7 +246,7 @@ class EmacsMapping(MappingRule):
         "search [<text>]"                : Key('c-s') + Text("%(text)s"),
         "lurch [<text>]"                 : Key('c-r') + Text("%(text)s"),
         "list buffs"                     : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
-#"(projectile-project-root)"
+
         # projectile commands
         "project"                        : Key("c-c,p,p"),
         "open file"                      : Key("c-c,p,f"),
@@ -276,7 +277,7 @@ class EmacsMapping(MappingRule):
 
         # buffer commands
         "switch (buff | buffer)"         : Key("c-x, b"),
-        "kill buff"                      : Key("c-x,k,enter"),
+        "destroy buff"                   : Key("c-x,k,enter"),
         "folder"                         : Key("c-x,c-j"),
 
         "replace"                        : Key('as-percent'),
@@ -364,9 +365,9 @@ class Emacs(EmacsBase):
         "home"                         : Key("c-a"),
         "edge"                         : Key("c-e"),
         "cliff"                        : Cmd("(md-go-to-cliff)"),
-        "top"                          : Key("a-langle"),
+        "top side"                     : Key("a-langle"),
         "bottom"                       : Key("a-rangle"),
-        "window top"                   : Cmd("(goto-char (window-start))"),
+        "window top side"              : Cmd("(goto-char (window-start))"),
         "window bottom"                : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
         "post [<n>]"                   : Key("a-f:%(n)d"),
         "per [<n>]"                    : Key("a-b:%(n)d"),

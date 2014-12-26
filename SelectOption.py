@@ -22,6 +22,7 @@ class SelectOption(Actions.Action):
     interval = 1
     eventType = None
     priority = 1
+    classLog = False
     
     def __init__(self):
         Actions.Action.__init__(self)
@@ -109,26 +110,32 @@ class SelectOption(Actions.Action):
         for k, v in self.spokenForms.items():
             scores[k] = -1
             for form in v:
-                log.debug(form)
+                if self.classLog:
+                    log.info(form)
                 # We need a copy because we're going to remove
                 # words as we find them, so that we can match
                 # better when the same word occurs twice, e.g.
                 # foo/foo.py should get matched if you say
                 # "foo foo py" instead of rules/foo.py
                 f = copy(form)
-                matches = 0.0
+                matches = 0
                 for word in words:
-                    log.debug("matches: %f" % matches)
+                    if self.classLog:
+                        log.info("matches: %f" % matches)
                     # this still ignores relative ordering
                     # of different words
                     if word in f:
-                        log.debug("match %s in %s" % (word, f))
-                        matches += 1
+                        if self.classLog:
+                            log.info("match %s in %s" % (word, f))
+                        if matches:
+                            matches *= 2.5
+                        else:
+                            matches = 1
                         f.remove(word)
-                    else:
-                        matches = max(matches - 1, 0.0) 
-                score = matches / max(len(form), len(words))
+                score = float(matches) / max(len(form), len(words))
                 scores[k] = max(score, scores[k])
+                if self.classLog:
+                    log.info("Score for [%s] calc: [%f / max(%d, %d)]: %f" % (form, matches, len(form), len(words), score))
 
         counter = scores.items()
         counter.sort(key=lambda x: x[1], reverse=True)
@@ -138,6 +145,7 @@ class SelectOption(Actions.Action):
         ties = []
         for c in counter:
             if c[1] == first[1]:
+                log.info("adding tie %s" % str(c))
                 ties.append(c)
             else:
                 break
@@ -151,9 +159,13 @@ class SelectOption(Actions.Action):
         # cycling the choices
         ties.sort(key=self._tieSorter())
         currentChoice = self._currentChoice()
+        log.info("sorted ties: %s" % ties)
+        log.info("current choice: %s" % currentChoice)
         for i, t in enumerate(ties):
+            log.info("comparing %s %s: %s" % (t[0], currentChoice, t[0] == currentChoice))
             if t[0] == currentChoice:
                 bestpick = ties[(i+1) % len(ties)][0]
+                log.info("Matched, cycling to %s" % bestpick)
                 break
 
         # if none is selected, then rely on history

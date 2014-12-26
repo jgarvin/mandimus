@@ -6,9 +6,15 @@ from Elements import Integer, Dictation
 
 class WebSearch(Action):
     def __call__(self, extras={}):
+        text = self.data
+        if self.data:
+            text += " "
+        # go to address bar, deleting existing text
         (Key("c-l, c-a, backspace")
-         + Text(self.data + (" %(text)s" % extras))
-         + Key("enter"))()
+         # enter the text
+         + Text(text + (" %(text)s" % extras))
+         # delete any autocomplete results off the end and enter
+         + Key("delete, enter"))()
 
 @registerRule
 class ChromeSearch(MappingRule):
@@ -23,7 +29,7 @@ class ChromeSearch(MappingRule):
         "game facks [<text>]"           : WebSearch("gfaqs"),
         "images [<text>]"               : WebSearch("im"),
         "stack overflow [<text>]"       : WebSearch("so"),
-        "search <text>"                 : Key("c-l, c-a, backspace") + Text("%(text)s") + Key("enter"),
+        "search <text>"                 : WebSearch(""),
     }
 
     extras = [
