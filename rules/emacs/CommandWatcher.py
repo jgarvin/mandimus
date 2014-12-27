@@ -57,6 +57,7 @@ class EmacsCommandWatcher(object):
         window = ev.window if ev else getFocusedWindow()
         if self._contextMatch(window):
             log.debug(self.cmd)
+            log.debug("Watcher going to run: [%s]" % self.cmd)
             newOutput = runEmacsCmd(self.cmd, inFrame=self.inFrame,
                                     allowError=self.allowError,
                                     dolog=(self.logCommands or self.allEnabledLog))

@@ -144,8 +144,10 @@ class SelectOption(Actions.Action):
         first = counter[0]
         ties = []
         for c in counter:
-            if c[1] == first[1]:
-                log.info("adding tie %s" % str(c))
+            # not really ties anymore, just everything with at least 1 match
+            if c[1] > 0:
+                if self.classLog:
+                    log.info("adding tie %s" % str(c))
                 ties.append(c)
             else:
                 break
@@ -159,13 +161,16 @@ class SelectOption(Actions.Action):
         # cycling the choices
         ties.sort(key=self._tieSorter())
         currentChoice = self._currentChoice()
-        log.info("sorted ties: %s" % ties)
-        log.info("current choice: %s" % currentChoice)
+        if self.classLog:
+            log.info("sorted ties: %s" % ties)
+            log.info("current choice: %s" % currentChoice)
         for i, t in enumerate(ties):
-            log.info("comparing %s %s: %s" % (t[0], currentChoice, t[0] == currentChoice))
+            if self.classLog:
+                log.info("comparing %s %s: %s" % (t[0], currentChoice, t[0] == currentChoice))
             if t[0] == currentChoice:
                 bestpick = ties[(i+1) % len(ties)][0]
-                log.info("Matched, cycling to %s" % bestpick)
+                if self.classLog:
+                    log.info("Matched, cycling to %s" % bestpick)
                 break
 
         # if none is selected, then rely on history

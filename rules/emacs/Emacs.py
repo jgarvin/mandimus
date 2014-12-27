@@ -87,22 +87,30 @@ selectors.append(SelectChannel())
 selectors.append(SelectSpecial())
 selectors.append(SelectTerminal())
 
+class ProjectWatcher(EmacsCommandWatcher):
+    cmd = "(projectile-relevant-known-projects)"
+    allowError = True
+    eventType = EventList.ProjectListEvent
+    logCommands = True
 
-# class SelectProject(SelectChoice):
-#     @classmethod
-#     def getChoices(cls):
-#         buffs = runEmacsCmd("(projectile-relevant-known-projects)", inFrame=False)
-#         return getStringList(buffs)
-        
-#     def _currentChoice(self):
-#         return runEmacsCmd("(projectile-project-name)")
+watchers.append(ProjectWatcher())
 
-#     def _select(self, choice):
-#         runEmacsCmd("(projectile-switch-project-by-name \"%s\")" % choice)
+class SelectProject(EmacsOption):
+    leadingTerm = "project"
+    eventType = EventList.ProjectListEvent
+    classLog = True
 
-#     def _noChoice(self):
-#         # TODO
-#         pass
+    def _currentChoice(self):
+        return runEmacsCmd("(projectile-project-name)").strip("\"")
+
+    def _select(self, choice):
+        runEmacsCmd("(projectile-switch-project-by-name \"%s\")" % choice)
+
+    def _noChoice(self):
+        Key("c-c,p,p,enter")()
+
+selectors.append(SelectProject())
+
 class ProjectFileWatcher(EmacsCommandWatcher):
     cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
     allowError = True
@@ -117,7 +125,6 @@ openProjetileFileEl = """
 class SelectProjectFile(EmacsOption):
     leadingTerm = "file"
     eventType = EventList.ProjectFileListEvent
-    #classLog = True
     
     def _currentChoice(self):
         return runEmacsCmd("(file-relative-name (buffer-file-name) (projectile-project-root))").strip("\"")
@@ -248,7 +255,7 @@ class EmacsMapping(MappingRule):
         "list buffs"                     : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
 
         # projectile commands
-        "project"                        : Key("c-c,p,p"),
+        "switch project"                 : Key("c-c,p,p"),
         "open file"                      : Key("c-c,p,f"),
         "open folder"                    : Key("c-c,p,d"),
         "ack"                            : Key("c-c,p,s,a"),

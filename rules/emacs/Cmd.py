@@ -110,6 +110,9 @@ class CommandClient(object):
         """Run command optionally in particular frame,
         set True for active frame."""
 
+        if command is None:
+            raise Exception("Command must be a string.")
+
         if not self.sock:
             if not self.tryConnect():
                 log.error("Can't run command, not connected: [%s]" % command)

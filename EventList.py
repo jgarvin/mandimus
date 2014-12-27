@@ -10,6 +10,7 @@ EmacsConnectedEvent = namedtuple("EmacsConnectedEvent", [])
 
 # choice events
 BufferListEvent = namedtuple("BufferListEvent", "choices") 
+ProjectListEvent = namedtuple("ProjectListEvent", "choices") 
 ProjectFileListEvent = namedtuple("BufferListEvent", "choices") 
 NickEvent = namedtuple("NickEvent", "choices")
 EmacsWordEvent = namedtuple("EmacsWordEvent", "choices")
