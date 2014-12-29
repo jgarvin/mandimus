@@ -91,14 +91,12 @@ class ProjectWatcher(EmacsCommandWatcher):
     cmd = "(projectile-relevant-known-projects)"
     allowError = True
     eventType = EventList.ProjectListEvent
-    logCommands = True
 
 watchers.append(ProjectWatcher())
 
 class SelectProject(EmacsOption):
     leadingTerm = "project"
     eventType = EventList.ProjectListEvent
-    classLog = True
 
     def _currentChoice(self):
         return runEmacsCmd("(projectile-project-name)").strip("\"")
@@ -125,9 +123,10 @@ openProjetileFileEl = """
 class SelectProjectFile(EmacsOption):
     leadingTerm = "file"
     eventType = EventList.ProjectFileListEvent
+    classLog = True
     
     def _currentChoice(self):
-        return runEmacsCmd("(file-relative-name (buffer-file-name) (projectile-project-root))").strip("\"")
+        return runEmacsCmd("(when (md-current-path) (file-relative-name (md-current-path) (projectile-project-root))))").strip("\"")
 
     def _select(self, choice):
         runEmacsCmd(openProjetileFileEl % choice)

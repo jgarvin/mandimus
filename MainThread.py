@@ -283,6 +283,7 @@ if __name__ == "__main__":
     
     imports = [
         ('rules.Always', ['']),
+        ('rules.emacs.Belt', ['']),
         ('rules.emacs.Dired', ['']),
         ('rules.emacs.Emacs', ['']),
         ('rules.emacs.Python', ['']),

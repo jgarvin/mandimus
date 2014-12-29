@@ -7,24 +7,17 @@ from rules.Rule import registerRule
 from Actions import Text, Camel, Hyphen, Underscore, Action, FormatState
 from rules.Elements import Integer, Dictation
 
+def emacsBool(b):
+    if b:
+        return "t"
+    return "nil"
+
 class EmacsText(Text):
     def __init__(self, data, lower=True, capitalCheck=True):
         Text.__init__(self, data, lower=lower)
         self.capitalCheck = capitalCheck
 
     def _print(self, words):
-        needCapital = False
-        if self.capitalCheck:
-            needCapital = runEmacsCmd("(md-need-capitalization)") == 't'
-        spaceOutput = runEmacsCmd("(md-need-space \"%s\")" % words) 
-        needSpace = spaceOutput == 't'
-        if needCapital:
-            log.info('capitalize')
-            words = words[0].upper() + words[1:]
-        if needSpace:
-            log.info('need space')
-            words = ' ' + words
-        
         # There's no good elisp way to handle putting characters into
         # the search box AFAIK. You can get text in there but giving it
         # focus disables search as you type.
@@ -34,5 +27,5 @@ class EmacsText(Text):
             Text._print(self, words)
         else:
             runEmacsCmd("(undo-boundary)")
-            runEmacsCmd("(insert \"%s\")" % words)
+            runEmacsCmd("(md-insert-text \"%s\" %s %s)" % (words, "t", emacsBool(self.capitalCheck)), dolog=True)
             runEmacsCmd("(undo-boundary)")

@@ -144,8 +144,7 @@ class SelectOption(Actions.Action):
         first = counter[0]
         ties = []
         for c in counter:
-            # not really ties anymore, just everything with at least 1 match
-            if c[1] > 0:
+            if c[1] == first[1]:
                 if self.classLog:
                     log.info("adding tie %s" % str(c))
                 ties.append(c)
