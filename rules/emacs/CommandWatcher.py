@@ -74,24 +74,24 @@ class EmacsCommandWatcher(object):
         return window and EmacsBase.activeForWindow(window)
 
     @classmethod
-    def toggleAllWatchers(log):
-       cls.allEnabled = not cls.allEnabled
-       cls.info("Setting all watchers to: %s" % cls.allEnabled)
+    def toggleAllWatchers(cls):
+        cls.allEnabled = not cls.allEnabled
+        log.info("Setting all watchers to: %s" % cls.allEnabled)
 
     @classmethod
     def toggleAllWatchersLogging(cls):
-       cls.allEnabledLog = not cls.allEnabledLog
-       log.info("Setting all watchers logging to: %s" % cls.allEnabled)
+        cls.allEnabledLog = not cls.allEnabledLog
+        log.info("Setting all watchers logging to: %s" % cls.allEnabledLog)
 
     @classmethod
     def toggleLogging(cls):
         cls.logCommands = not cls.logCommands
-        log.info("Setting %s watcher logging to: %s" % (cls.__name__, cls.allEnabled))
+        log.info("Setting %s watcher logging to: %s" % (cls.__name__, cls.logCommands))
 
     @classmethod
     def toggleEnabled(cls):
         cls.enabled = not cls.enabled
-        log.info("Setting %s watcher to: %s" % (cls.__name__, cls.allEnabled))
+        log.info("Setting %s watcher to: %s" % (cls.__name__, cls.enabled))
         
 @registerRule
 class ToggleAllWatchers(MappingRule):
