@@ -24,14 +24,14 @@ class PressKey(object):
         keystring = []
         foundModifier = True
 
-        if self.force_shift and "shift" not in words:
-            words = ["shift"] + words
+        if self.force_shift and "cap" not in words:
+            words = ["cap"] + words
         
         numIndex = None
         repetitions = extras['n']
         for i, word in enumerate(words):
-            if word in ["control", "alt", "shift"]:
-                keystring.append(word[0])
+            if word in ["control", "alt", "cap"]:
+                keystring.append(word[0] if word != "cap" else "s") 
                 foundModifier = True
             elif word == "num":
                 continue
@@ -55,9 +55,9 @@ class AlwaysRule(SeriesMappingRule):
     mapping = {
         "command tally"                            : (lambda x: Speak(str(commandTally()))()),
         'rep [<n>]'                                : Repeat(),
-        "[control] [alt] [shift] <charrule> [<n>]" : PressKey(),
+        "[control] [alt] [cap] <charrule> [<n>]" : PressKey(),
         'scoot [<n>]'                              : Key("tab:%(n)d"),
-        'shift scoot [<n>]'                        : Key("s-tab:%(n)d"),
+        'cap scoot [<n>]'                        : Key("s-tab:%(n)d"),
     }
 
     charref = RuleRef(CharRule, "charrule")

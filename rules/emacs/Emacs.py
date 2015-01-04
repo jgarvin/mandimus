@@ -110,7 +110,8 @@ class SelectProject(EmacsOption):
 selectors.append(SelectProject())
 
 class ProjectFileWatcher(EmacsCommandWatcher):
-    cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
+    #cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
+    cmd = "md-projectile-files"
     allowError = True
     eventType = EventList.ProjectFileListEvent
 
@@ -137,11 +138,7 @@ class SelectProjectFile(EmacsOption):
 selectors.append(SelectProjectFile())
     
 class WordWatcher(EmacsCommandWatcher):
-    #cmd = "(md-get-buffer-words)"
-    #cmd = "(md-safe-get-symbols (window-start) (window-end))"
-    cmd = "(md-safe-get-symbols (point-min) (point-max))"
-    #cmd = "(md-safe-get-symbols-frequency (point-min) (point-max))"
-    # cmd = "(md-safe-get-symbols-frequency (window-start) (window-end))"
+    cmd = "(md-get-symbols)"
     eventType = EventList.EmacsWordEvent
 
     def filter(self, x):
@@ -363,6 +360,7 @@ class Emacs(EmacsBase):
         "help docks"                   : Key("c-h,d"),
         "help news"                    : Key("c-h,n"),
         "help info"                    : Key("c-h,i"),
+        "help syntax"                  : Key("c-h,s"),
         
         # navigation commands
         "ace"                          : Key("c-c,space"),

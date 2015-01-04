@@ -5,6 +5,7 @@ from rules.emacs.Text import EmacsText
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
 from rules.emacs.Base import EmacsBase
+import keyword
 
 @registerRule
 class Python(EmacsBase):
@@ -15,13 +16,9 @@ class Python(EmacsBase):
         "align list" : Cmd("(align-list)"),
         "mark block" : Cmd("(er/mark-python-block)"),
         "mark state" : Cmd("(er/mark-python-statement)"),
-        "True"       : EmacsText("True", lower=False),
-        "False"      : EmacsText("False", lower=False),
     }
 
-import keyword
-Python.mapping.update({"key " + i : EmacsText("%s" % i, lower=False) for i in keyword.kwlist})
-
-otherMainWords = {"True", "False", "set", "list", "dict", "None", "self", "print", "object",
-                  "reversed", "enumerate", "range"}
-Python.mapping.update({"key " + i : EmacsText("%s" % i, lower=False) for i in otherMainWords})
+    keywords = [
+        "True", "False", "set", "list", "dict", "None", "self", "print", "object",
+        "len", "reversed", "enumerate", "range", ["__init__", "init"],
+    ] + keyword.kwlist

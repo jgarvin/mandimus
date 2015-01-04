@@ -6,7 +6,8 @@ from rules.SeriesMappingRule import SeriesMappingRule
 from rules.emacs.Cmd import runEmacsCmd
 import rules.BaseRules as BaseRules
 from EventLoop import getLoop
-from EventList import FocusChangeEvent
+from EventList import FocusChangeEvent, EmacsConnectedEvent
+from rules.emacs.Text import EmacsText
 
 def getEmacsList(x):
     x = x.strip("()")
@@ -25,6 +26,7 @@ getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
 class EmacsBase(SeriesMappingRule):
     majorMode = None
+    keywords = []
 
     extras = [
         Integer("n", 2, 20),
@@ -38,8 +40,27 @@ class EmacsBase(SeriesMappingRule):
     defaults = {
         "n"    : 1,
         "text" : "",
-        }    
+        }
 
+    def __init__(self):
+        if self.majorMode and self.keywords:
+            getLoop().subscribeEvent(EmacsConnectedEvent, self.sendKeywords)
+
+        if self.keywords:
+            self.mapping.update({"key " + i[1] : EmacsText("%s" % i[0], lower=False) for i in self.keywordList})
+
+    def sendKeywords(self, ev):
+        if not self.keywords:
+            return
+        keywordString = "'(" + " ".join([("\"%s\"" % x[0]) for x in self.keywordList]) + ")"
+        # let emacs know what can already be written through voice commands
+        # so they get filtered from the belts and token lists
+        runEmacsCmd("(md-register-mode-keywords '%s %s)" % (self.majorMode, keywordString))
+
+    @property
+    def keywordList(self):
+        return [x if type(x) != str else (x, x) for x in self.keywords]
+    
     @classmethod
     def activeForWindow(cls, window):
         isemacs = "emacs" in window.wmclass or "Emacs" in window.wmclass
