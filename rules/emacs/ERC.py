@@ -19,7 +19,7 @@ from Window import getFocusedWindow
 from rules.emacs.Base import EmacsBase
 
 class NickWatcher(EmacsCommandWatcher):
-    cmd = "(md-get-active-erc-nicknames)"
+    cmd = "md-active-erc-nicknames"
     eventType = EventList.NickEvent
 
     def _contextMatch(self, window):

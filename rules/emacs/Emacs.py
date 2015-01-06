@@ -138,7 +138,7 @@ class SelectProjectFile(EmacsOption):
 selectors.append(SelectProjectFile())
     
 class WordWatcher(EmacsCommandWatcher):
-    cmd = "(md-get-symbols)"
+    cmd = "md-symbols-cache"
     eventType = EventList.EmacsWordEvent
 
     def filter(self, x):
@@ -440,6 +440,7 @@ class Emacs(EmacsBase):
         "big snap [<n>]"               : Key("c-x,c-space:%(n)d"),
 
         "num <big>"                    : EmacsText("%(big)d"),
+        "inspect character"            : Key("c-u,c-x,equal"),
     }
 
 
