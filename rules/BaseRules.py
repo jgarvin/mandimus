@@ -66,7 +66,7 @@ class SymRule(MappingRule):
         "frak"        : "percent", # short for fraction
         "caret"       : "caret",
         "ampersand"   : "ampersand",
-        "star"        : "asterisk",
+        "glob"        : "asterisk",
         "cool"        : "colon",
         "cusp"        : "semicolon",
         "point"       : "period",
@@ -102,7 +102,7 @@ class SymRule(MappingRule):
         "frak"        : "%",
         "caret"       : "^",
         "ampersand"   : "&",
-        "star"        : "*",
+        "glob"        : "*",
         "cool"        : ":",
         "cusp"        : ";",
         "point"       : ".",

@@ -28,8 +28,8 @@ class XMonadRule(SeriesMappingRule):
         "master"                      : Key("ca-enter"),
         "add master [<n>]"            : Key("ca-comma:%(n)d"),
         "remove master"               : Key("ca-period"),
-        "editor"                      : Key("ca-w"),
-        "browser"                     : Key("ca-b"),
+        "editor"                      : Key("csa-w"),
+        "browser"                     : Key("csa-b"),
         "new terminal"                : Key("csa-t"),
         "restart window manager"      : Key("ca-q"),
         }

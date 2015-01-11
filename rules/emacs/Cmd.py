@@ -190,7 +190,7 @@ class Cmd(Action):
             log.info("%s lisp code: [%s]" % (type(self).__name__, code))
             
         for i in range(self._repetitions(extras)):
-            runEmacsCmd(code)
+            runEmacsCmd(code, dolog=(self.log or self.classLog))
 
 class CharCmd(Cmd):
     classLog = False
