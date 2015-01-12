@@ -27,28 +27,41 @@ class ColorRule(MappingRule):
         "purple" : "purple",
         "yellow" : "yellow",
         "orange" : "orange",
-        "pink"   : "deep pink",
     }
 
+@registerRule
+class AccentRule(MappingRule):
+    refOnly = True
+    mapping = {
+        "circle" : 0x030a,
+        "corner" : 0x031a,
+        "hair"   : 0x030f,
+    }
+    
 class PickSymbol(Cmd):
-    classLog = True
+    classLog = False
     def _lisp(self, extras={}):
-        color = ColorRule.mapping[extras['words'].split()[0]]
-        letter = AlphaRule.mapping[extras['words'].split()[1]]
-        return '(md-hl-pick-symbol "%s" "%s")' % (letter, color)
-
+        words = extras['words'].split()
+        color = ColorRule.mapping[words[0]]
+        letter = AlphaRule.mapping[words[1]]
+        mark = AccentRule.mapping[words[2]] if len(words) > 2 else None
+        mark = ("#x%x" % mark) if mark else "nil"
+        return '(md-hl-pick-symbol "%s" "%s" %s)' % (letter, color, mark)
+ 
 @registerRule
 class SymbolPicker(EmacsBase):
     mapping = {
-        "<colorrule> <alpharule>" : PickSymbol(),
+        "<colorrule> <alpharule> [<accentrule>]" : PickSymbol(),
     }
 
     alpharef = RuleRef(AlphaRule, "alpharule")
     colorref = RuleRef(ColorRule, "colorrule")
-    
+    accentref = RuleRef(AccentRule, "accentrule")
+        
     extras = EmacsBase.extras + [
         alpharef,
         colorref,
+        accentref,
         ]
 
     

@@ -393,7 +393,7 @@ class Emacs(EmacsBase):
         # mark commands
         "mark [<n>]"                   : Key("c-space:%(n)d"),
         "exchange"                     : Cmd("(exchange-point-and-mark)"),
-        #"select [<n>]"                : Key("c-equal:%(n)d"),
+        "select [<n>]"                 : Key("c-equal:%(n)d"),
         "contract"                     : Key("a-equal"),
         
         # text manip commands
