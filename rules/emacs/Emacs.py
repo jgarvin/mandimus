@@ -441,6 +441,9 @@ class Emacs(EmacsBase):
 
         "num <big>"                    : EmacsText("%(big)d"),
         "inspect character"            : Key("c-u,c-x,equal"),
+        "complete"                     : Minibuf("company-complete"),
     }
+
+    
 
 

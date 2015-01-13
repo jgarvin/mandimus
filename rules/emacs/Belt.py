@@ -1,6 +1,6 @@
 from rules.Rule import registerRule
 from rules.emacs.Base import EmacsBase
-from rules.emacs.Cmd import CharCmd
+from rules.emacs.Cmd import CharCmd, Cmd
 
 @registerRule
 class BeltRules(EmacsBase):
@@ -10,6 +10,7 @@ class BeltRules(EmacsBase):
         "jerk <charrule> [<n>]"  : CharCmd('(md-activate-belt-item "kill" ?%s)'),
         "beat <charrule> [<n>]"  : CharCmd('(md-activate-belt-item "frequency" ?%s)'),  
         "chong <charrule> [<n>]" : CharCmd('(md-activate-belt-item "recent" ?%s)'),
+        "toggle belt"            : Cmd("(md-toggle-belt-mode)"),
     }
 
     

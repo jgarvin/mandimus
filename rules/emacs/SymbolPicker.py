@@ -52,6 +52,7 @@ class PickSymbol(Cmd):
 class SymbolPicker(EmacsBase):
     mapping = {
         "<colorrule> <alpharule> [<accentrule>]" : PickSymbol(),
+        "toggle picker"                          : Cmd("(md-toggle-symbol-picker-mode)"),
     }
 
     alpharef = RuleRef(AlphaRule, "alpharule")
