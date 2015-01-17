@@ -118,10 +118,6 @@ class CommandClient(object):
                 log.error("Can't run command, not connected: [%s]" % command)
                 return "nil"
 
-        # have to escape so python doesn't process them
-        # command = command.replace("{", "{{")
-        # command = command.replace("}", "}}")
-
         wrapper = ["{}"]
 
         if allowError:
@@ -199,10 +195,16 @@ class CharCmd(Cmd):
         if word == "num":
             word = extras['words'].split()[2]
         char = BaseRules.CharRule.lookup(word)
-        # most characters don't need escaping, but some do
-        if char in " \n\t()\\|;'`\"#.,\a\b\f\r":
-            char = "\\" + char
+        char = emacsChar(char)
         return self.data % char
+
+def emacsChar(char):
+    c = ["?"]
+    # most characters don't need escaping, but some do
+    if char in " \n\t()\\|;'`\"#.,\a\b\f\r":
+        c.append("\\")
+    c.append(char)
+    return "".join(c)
 
 getCommandsEl = """
 (let ((y '()))

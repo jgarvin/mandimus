@@ -229,7 +229,7 @@ class EmacsMapping(MappingRule):
     "this is for commands that are unlikely to be said in series"
     mapping = {
         "command"                        : Key("c-x,c-m"),
-        "command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
+        #"command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
         "debug function"                 : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
@@ -321,31 +321,12 @@ class EmacsMapping(MappingRule):
     def activeForWindow(cls, window):
         return Emacs.activeForWindow(window)
 
-class Axe(Action):
-    def _repetitions(self, extras):
-        repeat = 1
-        if 'n' in extras and isinstance(extras['n'], int):
-            repeat = extras['n']
-        return repeat
-
-    def __call__(self, extras={}):
-        for i in range(self._repetitions(extras)):
-            inMiniBuffer = '*Minibuf-' in getFocusedWindow().name
-            if inMiniBuffer:
-                # hack to work around often canceling emacsclient requests,
-                # first keypress cancels the request, and the second
-                # cancels what we actually intended
-                Key("c-g:2")()
-                return
-            # on rare occasions this will cancel and emacsclient request,
-            # but it's rare enough that we don't try to handle it
-            Key("cs-g")()
-    
 @registerRule
 class Emacs(EmacsBase):
     mapping  = {
         # general commands
-        "axe [<n>]"                    : Axe(),
+        "axe [<n>]"                    : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))"),
+        "super axe [<n>]"              : Key("c-g:%(n)d"),
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),
@@ -367,7 +348,7 @@ class Emacs(EmacsBase):
         "ace care"                     : Key("c-u,c-c,space"),
 
         "home"                         : Key("c-a"),
-        "edge"                         : Key("c-e"),
+        "edge"                         : Cmd("(end-of-line)"),
         "cliff"                        : Cmd("(md-go-to-cliff)"),
         "top side"                     : Key("a-langle"),
         "bottom"                       : Key("a-rangle"),
@@ -441,6 +422,7 @@ class Emacs(EmacsBase):
 
         "num <big>"                    : EmacsText("%(big)d"),
         "inspect character"            : Key("c-u,c-x,equal"),
+        "insert character"             : Key("c-x,8,enter"),
         "complete"                     : Minibuf("company-complete"),
     }
 

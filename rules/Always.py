@@ -79,14 +79,9 @@ class AlwaysRule(SeriesMappingRule):
 
 class TypingBase(MappingRule):
     extras = [
-        Integer("n", 1, 20),
         Dictation("text")
         ]
     
-    defaults = {
-        "n": 1,
-        }    
-
     @classmethod
     def activeForWindow(cls, window):
         return not Emacs.activeForWindow(window)

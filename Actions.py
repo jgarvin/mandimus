@@ -436,6 +436,10 @@ class FormatState(object):
         return new
 
 def typeKeys(letters):
+    if not letters:
+        log.debug("Tried to type empty string, ignoring.")
+        return
+
     # we pass each character as a separate argument to xdotool,
     # this prevents xdotool from interpreting double hyphens and
     # hyphens followed by words as xdotool flags
@@ -451,6 +455,7 @@ def typeKeys(letters):
         arglist.append(newletter)
 
     letters = ' '.join(arglist)
+    
     cmd = ("xdotool type --clearmodifiers " + letters)
     runCmd(cmd)
     

@@ -23,7 +23,7 @@ class Dired(EmacsBase):
         "toggle picks"        : Text("*t"),
         "pick regex"          : Text("%m"),
         "pick contents regex" : Text("%g"),
-        "make dir"            : Text("+"),
+        "make folder"         : Text("+"),
         "flag"                : Key("d"),
         "unflag"              : Key("u"),
         "commit delete"       : Key("x"),

@@ -49,10 +49,10 @@ class ActionRule(MappingRule):
 @registerRule
 class EditRules(EmacsBase):
     mapping = {
-        "zap <charrule> [<n>]"  : CharCmd("(zap-up-to-char 1 ?%s)"),
-        "taze <charrule> [<n>]" : CharCmd("(zap-up-to-char -1 ?%s)"),
-        "fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 ?%s)"),
-        "buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 ?%s)"),
+        "zap <charrule> [<n>]"  : CharCmd("(zap-up-to-char 1 %s)"),
+        "taze <charrule> [<n>]" : CharCmd("(zap-up-to-char -1 %s)"),
+        "fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 %s)"),
+        "buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 %s)"),
         "flip [<n>]"            : Cmd("(transpose-sexps 1)"),
         "pilf [<n>]"            : Cmd("(transpose-sexps -1)"),
         "rise [<n>]"            : Key("a-up:%(n)d"),
