@@ -11,9 +11,12 @@ class Lisp(EmacsBase):
     majorMode = "emacs-lisp-mode"
     
     keywords = [
+        ["1-", "one minus"],
+        ["1+", "one plus"],
         "add-to-list",
         "and",
         ["aref", "A ref"],
+        "assert",
         "car",
         "catch",
         ["cdr", "cooder"],
@@ -32,6 +35,7 @@ class Lisp(EmacsBase):
         ["delq", "del Q"],
         "dolist",
         "dotimes",
+        "error",
         ["eq", "E Q"],
         "equal",
         "eval",
@@ -58,9 +62,11 @@ class Lisp(EmacsBase):
         "map",
         "mapcar",
         "mapconcat",
+        "max",
         "member",
         ["memq", "mem Q"],
         "message",
+        "min",
         "not",
         ["nth", "enth"],
         "null",

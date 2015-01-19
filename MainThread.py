@@ -298,6 +298,7 @@ if __name__ == "__main__":
         ('rules.emacs.Nav', ['']),
         ('rules.emacs.Term', ['']),
         ('rules.emacs.ModeLine', ['']),
+        ('rules.emacs.Snippet', ['']),
         ('rules.emacs.SymbolPicker', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),

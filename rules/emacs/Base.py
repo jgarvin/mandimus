@@ -3,7 +3,7 @@ log = mdlog.getLogger(__name__)
 
 from rules.Elements import Dictation, Integer, RuleRef
 from rules.SeriesMappingRule import SeriesMappingRule
-from rules.emacs.Cmd import runEmacsCmd
+from rules.emacs.Cmd import runEmacsCmd, Cmd
 import rules.BaseRules as BaseRules
 from EventLoop import getLoop
 from EventList import FocusChangeEvent, EmacsConnectedEvent
@@ -48,6 +48,7 @@ class EmacsBase(SeriesMappingRule):
 
         if self.keywords:
             self.mapping.update({"key " + i[1] : EmacsText("%s" % i[0], lower=False) for i in self.keywordList})
+            self.mapping.update({"new " + i[1] : Cmd("(md-insert-snippet \"%s\")" % i[0]) for i in self.keywordList})
 
     def sendKeywords(self, ev):
         if not self.keywords:
