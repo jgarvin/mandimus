@@ -13,7 +13,7 @@ class AlphaRule(MappingRule):
         "echo"    : "e",
         "fox"     : "f",
         "golf"    : "g",
-        "how"     : "h",
+        "his"     : "h",
         "india"   : "i",
         "johnny"  : "j",
         "king"    : "k",

@@ -40,19 +40,24 @@ class AccentRule(MappingRule):
     
 class PickSymbol(Cmd):
     classLog = True
+    def __init__(self, data, leadingWords=1):
+        self.leadingWords = leadingWords
+        Cmd.__init__(self, data)
+
     def _lisp(self, extras={}):
         words = extras['words'].split()
-        color = ColorRule.mapping[words[0]]
-        letter = AlphaRule.mapping[words[1]]
-        mark = AccentRule.mapping[words[2]] if len(words) > 2 else None
+        color = ColorRule.mapping[words[0 + self.leadingWords]]
+        letter = AlphaRule.mapping[words[1 + self.leadingWords]]
+        mark = AccentRule.mapping[words[2 + self.leadingWords]] if len(words) > (2 + self.leadingWords) else None
         mark = ("#x%x" % mark) if mark else "nil"
-        return '(md-hl-pick-symbol "%s" %s "%s")' % (letter, mark, color)
+        return '(%s "%s" %s "%s")' % (self.data, letter, mark, color)
  
 @registerRule
 class SymbolPicker(EmacsBase):
     mapping = {
-        "<colorrule> <alpharule> [<accentrule>]" : PickSymbol(),
-        "toggle picker"                          : Cmd("(md-toggle-symbol-picker-mode)"),
+        "<colorrule> <alpharule> [<accentrule>]"      : PickSymbol("md-hl-insert-symbol", 0),
+        "jump <colorrule> <alpharule> [<accentrule>]" : PickSymbol("md-hl-jump-symbol"),
+        "toggle picker"                               : Cmd("(md-toggle-symbol-picker-mode)"),
     }
 
     alpharef = RuleRef(AlphaRule, "alpharule")
