@@ -16,7 +16,8 @@ def runCmd(cmd):
 
 def splitKeyString(keyStr):
     """Translate dragonfly style key descriptions
-    to xdotool's preferred versions"""
+    with numeric repeating into a key description
+    without repetition."""
     
     # dragonfly uses comma sep keys, xdotool uses spaces
     singles = keyStr.split(',')

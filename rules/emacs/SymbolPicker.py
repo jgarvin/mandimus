@@ -39,14 +39,14 @@ class AccentRule(MappingRule):
     }
     
 class PickSymbol(Cmd):
-    classLog = False
+    classLog = True
     def _lisp(self, extras={}):
         words = extras['words'].split()
         color = ColorRule.mapping[words[0]]
         letter = AlphaRule.mapping[words[1]]
         mark = AccentRule.mapping[words[2]] if len(words) > 2 else None
         mark = ("#x%x" % mark) if mark else "nil"
-        return '(md-hl-pick-symbol "%s" "%s" %s)' % (letter, color, mark)
+        return '(md-hl-pick-symbol "%s" %s "%s")' % (letter, mark, color)
  
 @registerRule
 class SymbolPicker(EmacsBase):

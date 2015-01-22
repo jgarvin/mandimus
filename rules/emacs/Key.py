@@ -54,19 +54,11 @@ def dfly2emacsKey(keystr):
     modifiers.extend(keys)
     return '-'.join(modifiers)
 
-tempCommand = """
-(defun md-temp-command ()
-  (interactive)
-  %s)
-(md-temp-command)
-"""    
-
 def makeKbdMacro(dflyKeyStr):
     keys = []
-    cmd = "(execute-kbd-macro (kbd \"%s\"))"
+    cmd = "(setq unread-command-events (append (listify-key-sequence (kbd \"%s\")) unread-command-events))"
     keys = [dfly2emacsKey(k) for k in splitKeyString(dflyKeyStr)]
     cmd %= ' '.join(keys)
-    cmd = tempCommand % cmd
     log.info(cmd)
     return cmd
 
