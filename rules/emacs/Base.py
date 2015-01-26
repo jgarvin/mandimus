@@ -35,6 +35,7 @@ class EmacsBase(SeriesMappingRule):
         Dictation("replace"),
         Integer("big", 0, 2**14),
         RuleRef(BaseRules.CharRule, "charrule"),
+        RuleRef(BaseRules.AlphaRule, "alpharule"),
     ]
 
     defaults = {
@@ -49,6 +50,8 @@ class EmacsBase(SeriesMappingRule):
         if self.keywords:
             self.mapping.update({"key " + i[1] : EmacsText("%s" % i[0], lower=False) for i in self.keywordList})
             self.mapping.update({"new " + i[1] : Cmd("(md-insert-snippet \"%s\")" % i[0]) for i in self.keywordList})
+            self.mapping.update({"prior " + i[1] : Cmd("(md-go-to-previous \"%s\")" % i[0]) for i in self.keywordList})
+            self.mapping.update({"future " + i[1] : Cmd("(md-go-to-next \"%s\")" % i[0]) for i in self.keywordList})
 
     def sendKeywords(self, ev):
         if not self.keywords:
@@ -69,4 +72,16 @@ class EmacsBase(SeriesMappingRule):
             return False
         if cls.majorMode is None or not getMajorMode():
             return True
-        return cls.majorMode in getMajorMode()
+        mode = getMajorMode()
+        if type(cls.majorMode) == str or type(cls.majorMode) == unicode:
+            return cls.majorMode in getMajorMode()
+        else:
+            # a rule can be active in multiple modes by setting majorMode
+            # to a list, tuple, etc.
+            for i in cls.majorMode:
+                if i in mode:
+                    return True
+            
+            
+
+

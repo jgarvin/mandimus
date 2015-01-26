@@ -53,8 +53,9 @@ class EditRules(EmacsBase):
         "taze <charrule> [<n>]" : CharCmd("(zap-up-to-char -1 %s)"),
         "fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 %s)"),
         "buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 %s)"),
-        "flip [<n>]"            : Cmd("(transpose-sexps 1)"),
-        "pilf [<n>]"            : Cmd("(transpose-sexps -1)"),
+        "trans [<n>]"           : Cmd("(transpose-sexps 1)"),
+        "snart [<n>]"           : Cmd("(transpose-sexps -1)"),
         "rise [<n>]"            : Key("a-up:%(n)d"),
         "drop [<n>]"            : Key("a-down:%(n)d"),
+        "var <alpharule> [<n>]" : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
     }

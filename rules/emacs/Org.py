@@ -22,7 +22,7 @@ class OrgAnywhere(MappingRule):
 
 @registerRule
 class Org(EmacsBase):
-    majorMode = "org-mode"
+    majorMode = ["org-mode", "org-agenda-mode"]
     
     # "scoot" -> expand section
     # "cap scoot" -> collapse all sections
