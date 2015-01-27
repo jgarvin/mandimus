@@ -56,6 +56,16 @@ normalConsonantBlends = {
     "thr",
     # my additions below
     "omb", # otherwise comb becomes comoob
+    "cc",
+    "ff",
+    "gg",
+    "ll",
+    "mm",
+    "nn",
+    "pp",
+    "ss",
+    "tt",
+    "ck",
 }
 
 consonants = { 'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n',

@@ -325,12 +325,12 @@ class DragonflyClient(DragonflyNode):
             if l.name not in self.grammars:
                 self.makeRuleGrammar(l, l.name)
             if not l.enabled:
-                #log.info("Enabling for real %s" % l.name)
+                log.info("Enabling for real %s" % l.name)
                 try:
                     l.enable()
                 except natlink.BadGrammar as e:
                     log.error("Grammar was too complex: %s" % l.name)
-                    self.removeRule(l)
+                    self.removeRule(l.name)
                     continue
             else:
                 #log.info("not Enabling for real %s" % l.name)

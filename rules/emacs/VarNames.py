@@ -37,6 +37,12 @@ class EmacsTextRule(TypingBase):
     }
 
 @registerRule
+class EmacsFastenRule(TypingBase):
+    mapping = {
+        "fasten <text>" : EmacsText("%(text)s", False, spaceCheck=False),
+    }
+
+@registerRule
 class EmacsCamelRule(TypingBase):
     mapping = {
         "camel <text>" : EmacsCamel("%(text)s"),

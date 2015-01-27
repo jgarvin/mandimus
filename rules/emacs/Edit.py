@@ -57,5 +57,6 @@ class EditRules(EmacsBase):
         "snart [<n>]"           : Cmd("(transpose-sexps -1)"),
         "rise [<n>]"            : Key("a-up:%(n)d"),
         "drop [<n>]"            : Key("a-down:%(n)d"),
-        "var <alpharule> [<n>]" : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
+        "var <charrule> [<n>]"  : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
     }
+

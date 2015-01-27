@@ -6,7 +6,8 @@ from rules.emacs.Cmd import CharCmd, Cmd
 class SnippetRules(EmacsBase):
     mapping = {
         "jump <charrule>" : CharCmd('(md-sn-find-slot %s)'),
-        "tolls"           : Cmd('(md-sn-next-slot)'),
+        "slot"            : Cmd('(md-sn-next-slot)'),
         "make slot"       : Cmd('(md-sn-drop-slot)'),
+        "call [<i>]"      : Cmd("(md-insert-call-snippet %(i)d)"),
     }
 

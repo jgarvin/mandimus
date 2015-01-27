@@ -13,9 +13,10 @@ def emacsBool(b):
     return "nil"
 
 class EmacsText(Text):
-    def __init__(self, data, lower=True, capitalCheck=True):
+    def __init__(self, data, lower=True, capitalCheck=True, spaceCheck=True):
         Text.__init__(self, data, lower=lower)
         self.capitalCheck = capitalCheck
+        self.spaceCheck = spaceCheck 
 
     def _print(self, words):
         # There's no good elisp way to handle putting characters into
@@ -27,5 +28,7 @@ class EmacsText(Text):
             Text._print(self, words)
         else:
             #runEmacsCmd("(undo-boundary)")
-            runEmacsCmd("(md-insert-text \"%s\" %s %s)" % (words, "t", emacsBool(self.capitalCheck)), dolog=True)
+            runEmacsCmd("(md-insert-text \"%s\" %s %s)" % (words, emacsBool(self.spaceCheck),
+                                                           emacsBool(self.capitalCheck)), dolog=True)
             #runEmacsCmd("(undo-boundary)")
+ 

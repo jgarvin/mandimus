@@ -28,7 +28,9 @@ class Org(EmacsBase):
     # "cap scoot" -> collapse all sections
     # "lima" -> log view to see record for the day
     mapping = {
-        "to do"                   : Key("as-enter"),
+        "new"                     : Key("a-enter"),
+        "new todo"                : Key("as-enter"),
+        "make headline"           : Key("c-c,asterisk"),
         "task"                    : Key("c-c,c-t"),
         "follow"                  : Key("c-c,c-o"),
         "insert link"             : Key("c-c,c-l"),

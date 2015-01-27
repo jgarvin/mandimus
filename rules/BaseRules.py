@@ -19,7 +19,7 @@ class AlphaRule(MappingRule):
         "king"    : "k",
         "lima"    : "l",
         "mike"    : "m",
-        "nab"     : "n",
+        "no"      : "n",
         "oscar"   : "o",
         "peter"   : "p",
         "quebec"  : "q",
@@ -30,7 +30,7 @@ class AlphaRule(MappingRule):
         "victor"  : "v",
         "whiskey" : "w",
         "xray"    : "x",
-        "yoke"    : "y",
+        "yes"     : "y",
         "zulu"    : "z",
     }
 

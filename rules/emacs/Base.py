@@ -24,6 +24,43 @@ def getMajorMode():
 
 getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
+# class KeywordCmd(Cmd):
+#     def __init__(self, keywords, log=False):
+#         self.writtenForms = {}
+#         for i in keywords:
+#             self.writtenForms[i[1]] = i[0]
+#         Cmd.__init__(self, None, log)
+
+#     def _lisp(self, extras={}):
+#         words = extras['words'].split()
+#         command = words[0]
+#         # everything after command is part of key 
+#         rest = words[1:]
+#         if extras['n'] != 1:
+#             # unless there's a number spoken at the end
+#             rest = words[:-1]
+#         rest = self.writtenForms[" ".join(words[1:])]
+#         if command == "key":
+#             EmacsText("%s" % rest, lower=False)()
+#         elif command == "new":
+#             Cmd("(md-insert-snippet \"%s\")" % rest)()
+#         elif command == "prior":
+#             Cmd("(md-go-to-previous \"%s\")" % rest)()
+#         elif command == "future":
+#             Cmd("(md-go-to-next \"%s\")" % rest)()
+#         else:
+#             assert False
+
+# @registerRule
+# class ModeVerbRule(MappingRule):
+#     refOnly = True
+#     mapping = {
+#         "key" : None,
+#         "new" : None,
+#         "prior" : None,
+#         "future" : None,
+#     }
+
 class EmacsBase(SeriesMappingRule):
     majorMode = None
     keywords = []
@@ -36,6 +73,7 @@ class EmacsBase(SeriesMappingRule):
         Integer("big", 0, 2**14),
         RuleRef(BaseRules.CharRule, "charrule"),
         RuleRef(BaseRules.AlphaRule, "alpharule"),
+        Integer("i", 0, 10) ,
     ]
 
     defaults = {
@@ -50,8 +88,8 @@ class EmacsBase(SeriesMappingRule):
         if self.keywords:
             self.mapping.update({"key " + i[1] : EmacsText("%s" % i[0], lower=False) for i in self.keywordList})
             self.mapping.update({"new " + i[1] : Cmd("(md-insert-snippet \"%s\")" % i[0]) for i in self.keywordList})
-            self.mapping.update({"prior " + i[1] : Cmd("(md-go-to-previous \"%s\")" % i[0]) for i in self.keywordList})
-            self.mapping.update({"future " + i[1] : Cmd("(md-go-to-next \"%s\")" % i[0]) for i in self.keywordList})
+            self.mapping.update({"prior " + i[1] + "[<n>]" : Cmd("(md-go-to-previous \"%s\")" % i[0]) for i in self.keywordList})
+            self.mapping.update({"future " + i[1] + "[<n>]" : Cmd("(md-go-to-next \"%s\")" % i[0]) for i in self.keywordList})
 
     def sendKeywords(self, ev):
         if not self.keywords:

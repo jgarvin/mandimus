@@ -385,7 +385,7 @@ class Emacs(EmacsBase):
         "nip [<n>]"                    : Cmd('(md-backward-kill-word)'),
         "pin [<n>]"                    : Cmd('(md-forward-kill-word)'),        
         "pat [<n>]"                    : Key("delete:%(n)d"),
-        "tap [<n>]"                    : Key("backspace:%(n)d"),
+        "knock [<n>]"                  : Key("backspace:%(n)d"),
         "squeeze"                      : Cmd('(cycle-spacing)'),
 
         "yank"                         : Key("c-y"),
@@ -404,10 +404,6 @@ class Emacs(EmacsBase):
         "indent"                       : Cmd("(call-interactively 'indent-region)"),
 
         "comment"                      : Key("c-slash"),
-        
-        # replacing commands
-        "yes"                          : Key('y'),
-        "no"                           : Key('n'),
         
         # text commands
         "capital"                      : Key("a-c"),

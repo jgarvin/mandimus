@@ -38,8 +38,8 @@ class NavRules(EmacsBase):
         "Nile <charrule> [<n>]" : CharCmd("(md-find-line-starting-with-char -1 %s)"),
         "store <charrule>"      : CharCmd("(point-to-register %s)"),
         "load <charrule>"       : CharCmd("(jump-to-register %s)"),
-        "previous"              : Cmd("(md-get-previous-instance-of-symbol)"),
-        "next"                  : Cmd("(md-get-next-instance-of-symbol)"),
+        "previous [<n>]"        : Cmd("(md-get-previous-instance-of-symbol)"),
+        "next [<n>]"            : Cmd("(md-get-next-instance-of-symbol)"),
     }
 
     
