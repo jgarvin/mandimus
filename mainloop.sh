@@ -5,7 +5,8 @@ while true; do
     sleep 1
     kill -9 $(jobs -p)
     rm **/*.pyc
-    rm ~/dragonshare/NatLink/NatLink/MacroSystem/*.pyc
+    
+    # rm ~/dragonshare/NatLink/NatLink/MacroSystem/*.pyc
     #touch ~/dragonshare/NatLink/NatLink/MacroSystem/*.py
 
     # Let ctrl-c pass through to python so we can use it
