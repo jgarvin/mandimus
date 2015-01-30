@@ -3,7 +3,7 @@ from rules.MappingRule import MappingRule
 from rules.emacs.Emacs import Emacs
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.Rule import registerRule
-from Actions import Key, Text
+from Actions import Key, Text, Repeat
 from rules.emacs.Base import EmacsBase
 
 @registerRule
@@ -31,6 +31,7 @@ class Org(EmacsBase):
         "new"                     : Key("a-enter"),
         "new todo"                : Key("as-enter"),
         "make headline"           : Key("c-c,asterisk"),
+        "archive [<n>]"           : Key("c-c,c-x,c-a") * Repeat(extra="n"),
         "task"                    : Key("c-c,c-t"),
         "follow"                  : Key("c-c,c-o"),
         "insert link"             : Key("c-c,c-l"),

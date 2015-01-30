@@ -1,7 +1,7 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, Repeat
+from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
 from Rule import commandTally, registerRule
 from SeriesMappingRule import SeriesMappingRule
 from MappingRule import MappingRule
@@ -54,7 +54,7 @@ class PressKey(object):
 class AlwaysRule(SeriesMappingRule):
     mapping = {
         "command tally"                            : (lambda x: Speak(str(commandTally()))()),
-        'rep [<n>]'                                : Repeat(),
+        'rep [<n>]'                                : RepeatPreviousAction(),
         "[control] [alt] [cap] <charrule> [<n>]" : PressKey(),
         'scoot [<n>]'                              : Key("tab:%(n)d"),
         'cap scoot [<n>]'                        : Key("s-tab:%(n)d"),

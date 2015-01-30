@@ -12,7 +12,7 @@ import traceback
 from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER, KEY_VALUE_SEPARATOR
 from DragonflyNode import DragonflyNode
 from namedtuple import namedtuple
-from Actions import Repeat
+from Actions import RepeatPreviousAction
 from EventLoop import getLoop
 from rules.Rule import registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
@@ -177,7 +177,7 @@ class DragonflyThread(DragonflyNode):
                 try:
                     cb = g.mapping[rule]
 
-                    if isinstance(cb, Repeat):
+                    if isinstance(cb, RepeatPreviousAction):
                         if len(self.history) >= 1:
                             repetitions = extras['n']
                             rule, extras = self.history[-1]

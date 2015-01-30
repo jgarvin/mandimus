@@ -118,7 +118,16 @@ class EmacsBase(SeriesMappingRule):
         keywordString = "'(" + " ".join([("\"%s\"" % x[0]) for x in self.keywordList]) + ")"
         # let emacs know what can already be written through voice commands
         # so they get filtered from the belts and token lists
-        runEmacsCmd("(md-register-mode-keywords '%s %s)" % (self.majorMode, keywordString))
+        for m in self.modes():
+            runEmacsCmd("(md-register-mode-keywords '%s %s)" % (m, keywordString))
+
+    @classmethod
+    def modes(cls):
+        # a rule can be active in multiple modes by setting majorMode
+        # to a list, tuple, etc.
+        if type(cls.majorMode) == str or type(cls.majorMode) == unicode:
+            return [cls.majorMode]
+        return cls.majorMode
 
     @property
     def keywordDict(self):
@@ -137,14 +146,9 @@ class EmacsBase(SeriesMappingRule):
         if cls.majorMode is None or not getMajorMode():
             return True
         mode = getMajorMode()
-        if type(cls.majorMode) == str or type(cls.majorMode) == unicode:
-            return cls.majorMode in getMajorMode()
-        else:
-            # a rule can be active in multiple modes by setting majorMode
-            # to a list, tuple, etc.
-            for i in cls.majorMode:
-                if i in mode:
-                    return True
+        for i in cls.modes():
+            if i in mode:
+                return True
             
             
 

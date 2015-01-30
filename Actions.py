@@ -121,10 +121,28 @@ class Action(object):
     def __add__(self, other):
         return ActionList() + self + other
 
+    def __mul__(self, other):
+        assert isinstance(other, Repeat)
+        return RepeatAction(self, other.count, other.extra)
+
     def __eq__(self, other):
         return type(self) == type(other) and self.data == other.data
 
+class RepeatAction(Action):
+    def __init__(self, otherAction, count, countVar):
+        Action.__init__(self, (otherAction, count, countVar))
+
+    def __call__(self, extras={}):
+        extraCount = 0 if self.data[2] is None else extras[self.data[2]]
+        for i in range(self.data[1] + extraCount):
+            self.data[0](extras)
+
 class Repeat(Action):
+    def __init__(self, count=0, extra=None):
+        self.count = count
+        self.extra = extra
+
+class RepeatPreviousAction(Action):
     # Logic in server
     pass
 

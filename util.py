@@ -1,6 +1,9 @@
 import StringIO
 import collections
 
+def enum(**enums):
+    return type('Enum', (), enums)
+
 def isNumber(s):
     try:
         int(s)
