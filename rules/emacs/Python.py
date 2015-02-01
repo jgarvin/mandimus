@@ -12,10 +12,14 @@ class Python(EmacsBase):
     majorMode = "python-mode"
 
     mapping = {
-        "align dic"  : Cmd("(align-dict)"),
-        "align list" : Cmd("(align-list)"),
-        "mark block" : Cmd("(er/mark-python-block)"),
-        "mark state" : Cmd("(er/mark-python-statement)"),
+        "align dic"   : Cmd("(align-dict)"),
+        "align list"  : Cmd("(align-list)"),
+        "mark block"  : Cmd("(er/mark-python-block)"),
+        "mark state"  : Cmd("(er/mark-python-statement)"),
+        "send funk"   : Key("ca-x"),
+        "send buff"   : Key("c-c,c-c"),
+        "send region" : Key("c-c,c-r"),
+        "shell"       : Key("c-c,c-z"),
     }
 
     keywords = [
