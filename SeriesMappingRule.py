@@ -15,7 +15,6 @@ class SeriesMappingRule(CompoundRule):
             defaults=defaults, exported=False)
         single = RuleRef(rule=mapping_rule)
         series = Repetition(single, min=1, max=8, name="series")
-        #   (local-set-key (kbd "C-y") 'yank-and-indent)
 
         compound_spec = "<series>"
         compound_extras = [series]

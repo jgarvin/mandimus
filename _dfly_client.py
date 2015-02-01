@@ -185,7 +185,8 @@ class DragonflyClient(DragonflyNode):
             self.other = self.makeSocket()
             self.other.settimeout(0.05)
             try:
-                self.other.connect(("10.0.0.2", 23133))
+                #self.other.connect(("10.0.0.2", 23133))
+                self.other.connect(("192.168.56.1", 23133))
                 log.info('connected')
             except socket.error as e:
                 log.info('connect error')
