@@ -299,6 +299,7 @@ if __name__ == "__main__":
         ('rules.emacs.Org', ['']),
         ('rules.emacs.Term', ['']),
         ('rules.emacs.ModeLine', ['']),
+        ('rules.emacs.Shell', ['']),
         ('rules.emacs.Snippet', ['']),
         ('rules.emacs.SymbolPicker', ['']),
         ('rules.XMonad', ['']),

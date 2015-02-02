@@ -51,7 +51,7 @@ class ChromeRule(SeriesMappingRule):
         "new"                           : Key("c-t"),
         "close [<n>]"                   : Key("c-w:%(n)d"),
         "address"                       : Key("c-l"),
-        "post [<n>]"                    : Key("c-tab:%(n)d"),
+        "pro [<n>]"                     : Key("c-tab:%(n)d"),
         "per [<n>]"                     : Key("cs-tab:%(n)d"),
         "(reopen tab | undo close tab)" : Key("cs-t"),
         "back"                          : Key("a-left"),
