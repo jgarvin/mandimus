@@ -50,32 +50,89 @@ class PressKey(object):
         for r in range(repetitions):
             Key(''.join(keystring))()
 
-@registerRule
-class AlwaysRule(SeriesMappingRule):
-    mapping = {
-        "command tally"                            : (lambda x: Speak(str(commandTally()))()),
-        'rep [<n>]'                                : RepeatPreviousAction(),
-        "[control] [alt] [cap] <charrule> [<n>]" : PressKey(),
-        'scoot [<n>]'                              : Key("tab:%(n)d"),
-        'cap scoot [<n>]'                        : Key("s-tab:%(n)d"),
-    }
+mapping = {
+    "command tally"                            : (lambda x: Speak(str(commandTally()))()),
+    'rep [<n>]'                                : RepeatPreviousAction(),
+    "[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
+    'scoot [<n>]'                              : Key("tab:%(n)d"),
+    'cap scoot [<n>]'                          : Key("s-tab:%(n)d"),
+}
 
-    charref = RuleRef(CharRule, "charrule")
-    
-    extras = [
-        Integer("n", 2, 20),
-        Integer("digit", 0, 10),
-        Dictation("text"),
-        charref,
-        ]
-    
-    defaults = {
-        "n": 1,
-        }
+charref = RuleRef(CharRule, "charrule")
 
-    @classmethod
-    def activeForWindow(cls, window):
-        return True
+extras = [
+    Integer("n", 2, 20),
+    Integer("digit", 0, 10),
+    Dictation("text"),
+    charref,
+]
+
+defaults = {
+    "n": 1,
+}
+
+AlwaysRule = makeHashedRule(RuleType.SERIES, 0, "Always", mapping, extras, defaults)
+activateRule(AlwaysRule)
+
+# Need a class that watches what window has focus, and activates/deactivates
+# rules based on that.
+# Almost all classes need this kind of filtering. How do we do this in the watcher API
+# style without a lot of redundancy?
+
+# Need to be able to combine context requirements.
+
+class ContexualRule(object):
+    def __init__(self, *args, **kwargs):
+        self.rule = makeHashedRule(*args, **kwargs)
+        self.context = Context(self.rule)
+    def activate(self):
+        activateRule(self.rule)
+    def deactivate(self):
+        deactivateRule(self.rule)
+
+class Context(object):
+    def __init__(self, target):
+        self.requirements = set()
+        self.met = set()
+        self.target = target
+    
+    def addRequirement(self, req):
+        self.requirements.add(req)
+        req.setContext(self)
+        self._maybeFire()
+
+    def met(req):
+        assert req in self.requirements
+        self.met.add(req)
+        self._maybeFire()
+
+    def unmet(req):
+        assert req in self.requirements
+        self.met.remove(req)
+        self._maybeFire()
+
+    def _maybeFire(self):
+        if not (self.requirements - self.met):
+            self.target.activate()
+        else:
+            self.target.deactivate()
+
+class Requirement(object):
+    def setContext(self, ctx):
+        self.context = ctx
+
+class WindowReq(object):
+    def __init__(self, wmclass=None, negate=False):
+        self.wmclass = wmclass
+        self.negate = negate
+        getLoop().subscribeEvent(FocusChangeEvent, self.onFocusChange)
+
+    def onFocusChange(self, ev):
+        if type(self.wmclass) in (str, unicode):
+            self.wmclass = [self.wmclass]
+        for c in self.wmclass:
+            if c in ev.window.wmclass ^ negate:
+                self.context.met(self)
 
 class TypingBase(MappingRule):
     extras = [

@@ -3,7 +3,7 @@ import hashlib
 from util import enum
 import json
 import md5
-from copy import copy
+from copy import deepcopy
 
 # So here is how the protocol works. The server decides which rules should be
 # enabled. It sends an ENABLE_RULES with a list of md5 hashes of the rules
@@ -42,7 +42,15 @@ RuleType = enum(SERIES=0, TERMINAL=1, INDEPENDENT=2)
 #   avoid for example having window commands mixed with editing.
 # mapping, extras, default have their normal dragonfly MappingRule meanings
 Rule = namedtuple("Rule", "ruleType seriesMergeGroup name mapping extras defaults")
-HashedRule = namedtuple("HashedRule", "rule hash")
+HashedRuleBase = namedtuple("HashedRule", "rule hash")
+
+class HashedRule(HashedRuleBase):
+    def __eq__(self, other):
+        return self.hash == other.hash
+    def __neq__(self, other):
+        return self.hash != other.hash
+    def __hash__(self):
+        return hash(self.hash)
 
 EnableRulesMsg = namedtuple("EnableRulesMsg", "hashes")
 LoadRuleMsg = namedtuple("LoadRuleMsg", "rule hash")
@@ -54,20 +62,41 @@ MatchEventMsg = namedtuple("MatchEventMsg", "rule_ref phrase words extras")
 HeartbeatMsg = namedtuple("HeartbeatMsg", "unused")
 WordListMsg = namedtuple("WordListMsg", "name list")
 
-def makeJSON(t):
-    d = OrderedDict()
+def makeJSONRepresentable(t):
     toEncode = t
-    if "rule_ref" in toEncode._fields:
-        toEncode = t
-        toEncode.rule_ref = t.rule_ref.hash
-    objDict = toEncode._asdict()
-    d["dataType"] = type(toEncode).__name__
-    for key, val in objDict.items():
-        d[key] = val
+
+    if hasattr(t, "_fields"):
+        d = OrderedDict()
+        d["dataType"] = type(t).__name__
+        if "rule_ref" in toEncode._fields:
+            toEncode = t
+            toEncode.rule_ref = t.rule_ref.hash
+        objDict = toEncode._asdict()
+        for key, val in objDict.items():
+            d[makeJSONRepresentable(key)] = makeJSONRepresentable(val)
+        return d
+    elif type(t) == dict:
+        d = OrderedDict()
+        keys = t.keys()
+        for k in keys:
+            d[makeJSONRepresentable(k)] = makeJSONRepresentable(t[k])
+        return d
+    elif type(t) in (tuple, list):
+        return [makeJSONRepresentable(e) for e in t]
+    elif type(t) == set:
+        l = sorted(list(t))
+        return [makeJSONRepresentable(e) for e in l]
+    return t
+
+def makeJSON(t):
+    d = makeJSONRepresentable(t)
     return json.dumps(d)
 
 def makeHashedRule(ruleType, seriesMergeGroup, name, mapping, extras, defaults):
-    r = Rule(ruleType, seriesMergeGroup, name, mapping, extras, defaults)
+    # Make copies so we can't accidentally make changes to the inputs that
+    # break the hash.
+    r = Rule(ruleType, seriesMergeGroup, name,
+             deepcopy(mapping), deepcopy(extras), deepcopy(defaults))
     x = hashlib.sha256()
     x.update(makeJSON(r))
     return HashedRule(r, x.hexdigest())
