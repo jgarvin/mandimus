@@ -115,6 +115,7 @@ class Lisp(EmacsBase):
         ["setq-default", "set Q default"],
         "set-window-point",
         ["string=", "string equal"],
+        "string-match",
         "sort",
         "subseq",
         "thing-at-point",
