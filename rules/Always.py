@@ -84,17 +84,33 @@ activateRule(AlwaysRule)
 class ContexualRule(object):
     def __init__(self, *args, **kwargs):
         self.rule = makeHashedRule(*args, **kwargs)
-        self.context = Context(self.rule)
+        self._context = Context(self.rule)
+
+    @property
+    def context(self):
+        return self._context
+
     def activate(self):
         activateRule(self.rule)
+
     def deactivate(self):
         deactivateRule(self.rule)
 
+def makeRule(name, mapping, extras, defaults, ruleType=RuleType.SERIES,
+             seriesMergeGroup=0):
+    x = makeHashedRule(ruleType, seriesMergeGroup, name, mapping, extras, defaults)
+    x = ContextualRule(x)
+    return x
+
 class Context(object):
-    def __init__(self, target):
+    """A Context represents a set of requirements that
+    activates its targets when those requirements are met
+    and deactivates them otherwise."""
+
+    def __init__(self, targets):
         self.requirements = set()
         self.met = set()
-        self.target = target
+        self.targets = targets
     
     def addRequirement(self, req):
         self.requirements.add(req)
@@ -113,18 +129,25 @@ class Context(object):
 
     def _maybeFire(self):
         if not (self.requirements - self.met):
-            self.target.activate()
+            for t in self.targets:
+                t.activate()
         else:
-            self.target.deactivate()
+            for t in self.targets:
+                t.deactivate()
 
 class Requirement(object):
-    def setContext(self, ctx):
-        self.context = ctx
+    def addContext(self, ctx):
+        self.contexts.add(ctx)
 
-class WindowReq(object):
-    def __init__(self, wmclass=None, negate=False):
+    def removeContext(self, ctx):
+        self.contexts.remove(ctx)
+
+class WindowRequirement(object):
+    def __init__(self, contexts=None, wmclass=None, negate=False):
         self.wmclass = wmclass
         self.negate = negate
+        if contexts is None:
+            self.contexts = set()
         getLoop().subscribeEvent(FocusChangeEvent, self.onFocusChange)
 
     def onFocusChange(self, ev):
@@ -132,7 +155,8 @@ class WindowReq(object):
             self.wmclass = [self.wmclass]
         for c in self.wmclass:
             if c in ev.window.wmclass ^ negate:
-                self.context.met(self)
+                for ctx in self.contexts:
+                    ctx.met(self)
 
 class TypingBase(MappingRule):
     extras = [
