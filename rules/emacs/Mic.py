@@ -3,7 +3,7 @@ log = mdlog.getLogger(__name__)
 
 from EventLoop import getLoop
 from rules.emacs.Cmd import runEmacsCmd
-from EventList import MicrophoneEvent, ConnectedEvent, DisconnectedEvent, StartupCompleteEvent, EmacsConnectedEvent
+from EventList import MicrophoneEvent, ConnectedEvent, DisconnectedEvent, LoadingRulesEvent, EmacsConnectedEvent
 import sys
 
 class MicrophoneState(object):
@@ -13,19 +13,18 @@ class MicrophoneState(object):
 
     def updateState(self, ev):
         self.state = ev.state
-        self.tellEmacs(self.state if self.connected else "disconnected")
-        if self.state == "sleeping":
-            # waking from sleep use to always reload the client, but that got
-            # to be annoying and slow
-            #self.connected = False
-            pass
+        self.sendState()
 
-    def connectionChange(self, ev):
-        self.connected = True if isinstance(ev, StartupCompleteEvent) else False
-        self.tellEmacs(self.state if self.connected else "disconnected")
+    def loadingRulesChange(self, ev):
+        self.loading = ev.state
+        self.sendState()
 
-    def resendState(self, ev):
-        self.tellEmacs(self.state)
+    def disconnected(self, ev):
+        self.connected = False
+        self.sendState()
+
+    def sendState(self, ev=None):
+        self.tellEmacs(self.state if (self.connected and not self.loading) else "disconnected")
         
     def tellEmacs(self, state):
         log.debug("mic state: %s" % state)
@@ -34,6 +33,6 @@ class MicrophoneState(object):
 _state = MicrophoneState()
 
 getLoop().subscribeEvent(MicrophoneEvent, _state.updateState)
-getLoop().subscribeEvent(StartupCompleteEvent, _state.connectionChange, priority=sys.maxint)
-getLoop().subscribeEvent(DisconnectedEvent, _state.connectionChange)
-getLoop().subscribeEvent(EmacsConnectedEvent, _state.resendState)
+getLoop().subscribeEvent(LoadingRulesEvent, _state.loadingRulesChange)
+getLoop().subscribeEvent(DisconnectedEvent, _state.disconnected)
+getLoop().subscribeEvent(EmacsConnectedEvent, _state.sendState)

@@ -52,15 +52,23 @@ class HashedRule(HashedRuleBase):
     def __hash__(self):
         return hash(self.hash)
 
-EnableRulesMsg = namedtuple("EnableRulesMsg", "hashes")
-LoadRuleMsg = namedtuple("LoadRuleMsg", "rule hash")
-MicStateMsg = namedtuple("MicStateMsg", "state")
-LoadingStateMsg = namedtuple("LoadingStateMsg", "state")
-RequestRulesMsg = namedtuple("RequestRulesMsg", "hashes")
-RecognitionStateMsg = namedtuple("StartRecognitionMsg", "state")
-MatchEventMsg = namedtuple("MatchEventMsg", "rule_ref phrase words extras")
-HeartbeatMsg = namedtuple("HeartbeatMsg", "unused")
-WordListMsg = namedtuple("WordListMsg", "name list")
+msgTypes = set()
+
+def _newMsgType(name, members):
+    newType = namedtuple(name, members)
+    global msgTypes
+    msgTypes.add(newType)
+    return newType
+
+EnableRulesMsg = _newMsgType("EnableRulesMsg", "hashes")
+HeartbeatMsg = _newMsgType("HeartbeatMsg", "unused")
+LoadRuleFinishedMsg = _newMsgType("LoadRuleFinishedMsg", "hash")
+LoadRuleMsg = _newMsgType("LoadRuleMsg", "rule hash")
+MatchEventMsg = _newMsgType("MatchEventMsg", "hash phrase words extras")
+MicStateMsg = _newMsgType("MicStateMsg", "state")
+RecognitionStateMsg = _newMsgType("RecognitionStateMsg", "state")
+RequestRulesMsg = _newMsgType("RequestRulesMsg", "hashes")
+WordListMsg = _newMsgType("WordListMsg", "name list")
 
 def makeJSONRepresentable(t):
     toEncode = t
@@ -92,7 +100,11 @@ def makeJSON(t):
     d = makeJSONRepresentable(t)
     return json.dumps(d)
 
-def makeHashedRule(ruleType, seriesMergeGroup, name, mapping, extras, defaults):
+def makeHashedRule(name, mapping, extras, defaults, ruleType=RuleType.SERIES, seriesMergeGroup=0):
+    # For the mapping hash we only care about the spoken part of the rule, not the action
+    # taken in response.
+    mapping = {k : None for k in mapping.keys()}
+
     # Make copies so we can't accidentally make changes to the inputs that
     # break the hash.
     r = Rule(ruleType, seriesMergeGroup, name,
@@ -100,5 +112,19 @@ def makeHashedRule(ruleType, seriesMergeGroup, name, mapping, extras, defaults):
     x = hashlib.sha256()
     x.update(makeJSON(r))
     return HashedRule(r, x.hexdigest())
+
+def parseNamedTuple(p, t):
+    del p["dataType"]
+    return t(**p)
+
+def parseMessage(json_msg):
+    p = json.loads(json_msg)
+    if "dataType" not in p:
+        raise ValueError("Missing dataType key in msg: [%s]" % json_msg)
+    for t in msgTypes:
+        print "comparing %s %s" % (t.__name__, p["dataType"])
+        if t.__name__ == p["dataType"]:
+            return parseNamedTuple(p, t)
+    raise ValueError("Unknown message type [%s] in msg: [%s]" % (p["dataType"], json_msg))
 
 ### DRAGONSHARE RSYNC

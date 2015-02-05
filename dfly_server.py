@@ -9,15 +9,20 @@ import os
 import time
 import traceback
 
-from dfly_parser import parseMessages, MESSAGE_TERMINATOR, ARG_DELIMETER, KEY_VALUE_SEPARATOR
 from DragonflyNode import DragonflyNode
 from namedtuple import namedtuple
 from Actions import RepeatPreviousAction
 from EventLoop import getLoop
 from rules.Rule import registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
-from EventList import MicrophoneEvent, RuleMatchEvent, ConnectedEvent, StartupCompleteEvent, WordEvent
+from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
+                       StartupCompleteEvent, WordEvent, RuleActivateEvent,
+                       RuleDeactivateEvent)
 from copy import copy
+from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
+                      LoadRuleFinishedMsg, RequestRulesMsg, RecognitionStateMsg,
+                      MatchEventMsg, HeartbeatMsg, WordListMsg, makeJSON,
+                      parseMessage)
 
 BLOCK_TIME = 0.05
 
@@ -27,6 +32,15 @@ class DragonflyThread(DragonflyNode):
         self.pushQ = pushQ
         DragonflyNode.__init__(self, pushQ)
         self.history = []
+
+        # dictionary mapping rule hash -> rule
+        self.hashedRules = {}
+        # contains HashedRule's
+        self.activatedRules = set()
+        # contains HashedRule's from last time we committed, so
+        # we can check if we actually need to send changes
+        self.activatedLastCommit = set()
+        self.waitingForLoadConfirmation = set()
         
         self.server_socket = self.makeSocket()
         self.server_socket.bind(self.address)
@@ -34,12 +48,20 @@ class DragonflyThread(DragonflyNode):
         self.other = None
         self.buf = ''
 
-        self.rules = {}
-        self.enabledRules = set()
-
         self.utterance = []
 
         getLoop().subscribeTimer(BLOCK_TIME, self)
+        getLoop().subscribeEvent(RuleActivateEvent, self.onRuleActivate)
+        getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
+
+    def onRuleActivate(self, ev):
+        if ev.hash not in self.hashedRules:
+            log.info("Adding new hashed rule %s" % ev.rule)
+            self.hashedRules[ev.rule.hash] = ev.rule.rule
+
+        if ev.rule in self.activatedRules:
+            log.info("Requested to activate already activated rule (%s), ignoring." % ev.rule)
+            self.activatedRules.add(ev.rule)
 
     def __call__(self):
         if not self.other:
@@ -61,99 +83,66 @@ class DragonflyThread(DragonflyNode):
         if self.server_socket is not None:
             self.server_socket.close()
 
-    def loadRule(self, rule):
-        if rule.name in self.rules:
-            if rule == self.rules[rule.name]:
-                #log.info('rule UNchanged: ' + rule.name)
-                return
-            else:
-                log.info('rule changed: ' + rule.name)
-        
-        log.info('Loading rule: ' + rule.name)
-        self.sendMsg(rule.textSerialize())
-        self.rules[rule.name] = rule
-
-    def unloadRule(self, rule):
-        if rule.name not in self.rules:
+    def loadRule(self, hash):
+        if hash not in self.hashedRules:
+            log.error("Client requested rule we don't have! Hash: %s" % hash)
             return
         
-        log.info('Unloading rule: ' + rule.name)        
-        self.sendMsg('unload' + ARG_DELIMETER + rule.name)
-        try:
-            self.enabledRules.remove(rule)
-        except KeyError:
-            pass
+        log.info("Loading rule: %s" % self.hashedRules[hash])
+        self.sendMsg(makeJSON(LoadRuleMsg(self.hashedRules[hash], hash)))
+        self.waitingForLoadConfirmation.add(hash)
+        self.pushQ.put(LoadingRulesEvent(True))
 
-    def clearAllRules(self):
-        log.info('Unloading all rules.')        
-        self.sendMsg('unload_all')
-        self.rules = {}
-        self.enabledRules = set()
-        for r in registeredRules().values():
-            self.unloadRule(r)
-
-    def sendAllRules(self):
-        log.info('Sending all rules.')
-        for r in registeredRules().values():
-            self.loadRule(r)
-        #self.sendMsg("all sent" )
+    def onLoadFinished(self, hash):
+        self.waitingForLoadConfirmation.remove(hash)
+        if not self.waitingForLoadConfirmation:
+            self.pushQ.put(LoadingRulesEvent(False))
 
     def commitRuleEnabledness(self):
-        log.info("Committing rule enabledness: %s" % [rule.name for rule in self.enabledRules])
-        self.sendMsg(ARG_DELIMETER.join(['enable'] + [rule.name for rule in self.enabledRules]))
-
-    def updateRuleEnabledness(self, active):
-        oldEnabledNames = [rule.name for rule in self.enabledRules]
-
-        self.enabledRules = set()
-
-        # load anything new that was registered or that changed
-        registered = set(registeredRules().values())
-        for r in registered:
-            self.loadRule(r)
-
-        allRules = set(self.rules.values())
-
-        for l in active:
-            self.enabledRules.add(l)
-
-        newEnabledNames = [rule.name for rule in self.enabledRules]
-
-        # We do this by name rather than value because equality depends on the
-        # definitions being the same.
-        if oldEnabledNames != newEnabledNames:
-            self.commitRuleEnabledness()
+        if self.activatedRules - self.activatedLastCommit == set():
+            return
+        self.activatedLastCommit = copy(self.activatedRules)
+        log.info("Committing rule activations: %s" % [rule.name for rule in self.activatedRules])
+        self.sendMsg(makeJSON(EnableRulesMsg([r.hash for r in self.activatedRules])))
 
     def onConnect(self):
-        self.clearAllRules()
-        self.sendAllRules()
+        self.waitingForLoadConfirmation = set()
+        self.pushQ.put(LoadingRulesEvent(False))
+        self.activatedLastCommit = set()
+        self.commitRuleEnabledness()
         log.info("Pushing connected event.")
         self.pushQ.put(ConnectedEvent())
 
-    def requestStartupComplete(self):
-        self.sendMsg("REQUEST_STARTUP_COMPLETE")
+    def onMessage(self, json_msg):
+        log.info("Client msg: [%s]" % json_msg)
 
-    def onMessage(self, msg):
-        log.info("Client msg: [%s]" % msg)
-        if msg.startswith("MATCH"):
-            self.parseMatchMsg(msg)
-        elif msg.startswith("MICSTATE"):
-            #log.info("Received mic event: %s" % msg)
-            self.pushQ.put(MicrophoneEvent(msg.split(ARG_DELIMETER)[1]))
+        msg = parseMessage(json_msg)
+        if isinstance(msg, HeartbeatMsg):
+            log.debug("")
+        elif isinstance(msg, LoadRuleFinishedMsg):
+            self.onLoadFinished(msg)
+        elif isinstance(msg, MatchEventMsg):
+            self.onMatch(msg)
+        elif isinstance(msg, MicStateMsg):
+            self.pushQ.put(MicrophoneEvent(msg.state))
+        elif isinstance(msg, RecognitionStateMsg):
+            if msg.state == "start":
+                self.utterance = []
+            elif msg.state == "stop":
+                if self.utterance:
+                    self.pushQ.put(WordEvent(' '.join(self.utterance)))
+            else:
+                log.error("Unknown recognition state [%s] ignoring message: [%s]" % json_msg)
+                return
+        elif isinstance(msg, RequestRulesMsg):
+            for hash in msg.hashes:
+                self.loadRule(hash)
+        else:
+            log.error("Unknown message type, ignoring: [%s]" % json_msg)
+            return
+        
         elif msg.startswith("STARTUP_COMPLETE"):
             self.pushQ.put(StartupCompleteEvent())
-        elif msg.startswith("START_RECOGNITION"):
-            self.utterance = []
-        elif msg.startswith("STOP_RECOGNITION"):
-            if self.utterance:
-                self.pushQ.put(WordEvent(' '.join(self.utterance)))
-        elif msg == "":
-            log.debug("heartbeat")
-        elif msg.startswith("ack"):
-            log.debug('received ack: ' + msg)
-        else:
-            log.info("Unknown message type: [%s]" % msg[:min(10, len(msg))])
-        self.sendMsg("ack " + msg)
 
     def parseMatchMsg(self, msg):
         log.info(msg)

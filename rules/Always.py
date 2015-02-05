@@ -2,15 +2,12 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
-from Rule import commandTally, registerRule
-from SeriesMappingRule import SeriesMappingRule
-from MappingRule import MappingRule
+from Rule import commandTally
 from Elements import Integer, Dictation, RuleRef, Repetition
-from collections import OrderedDict
 from listHelpers import dictReplace
-from rules.emacs.Emacs import Emacs
 from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
-
+from rules.ContexualRule import ContexualRule
+from EventList import RuleActivateEvent
 import string
 
 class PressKey(object):
@@ -71,132 +68,52 @@ defaults = {
     "n": 1,
 }
 
-AlwaysRule = makeHashedRule(RuleType.SERIES, 0, "Always", mapping, extras, defaults)
-activateRule(AlwaysRule)
+AlwaysRule = makeContextualRule("Always", mapping, extras, defaults)
+AlwaysRule.activate()
 
-# Need a class that watches what window has focus, and activates/deactivates
-# rules based on that.
-# Almost all classes need this kind of filtering. How do we do this in the watcher API
-# style without a lot of redundancy?
-
-# Need to be able to combine context requirements.
-
-class ContexualRule(object):
-    def __init__(self, *args, **kwargs):
-        self.rule = makeHashedRule(*args, **kwargs)
-        self._context = Context(self.rule)
-
-    @property
-    def context(self):
-        return self._context
-
-    def activate(self):
-        activateRule(self.rule)
-
-    def deactivate(self):
-        deactivateRule(self.rule)
-
-def makeRule(name, mapping, extras, defaults, ruleType=RuleType.SERIES,
-             seriesMergeGroup=0):
-    x = makeHashedRule(ruleType, seriesMergeGroup, name, mapping, extras, defaults)
-    x = ContextualRule(x)
-    return x
-
-class Context(object):
-    """A Context represents a set of requirements that
-    activates its targets when those requirements are met
-    and deactivates them otherwise."""
-
-    def __init__(self, targets):
-        self.requirements = set()
-        self.met = set()
-        self.targets = targets
+extras = [
+    Dictation("text")
+]
     
-    def addRequirement(self, req):
-        self.requirements.add(req)
-        req.setContext(self)
-        self._maybeFire()
+mapping = {
+    "type <text>" : Text("%(text)s", False),
+}
 
-    def met(req):
-        assert req in self.requirements
-        self.met.add(req)
-        self._maybeFire()
+TypingRule = makeContexualRule("TypingRule", mapping, extras, {})
+TypingRule.context.addRequirement(NotEmacs)
+TypingRule.activate()
 
-    def unmet(req):
-        assert req in self.requirements
-        self.met.remove(req)
-        self._maybeFire()
+mapping = {
+    "camel <text>" : Camel("%(text)s"),
+}
 
-    def _maybeFire(self):
-        if not (self.requirements - self.met):
-            for t in self.targets:
-                t.activate()
-        else:
-            for t in self.targets:
-                t.deactivate()
+CamelRule = makeContexualRule("CamelRule", mapping, extras, {})
+CamelRule.context.addRequirement(NotEmacs)
+CamelRule.activate()
 
-class Requirement(object):
-    def addContext(self, ctx):
-        self.contexts.add(ctx)
+mapping = {
+    "stud <text>" : Camel("%(text)s", True),
+}
 
-    def removeContext(self, ctx):
-        self.contexts.remove(ctx)
+StudRule = makeContexualRule("StudRule", mapping, extras, {})
+StudRule.context.addRequirement(NotEmacs)
+StudRule.activate()
 
-class WindowRequirement(object):
-    def __init__(self, contexts=None, wmclass=None, negate=False):
-        self.wmclass = wmclass
-        self.negate = negate
-        if contexts is None:
-            self.contexts = set()
-        getLoop().subscribeEvent(FocusChangeEvent, self.onFocusChange)
+mapping = {
+    "hyphen <text>"     : Hyphen("%(text)s"),
+    "cap hyphen <text>" : Hyphen("%(text)s", True),
+}    
 
-    def onFocusChange(self, ev):
-        if type(self.wmclass) in (str, unicode):
-            self.wmclass = [self.wmclass]
-        for c in self.wmclass:
-            if c in ev.window.wmclass ^ negate:
-                for ctx in self.contexts:
-                    ctx.met(self)
+HypenRule = makeContexualRule("HypenRule", mapping, extras, {})
+HypenRule.context.addRequirement(NotEmacs)
+HypenRule.activate()
 
-class TypingBase(MappingRule):
-    extras = [
-        Dictation("text")
-        ]
-    
-    @classmethod
-    def activeForWindow(cls, window):
-        return not Emacs.activeForWindow(window)
-    
-@registerRule
-class TypingRule(TypingBase):
-    mapping = {
-        "type <text>" : Text("%(text)s", False),
-    }
 
-@registerRule
-class CamelRule(TypingBase):
-    mapping = {
-        "camel <text>" : Camel("%(text)s"),
-    }
+mapping = {
+    "score <text>"     : Underscore("%(text)s"),
+    "cap score <text>" : Underscore("%(text)s", True),
+}
 
-@registerRule
-class StudRule(TypingBase):
-    mapping = {
-        "stud <text>" : Camel("%(text)s", True),
-    }
-
-@registerRule
-class HyphenRule(TypingBase):
-    mapping = {
-        "hyphen <text>"     : Hyphen("%(text)s"),
-        "cap hyphen <text>" : Hyphen("%(text)s", True),
-    }    
-
-@registerRule
-class UnderscoreRule(TypingBase):
-    mapping = {
-        "score <text>"     : Underscore("%(text)s"),
-        "cap score <text>" : Underscore("%(text)s", True),
-    }
-    
-
+UnderscoreRule = makeContexualRule("UnderscoreRule", mapping, extras, {})
+UnderscoreRule.context.addRequirement(NotEmacs)
+UnderscoreRule.activate()

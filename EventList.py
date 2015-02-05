@@ -1,12 +1,14 @@
 from namedtuple import namedtuple
 
-RuleChangeEvent = namedtuple("RuleChangeEvent", "rule")
+RuleActivateEvent = namedtuple("RuleActivateEvent", "rule")
+RuleDeactivateEvent = namedtuple("RuleDeactivateEvent", "rule")
 MicrophoneEvent = namedtuple("MicrophoneEvent", "state")
 RuleMatchEvent = namedtuple("RuleMatchEvent", "rule, extras")
 FocusChangeEvent = namedtuple("FocusChangeEvent", "window") 
 WindowListEvent = namedtuple("WindowListEvent", "windows") 
 WordEvent = namedtuple("WordEvent", "words")
 EmacsConnectedEvent = namedtuple("EmacsConnectedEvent", [])
+LoadingRulesEvent = namedtuple("LoadingRulesEvent", "state")
 
 # choice events
 BufferListEvent = namedtuple("BufferListEvent", "choices") 
