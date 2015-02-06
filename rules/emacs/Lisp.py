@@ -13,6 +13,7 @@ class Lisp(EmacsBase):
     keywords = [
         ["1-", "one minus"],
         ["1+", "one plus"],
+        "add-hook",
         "add-to-list",
         "and",
         ["aref", "A ref"],
@@ -70,6 +71,7 @@ class Lisp(EmacsBase):
         ["&key", "key"],
         "nil",
         "number-sequence",
+        "make-local-variable",
         "make-string",
         "make-vector",
         "map",
@@ -101,6 +103,7 @@ class Lisp(EmacsBase):
         "re-search-backward",
         "re-search-forward",
         "regexp-quote",
+        "remove-hook",
         "require",
         ["&rest", "rest"],
         "quote",

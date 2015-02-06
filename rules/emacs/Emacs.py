@@ -6,7 +6,7 @@ from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
 from Actions import (
     Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic,
-    splitKeyString, FormatState, ActionList)
+    splitKeyString, FormatState, ActionList, Repeat)
 from rules.Elements import Integer, Dictation, RuleRef
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
@@ -331,9 +331,9 @@ class Emacs(EmacsBase):
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),
-        "other"                        : Key("c-x, o"),
+        "other [<n>]"                  : Key("c-x,o") * Repeat(extra="n"),
         "collapse"                     : Key("c-x, 1"),
-        "other collapse"               : Key("c-x, o") + Key("c-x, 1"),
+        "other [<n>] collapse"         : (Key("c-x, o") * Repeat(extra="n")) + Key("c-x, 1"),
 
         "help function"                : Key("c-h,f"),
         "help variable"                : Key("c-h,v"),
@@ -423,6 +423,7 @@ class Emacs(EmacsBase):
         "inspect character"            : Key("c-u,c-x,equal"),
         "insert character"             : Key("c-x,8,enter"),
         "complete"                     : Minibuf("company-complete"),
+        "open this"                    : Minibuf("find-file-at-point"),
     }
 
     
