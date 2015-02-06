@@ -64,7 +64,7 @@ EnableRulesMsg = _newMsgType("EnableRulesMsg", "hashes")
 HeartbeatMsg = _newMsgType("HeartbeatMsg", "unused")
 LoadRuleFinishedMsg = _newMsgType("LoadRuleFinishedMsg", "hash")
 LoadRuleMsg = _newMsgType("LoadRuleMsg", "rule hash")
-MatchEventMsg = _newMsgType("MatchEventMsg", "hash phrase words extras")
+MatchEventMsg = _newMsgType("MatchEventMsg", "hash phrase extras")
 MicStateMsg = _newMsgType("MicStateMsg", "state")
 RecognitionStateMsg = _newMsgType("RecognitionStateMsg", "state")
 RequestRulesMsg = _newMsgType("RequestRulesMsg", "hashes")
@@ -85,7 +85,7 @@ def makeJSONRepresentable(t):
         return d
     elif type(t) == dict:
         d = OrderedDict()
-        keys = t.keys()
+        keys = sorted(t.keys())
         for k in keys:
             d[makeJSONRepresentable(k)] = makeJSONRepresentable(t[k])
         return d

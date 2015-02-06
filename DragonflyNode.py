@@ -5,8 +5,7 @@ from hotCode import importOrReload
 
 import time, socket, errno, select
 
-importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR")
-importOrReload("EventList", "MicrophoneEvent", "ConnectedEvent", "DisconnectedEvent")
+importOrReload("EventList", "DisconnectedEvent")
 
 class DragonflyNode(object):
     def __init__(self, eventQ=None):

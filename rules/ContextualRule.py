@@ -1,12 +1,16 @@
-from protocol import makeHashedRule
+from protocol import makeHashedRule, RuleType
 from Context import Context
 from EventLoop import getLoop
 from EventList import RuleActivateEvent, RuleDeactivateEvent
 
-class ContexualRule(object):
-    def __init__(self, *args, **kwargs):
-        self.rule = makeHashedRule(*args, **kwargs)
-        self._context = Context(self.rule)
+class ContextualRule(object):
+    def __init__(self, rule, context=None):
+        self.rule = rule
+        if context is None:
+            self._context = Context(set([self]))
+        else:
+            self._context = context
+            context.addTarget(self)
 
     @property
     def context(self):
@@ -18,8 +22,7 @@ class ContexualRule(object):
     def deactivate(self):
         getLoop().put(RuleDeactivateEvent(self.rule))
 
-def makeContexualRule(name, mapping, extras, defaults, ruleType=RuleType.SERIES,
-                      seriesMergeGroup=0):
-    x = makeHashedRule(ruleType, seriesMergeGroup, name, mapping, extras, defaults)
-    x = ContextualRule(x)
-    return x
+def makeContextualRule(name, mapping, extras=[], defaults={}, ruleType=RuleType.SERIES,
+                       seriesMergeGroup=0):
+    x = makeHashedRule(name, mapping, extras, defaults, ruleType, seriesMergeGroup)
+    return ContextualRule(x)

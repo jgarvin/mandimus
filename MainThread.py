@@ -6,19 +6,19 @@ log.setLevel(10)
 import os, sys
 from dfly_server import DragonflyThread
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, SelectWindow
-from WindowEventWatcher import WindowEventWatcher, FocusChangeEvent, WindowListEvent
+from WindowEventWatcher import WindowEventWatcher
 from Window import Window, getFocusedWindow
 from wordUtils import extractWords, buildSelectMapping, punc2Words
 import EventLoop
 import re
 import time
 import traceback
-from Events import GrammarEvent
-from EventList import MicrophoneEvent, ConnectedEvent
-from rules.Rule import registerRule, registeredRules
+from EventList import (MicrophoneEvent, ConnectedEvent, WindowListEvent,
+                       ExitEvent, RestartEvent)
 from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
 from rules.Elements import Integer, Dictation
+from rules.ContextualRule import makeContextualRule
 import EventList
 import select
 
@@ -69,9 +69,6 @@ def chromium(w):
 # grammar only when the windows aren't special
 # cased?
 
-class RestartEvent(object): pass
-class ExitEvent(object): pass
-
 class TimerEntry(object):
     def __init__(self, nextExpiration, callback, seconds, priority):
         self.nextExpiration = nextExpiration
@@ -85,32 +82,22 @@ class MainThread(object):
         self.timers = []
         EventLoop.event_loop = self        
 
-        self.dfly = DragonflyThread(('', 23133), self)
-        self.win = WindowEventWatcher(self, filterWindows)
         self.run = True
-        
         self.events = []
-
         self.eventSubscribers = {}
 
-        self.subscribeEvent(ConnectedEvent, self.onConnect)
+        self.dfly = DragonflyThread(('', 23133), self)
+        self.win = WindowEventWatcher(self, filterWindows)
+        
         self.subscribeEvent(RestartEvent, self.restart)
         self.subscribeEvent(ExitEvent, self.stop)
-        self.subscribeEvent(FocusChangeEvent, self.onFocusChange)
-        self.subscribeEvent(WindowListEvent, self.handleWindowList)
-        self.subscribeEvent(GrammarEvent, self.handleGrammarEvent)
-        self.subscribeEvent(EventList.RuleChangeEvent, self.onRuleChange)
+        #self.subscribeEvent(WindowListEvent, self.handleWindowList)
         
-        class MainRule(SeriesMappingRule):
-            mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
-                        "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
-            def activeForWindow(self, w):
-                return True
-        registerRule(MainRule)
-
-    def onRuleChange(self, ev):
-        self.determineRules(getFocusedWindow())
-
+        mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
+                    "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
+        self.MainControlRule = makeContextualRule("MainControlRule", mapping)
+        self.MainControlRule.activate()
+        
     def subscribeEvent(self, eventType, handler, priority=100):
         if eventType not in self.eventSubscribers:
             self.eventSubscribers[eventType] = []
@@ -145,22 +132,6 @@ class MainThread(object):
                     log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
                     continue
                     
-    def onFocusChange(self, ev):
-        log.debug("Focus change")
-        self.determineRules(ev.window)
-
-    def determineRules(self, window):
-        #log.debug("Determine rules")
-
-        active = set()
-        if window:
-            for r in registeredRules().values():
-                #log.debug("found rule: %s" % type(r).__name__)
-                if r.activeForWindow(window):
-                    active.add(r)
-        log.info("updating rule enabledness")
-        self.dfly.updateRuleEnabledness(active)
-    
     def put(self, p):
         self.events += [p]
 
@@ -189,18 +160,6 @@ class MainThread(object):
             self.stop()
             sys.exit()
         
-    def onConnect(self, ev=None):
-        log.debug("Got connected event, checking windows")
-        self.win()
-        log.debug("Draining events")
-        self.drainEvents()
-        log.debug("Requesting startup complete")
-        # running win was supposed to make this unnecessary,
-        # but sometimes the window watcher finishes first,
-        # and the events get cached and dismissed
-        self.determineRules(getFocusedWindow())
-        self.dfly.requestStartupComplete()
-
     def __call__(self):
         try:
             while self.run:
@@ -211,58 +170,52 @@ class MainThread(object):
             self.stop()
             sys.exit()
 
-    def handleGrammarEvent(self, ev):
-        if ev.load:
-            self.dfly.loadGrammar(ev.grammar)
-        else:
-            self.dfly.unloadGrammar(ev.grammar)
+    # def handleWindowList(self, ev):
+    #     # sometimes at startup list is empty
+    #     if not ev.windows:
+    #         return
 
-    def handleWindowList(self, ev):
-        # sometimes at startup list is empty
-        if not ev.windows:
-            return
+    #     spokenWindows = {}
+    #     for w in ev.windows:
+    #         global spokenWindowRules
+    #         spokenForms = []
+    #         for rule in spokenWindowRules:
+    #             spokenForms = rule(w)
+    #             if spokenForms != []:
+    #                 spokenForms = [set(spokenForms)]
+    #                 break
 
-        spokenWindows = {}
-        for w in ev.windows:
-            global spokenWindowRules
-            spokenForms = []
-            for rule in spokenWindowRules:
-                spokenForms = rule(w)
-                if spokenForms != []:
-                    spokenForms = [set(spokenForms)]
-                    break
+    #         if spokenForms == []:
+    #             # thought about using name instead of wmclass,
+    #             # but the title tends to contain debris like
+    #             # the name of the currently opened document/page
+    #             nameset = extractWords(w.name, translate=punc2Words)
+    #             classset = extractWords(w.wmclass, translate=punc2Words)
+    #             spokenForms = [nameset, classset]
 
-            if spokenForms == []:
-                # thought about using name instead of wmclass,
-                # but the title tends to contain debris like
-                # the name of the currently opened document/page
-                nameset = extractWords(w.name, translate=punc2Words)
-                classset = extractWords(w.wmclass, translate=punc2Words)
-                spokenForms = [nameset, classset]
+    #         spokenWindows[w] = spokenForms
 
-            spokenWindows[w] = spokenForms
+    #     # remove empty sets
+    #     for w, spokenForms in spokenWindows.items():
+    #         try:
+    #             spokenForms.remove(set())
+    #         except ValueError:
+    #             pass # python is stupid
+    #         try:
+    #             spokenForms.remove(set(u''))
+    #         except ValueError:
+    #             pass # python is stupid
+    #     # remove windows that map to no forms
+    #     spokenWindows = dict((k, v) for k, v in spokenWindows.iteritems() if v)
 
-        # remove empty sets
-        for w, spokenForms in spokenWindows.items():
-            try:
-                spokenForms.remove(set())
-            except ValueError:
-                pass # python is stupid
-            try:
-                spokenForms.remove(set(u''))
-            except ValueError:
-                pass # python is stupid
-        # remove windows that map to no forms
-        spokenWindows = dict((k, v) for k, v in spokenWindows.iteritems() if v)
+    #     omapping = buildSelectMapping('win', spokenWindows, SelectWindow)
 
-        omapping = buildSelectMapping('win', spokenWindows, SelectWindow)
+    #     class WindowRule(MappingRule):
+    #         mapping = omapping
+    #         def activeForWindow(self, w):
+    #             return True
 
-        class WindowRule(MappingRule):
-            mapping = omapping
-            def activeForWindow(self, w):
-                return True
-
-        registerRule(WindowRule)
+    #     registerRule(WindowRule)
 
     def stop(self, ev=None):
         self.run = False

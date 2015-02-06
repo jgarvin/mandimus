@@ -13,7 +13,6 @@ from DragonflyNode import DragonflyNode
 from namedtuple import namedtuple
 from Actions import RepeatPreviousAction
 from EventLoop import getLoop
-from rules.Rule import registeredRules
 from rules.SeriesMappingRule import SeriesMappingRule
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
@@ -33,7 +32,7 @@ class DragonflyThread(DragonflyNode):
         DragonflyNode.__init__(self, pushQ)
         self.history = []
 
-        # dictionary mapping rule hash -> rule
+        # dictionary mapping rule hash -> HashedRule
         self.hashedRules = {}
         # contains HashedRule's
         self.activatedRules = set()
@@ -55,13 +54,28 @@ class DragonflyThread(DragonflyNode):
         getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
 
     def onRuleActivate(self, ev):
-        if ev.hash not in self.hashedRules:
-            log.info("Adding new hashed rule %s" % ev.rule)
-            self.hashedRules[ev.rule.hash] = ev.rule.rule
+        if ev.rule.hash not in self.hashedRules:
+            log.info("Adding new hashed rule [%s]" % (ev.rule,))
+            self.hashedRules[ev.rule.hash] = ev.rule
 
         if ev.rule in self.activatedRules:
-            log.info("Requested to activate already activated rule (%s), ignoring." % ev.rule)
-            self.activatedRules.add(ev.rule)
+            log.info("Requested to activate already activated rule [%s], ignoring." % (ev.rule,))
+            return
+        
+        log.info("Activating rule [%s]" % (ev.rule,))
+        self.activatedRules.add(ev.rule)
+
+    def onRuleDeactivate(self, ev):
+        if ev.rule.hash not in self.hashedRules:
+            log.error("Deactivating rule that was never added [%s]" % (ev.rule,))
+            return
+
+        if ev.rule not in self.activatedRules:
+            log.error("Asking to deactivate already deactivated rule [%s], ignoring." % (ev.rule,))
+            return
+
+        log.info("Deactivating rule [%s]" % (ev.rule,))
+        self.activatedRules.remove(ev.rule)
 
     def __call__(self):
         if not self.other:
@@ -88,8 +102,8 @@ class DragonflyThread(DragonflyNode):
             log.error("Client requested rule we don't have! Hash: %s" % hash)
             return
         
-        log.info("Loading rule: %s" % self.hashedRules[hash])
-        self.sendMsg(makeJSON(LoadRuleMsg(self.hashedRules[hash], hash)))
+        log.info("Loading rule: %s" % (self.hashedRules[hash],))
+        self.sendMsg(makeJSON(LoadRuleMsg(self.hashedRules[hash].rule, hash)))
         self.waitingForLoadConfirmation.add(hash)
         self.pushQ.put(LoadingRulesEvent(True))
 
@@ -122,7 +136,7 @@ class DragonflyThread(DragonflyNode):
         elif isinstance(msg, LoadRuleFinishedMsg):
             self.onLoadFinished(msg)
         elif isinstance(msg, MatchEventMsg):
-            self.onMatch(msg)
+            self.onMatch(msg.hash, msg.phrase, msg.extras)
         elif isinstance(msg, MicStateMsg):
             self.pushQ.put(MicrophoneEvent(msg.state))
         elif isinstance(msg, RecognitionStateMsg):
@@ -140,61 +154,41 @@ class DragonflyThread(DragonflyNode):
         else:
             log.error("Unknown message type, ignoring: [%s]" % json_msg)
             return
-        
-        elif msg.startswith("STARTUP_COMPLETE"):
-            self.pushQ.put(StartupCompleteEvent())
 
-    def parseMatchMsg(self, msg):
-        log.info(msg)
+    def onMatch(self, hash, phrase, extras):
+        if hash not in self.hashedRules:
+            log.error("Received match for unknown hash [%s]" % hash)
+            return
 
-        msg = msg.split("MATCH")[1]
-        tokens = msg.split(ARG_DELIMETER)
-        rule, words = tokens[:2]
-        extras = tokens[2:]
-        
-        extras = [g for g in extras if g != '']
-        extras = self.parseExtras(extras)
-        extras['rule'] = rule
-        extras['words'] = words
+        rule = self.hashedRules[hash]
+        if rule not in self.activatedRules:
+            log.error("Received match for deactivated rule! [%s -- %s]" % (rule.rule.name, hash))
+            return
 
-        self.onMatch(rule, extras)
+        rule = rule.rule
+        if phrase not in rule.mapping:
+            log.error("Received match on phrase not in rule! Phrase [%s] Rule [%s -- %s]" (phrase, rule.name, hash))
+            return
 
-    def onMatch(self, rule, extras):
         # todo replace this with MatchEvent
-        for g in self.enabledRules:
-            if rule in g.mapping:
-                try:
-                    cb = g.mapping[rule]
+        try:
+            cb = rule.mapping[phrase]
 
-                    if isinstance(cb, RepeatPreviousAction):
-                        if len(self.history) >= 1:
-                            repetitions = extras['n']
-                            rule, extras = self.history[-1]
-                            for i in range(repetitions):
-                                self.onMatch(rule, extras)
-                            return
-                    else:
-                        self.history.append(RuleMatchEvent(rule, extras))
+            if isinstance(cb, RepeatPreviousAction):
+                if len(self.history) >= 1:
+                    repetitions = extras['n']
+                    rule, extras = self.history[-1]
+                    for i in range(repetitions):
+                        self.onMatch(rule, extras)
+                    return
+            else:
+                self.history.append(RuleMatchEvent(rule, extras))
 
-                    log.info('match %s -- %s -- %s' % (g.name, rule, extras['words']))
-                    self.utterance.append(extras['words'])
-                    cb(extras)
-                except Exception as e:
-                    # don't want the whole thing to crash just because
-                    # of one bad rule
-                    exc_type, exc_value, exc_traceback = sys.exc_info()
-                    log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-
-    def parseExtras(self, extras):
-        parsed = {}
-        for e in extras:
-            e = e.split(KEY_VALUE_SEPARATOR)
-            try:
-                parsed[e[0]] = int(e[1])
-            except ValueError:
-                parsed[e[0]] = e[1]
-        return parsed
-    
-    
-      
-
+            log.info('match %s -- %s -- %s' % (rule.name, phrase, extras['words']))
+            self.utterance.append(extras['words'])
+            cb(extras)
+        except Exception as e:
+            # don't want the whole thing to crash just because
+            # of one bad rule
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))

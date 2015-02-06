@@ -20,5 +20,7 @@ EmacsWordEvent = namedtuple("EmacsWordEvent", "choices")
 class DisconnectedEvent(object): pass
 class ConnectedEvent(object): pass
 class StartupCompleteEvent(object): pass
+class RestartEvent(object): pass
+class ExitEvent(object): pass
 
 ### DRAGONSHARE RSYNC

@@ -5,26 +5,39 @@ class Context(object):
 
     def __init__(self, targets):
         self.requirements = set()
-        self.met = set()
+        self.metReqs = set()
         self.targets = targets
     
+    def addTarget(self, target):
+        self.targets.add(target)
+        self._maybeFire()
+
+    def removeTarget(self, target):
+        self.targets.remove(target)
+        target.deactivate()
+
     def addRequirement(self, req):
         self.requirements.add(req)
-        req.setContext(self)
+        req.addContext(self)
         self._maybeFire()
 
-    def met(req):
+    def removeRequirement(self, req):
+        self.requirements.remove(req)
+        req.removeContext(self)
+        self._maybeFire()
+        
+    def met(self, req):
         assert req in self.requirements
-        self.met.add(req)
+        self.metReqs.add(req)
         self._maybeFire()
 
-    def unmet(req):
+    def unmet(self, req):
         assert req in self.requirements
-        self.met.remove(req)
+        self.metReqs.remove(req)
         self._maybeFire()
 
     def _maybeFire(self):
-        if not (self.requirements - self.met):
+        if not (self.requirements - self.metReqs):
             for t in self.targets:
                 t.activate()
         else:

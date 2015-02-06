@@ -11,7 +11,6 @@ from rules.Elements import Integer, Dictation, RuleRef
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords, buildSelectMapping
-from Events import GrammarEvent
 from util import deepEmpty
 from rules.emacs.Cmd import Cmd, runEmacsCmd, toggleCommandLogging, Minibuf
 from rules.emacs.CommandWatcher import EmacsCommandWatcher
