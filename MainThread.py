@@ -286,6 +286,7 @@ if __name__ == "__main__":
         # ('rules.emacs.Belt', ['']),
         # ('rules.emacs.Dired', ['']),
         # ('rules.emacs.Emacs', ['']),
+        # ('rules.emacs.Eww', ['']),
         # ('rules.emacs.Python', ['']),
         # ('rules.emacs.Lisp', ['']),
         # ('rules.emacs.Edit', ['']),

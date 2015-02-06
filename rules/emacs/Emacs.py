@@ -6,7 +6,7 @@ from rules.SeriesMappingRule import SeriesMappingRule
 from rules.MappingRule import MappingRule
 from Actions import (
     Key, Text, Camel, Underscore, Hyphen, Speak, Action, runCmd, SelectChoice, Mimic,
-    splitKeyString, FormatState, ActionList)
+    splitKeyString, FormatState, ActionList, Repeat)
 from rules.Elements import Integer, Dictation, RuleRef
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
@@ -229,7 +229,7 @@ class EmacsMapping(MappingRule):
     "this is for commands that are unlikely to be said in series"
     mapping = {
         "command"                        : Key("c-x,c-m"),
-        #"command <text>"                 : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
+        #"command <text>"                : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
         "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
         "exit debug"                     : Key("c-rbracket"),
         "debug function"                 : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
@@ -260,7 +260,7 @@ class EmacsMapping(MappingRule):
         "project replace"                : Key("c-c,p,r"),
         "kill project"                   : Key("c-c,p,k"),
         "project root"                   : Key("c-c,p,D"),
-        "compile"                        : Key("c-c,p,c"),
+        "build"                          : Key("c-c,p,c"),
         "invalidate projectile cache"    : Key("c-c,p,i"),
 
         # compilation mode commands
@@ -298,6 +298,7 @@ class EmacsMapping(MappingRule):
         "get status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
         "submit"                         : Key("c-x,hash"),
         "open terminal"                  : Cmd("(etc-start-or-open-terminal)"),
+        "open shell"                     : Minibuf("shell"),
         "show top"                       : Cmd("(etc-start-or-open-top)"),
         "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
         "toggle command logging"         : toggleCommandLogging,
@@ -330,9 +331,9 @@ class Emacs(EmacsBase):
         "eval"                         : Key("c-x,c-e"),
         "start macro"                  : Key("F3"),
         "mack"                         : Key("F4"),
-        "other"                        : Key("c-x, o"),
+        "other [<n>]"                  : Key("c-x,o") * Repeat(extra="n"),
         "collapse"                     : Key("c-x, 1"),
-        "other collapse"               : Key("c-x, o") + Key("c-x, 1"),
+        "other [<n>] collapse"         : (Key("c-x, o") * Repeat(extra="n")) + Key("c-x, 1"),
 
         "help function"                : Key("c-h,f"),
         "help variable"                : Key("c-h,v"),
@@ -354,10 +355,10 @@ class Emacs(EmacsBase):
         "bottom"                       : Key("a-rangle"),
         "window top side"              : Cmd("(goto-char (window-start))"),
         "window bottom"                : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
-        "ahead [<n>]"                  : Key("a-f:%(n)d"),
-        "behind [<n>]"                 : Key("a-b:%(n)d"),
-        "pro [<n>]"                    : Cmd("(forward-symbol 1)"),
-        "per [<n>]"                    : Cmd("(forward-symbol -1)"),
+        "pro [<n>]"                    : Key("a-f:%(n)d"),
+        "per [<n>]"                    : Key("a-b:%(n)d"),
+        "over [<n>]"                   : Cmd("(forward-symbol 1)"),
+        "under [<n>]"                  : Cmd("(forward-symbol -1)"),
         "leaf [<n>]"                   : Key("c-v:%(n)d"),
         "feel [<n>]"                   : Key("a-v:%(n)d"),
         "center"                       : Key("c-l"),
@@ -422,6 +423,7 @@ class Emacs(EmacsBase):
         "inspect character"            : Key("c-u,c-x,equal"),
         "insert character"             : Key("c-x,8,enter"),
         "complete"                     : Minibuf("company-complete"),
+        "open this"                    : Minibuf("find-file-at-point"),
     }
 
     

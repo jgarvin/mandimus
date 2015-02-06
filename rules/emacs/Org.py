@@ -32,7 +32,7 @@ class Org(EmacsBase):
         "new todo"                : Key("as-enter"),
         "make headline"           : Key("c-c,asterisk"),
         "archive [<n>]"           : Key("c-c,c-x,c-a") * Repeat(extra="n"),
-        "task"                    : Key("c-c,c-t"),
+        "task [<n>]"              : Key("c-c,c-t") * Repeat(extra="n"),
         "follow"                  : Key("c-c,c-o"),
         "insert link"             : Key("c-c,c-l"),
         "schedule"                : Key("c-c,c-s"),
