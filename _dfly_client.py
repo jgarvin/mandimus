@@ -19,19 +19,10 @@ from functools import partial
 from copy import copy
 from util import deepEmpty
 
-#log.setLevel(0)
-
-# Without this stderr won't go to the Natlink
-# message window.
-#logging.basicConfig()
-
-# import logging
-# logging.basicConfig()
-# #logging.basicConfig(filename="E:\\log.txt", filemode='w')
-# log = logging.getLogger(__name__)
-
-importOrReload("dfly_parser", "parseMessages", "MESSAGE_TERMINATOR", "ARG_DELIMETER",
-               "MATCH_MSG_START", "KEY_VALUE_SEPARATOR")
+importOrReload("ClientDecoder", "Decoder")
+importOrReload("protocol", "EnableRulesMsg", "LoadRuleMsg", "LoadRuleFinishedMsg",
+               "HeartbeatMsg", "MatchEventMsg", "MicStateMsg", "RecognitionStateMsg",
+               "RequestRulesMsg", "WordListMsg")
 importOrReload("SeriesMappingRule", "SeriesMappingRule", "combineSeriesMappingRules")
 importOrReload("DragonflyNode", "DragonflyNode")
 
@@ -40,6 +31,28 @@ def reloadClient():
     unloadCode()
     from hotcode import reloadCode
     reloadCode()
+
+def unload():
+    global client
+    client.cleanup()
+    log.info("----------unload-------------")
+    mdlog.shutdown()
+    # unload_code()
+
+def snore_and_unload():
+    natlink.setMicState('sleeping')
+    client.sendMicState()
+    #unload()
+
+class GlobalRules(MappingRule):
+    mandimusFlags = []
+    isMergedSeries = False
+    mapping = {
+        "reload client code" : Function(reloadClient),
+        "snore" : Function(snore_and_unload),
+        }
+    extras = []
+    defaults = {}
 
 class NeedsDependency(Exception): pass
 
@@ -80,39 +93,22 @@ class DragonflyClient(DragonflyNode):
         self.timer = get_engine().create_timer(self._eventLoop, 1)
         self.buf = ""
 
-        self.rules = {}
-        self.enabledRules = set() # set of names, not including combined series
-        self.grammars = {}
+        # universal rule cache, stores several possible types:
+        # hash -> HashedRule
+        # hash of series rule hashes -> SeriesMappingRule
+        # hash of terminator rule hashes -> MappingRule
+        # hash of activated rules -> Grammar (master)
+        self.hashedRules = {}
+        self.activatedRules = set() # set of HashRules
 
-        # maps needed rule name to the message that needs it
-        self.pendingRules = {}
-
-        self.globalRule = GlobalRules(name="GlobalRules") 
-
-        self.rulesNewThisTick = []
-
-        self.addRule(self.globalRule, "GlobalRules")
-        self.resetEnabledRules()
-        #self.makeRuleGrammar(self.globalRule, "GlobalRules")
-
-        self.msgTypeHandlers = {}
+        self.activeMasterGrammar = None
 
         self.lastMicState = None
-
-        # We always have one master SeriesMappingRule that is a
-        # combination of all the active series rules. This way
-        # you can say many commands together without pausing,
-        # but still define them in separate files and having
-        # separate contexts.
-        self.combinedSeries = None
-
-        self.startupCompleteRequested = False
-
         self.recognitionState = "success"
 
-    def resetEnabledRules(self):
-        self.enabledRules = set()
-        self.enabledRules.add(self.globalRule.name)
+        #self.globalRule = GlobalRules(name="GlobalRules") 
+        #self.addRule(self.globalRule, "GlobalRules")
+        #self.makeRuleGrammar(self.globalRule, "GlobalRules")
 
     def addRule(self, rule, name):
         log.info('adding rule: %s %s' % (rule.name, name))
@@ -129,9 +125,6 @@ class DragonflyClient(DragonflyNode):
         self.rules[name] = rule
         rule.disable()
         self.rulesNewThisTick.append(name)
-
-    def addMsgTypeHandler(self, leadingTerm, handler):
-        self.msgTypeHandlers[leadingTerm] = handler
 
     def removeRule(self, name, replacing=False):
         log.info('Removing rule: ' + name)
@@ -246,13 +239,6 @@ class DragonflyClient(DragonflyNode):
         #log.info("Sending mic event %s" % natlink.getMicState())
         #self.sendMsg("MICSTATE" + ARG_DELIMETER + natlink.getMicState())
 
-    def unloadAllRules(self):
-        if len(self.grammars) > 1:
-            log.info('Unloading all rules.')
-        for key, val in self.rules.items():
-            if key != "GlobalRules":
-                self.removeRule(key)
-        
     def parseEnableMsg(self, msg):
         log.info("Received enable message: %s" % msg)
         
@@ -337,58 +323,30 @@ class DragonflyClient(DragonflyNode):
                 #log.info("not Enabling for real %s" % l.name)
                 pass
 
-    def _parseMessage(self, msg):
+    def onMessage(self, json_msg):
+        decoder = Decoder()
+        msg = parseMessage(json_msg, object_hook=decoder.decode)
         try:
-            if msg.startswith("MappingRule"):
-                self.parseMappingRuleMsg(msg, MappingRule)
-            elif msg.startswith("SeriesMappingRule"):
-                self.parseMappingRuleMsg(msg, SeriesMappingRule)
-            elif msg.startswith("unload_all"):
-                self.unloadAllRules()
-            elif msg.startswith("unload"):
-                self.parseUnloadMsg(msg)
-            elif msg.startswith("enable"):
-                self.parseEnableMsg(msg)
-            elif msg.startswith("ack"):
-                log.debug('received ack: ' + msg)
-            elif msg.startswith("REQUEST_STARTUP_COMPLETE"):
-                self.startupCompleteRequested = True
-            elif len(msg) == 0:
-                log.debug('received heartbeat')
+            if isinstance(msg, EnableRulesMsg):
+                pass
+            elif isinstance(msg, HeartbeatMsg):
+                log.debug("Heartbeat")
+            elif isinstance(msg, LoadRuleMsg):
+                self.onLoadRuleMsg(msg, decoder.placeholders)
             else:
-                log.info("Received unknown message type!: " + msg)
-                log.info('Message length %d' % (len(msg),))
+                log.error("Unknown message type, ignoring: [%s]" % json_msg)
+                return
         except Exception as e:
-            if isinstance(e, NeedsDependency):
-                raise
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
-    # def messageBatch(self, messages):
-    #     index = []
-    #     for i, m in enumerate(messages):
-    #         parts = m.split(ARG_DELIMETER, 3)
-    #         if len(parts) < 3:
-    #             continue
-    #         msgtype, msgname = parts[0], parts[1] 
-    #         index.append((i, msgtype, msgname))
+    def onLoadRuleMsg(msg, placeholders):
+        if msg.hash in self.hashedRules:
+            log.error("Sent already cached rule, ignoring [%s -- %s]" % msg)
 
-    def onMessage(self, msg):
-        try:
-            self._parseMessage(msg)
-        except NeedsDependency as e:
-            log.info("Waiting to parse [%s ...], needs dependency" % msg[:min(len(msg), 30)]) 
-            if e.message not in self.pendingRules:
-                self.pendingRules[e.message] = []
-            self.pendingRules[e.message].append(msg)
-            return False
+        # TODO: What about the placeholders? Wanted to cache those.
+        self.hashedRules[msg.hash] = msg.rule
 
-    def parseUnloadMsg(self, msg):
-        allargs = msg.split(ARG_DELIMETER) 
-        
-        assert allargs[0] == "unload"
-        self.removeRule(allargs[1])
-        
     def parseMappingRuleMsg(self, msg, mappingCls):
         allargs = msg.split(ARG_DELIMETER)
 
@@ -445,48 +403,6 @@ class DragonflyClient(DragonflyNode):
             log.info(defaults)
             return
         
-    def getRule(self, ruleName):                
-        if ruleName not in self.rules:
-            return None
-        return self.rules[ruleName]
-        
-    def parseExtras(self, extras):
-        parsed = []
-        for e in extras:
-            e = e.split()
-            if e[0] == "INTEGER":
-                parsed.append(Integer(e[1], int(e[2]), int(e[3])))
-            elif e[0] == "DICTATION":
-                parsed.append(Dictation(e[1]))
-            elif e[0] == "REPETITION":
-                elementRef = None
-                for p in parsed:
-                    if p.name == e[1]:
-                        elementRef = p
-                        break
-                if elementRef is None:
-                    raise Exception("Can't find element %s referred to by %s" % (e[1], e[4]))        
-                parsed.append(Repetition(p, int(e[2]), int(e[3]), name=e[4]))
-            elif e[0] == "RULEREF":
-                r = self.getRule(e[1])
-                if not r:
-                    log.info("Missing dependency!: %s" % e[1]) 
-                    raise NeedsDependency(e[1])
-                parsed.append(RuleRef(rule=r, name=e[2]))
-            else:
-                raise Exception("Unknown element: %s" % e)
-        return parsed
-        
-    def parseDefaults(self, defaults):
-        parsed = {}
-        for e in defaults:
-            e = e.split(KEY_VALUE_SEPARATOR)
-            try:
-                parsed[e[0]] = int(e[1])
-            except ValueError:
-                parsed[e[0]] = e[1]
-        return parsed
-    
     def onMatch(self, grammarString, data):
         if natlink.getMicState() != 'on':
             return
@@ -529,29 +445,6 @@ class DragonflyClient(DragonflyNode):
         for g in grammarList:
             mapping[g] = ReportingAction(g, self)
         return mapping
-        
-
-def unload():
-    global client
-    client.cleanup()
-    log.info("----------unload-------------")
-    mdlog.shutdown()
-    # unload_code()
-
-def snore_and_unload():
-    natlink.setMicState('sleeping')
-    client.sendMicState()
-    #unload()
-
-class GlobalRules(MappingRule):
-    mandimusFlags = []
-    isMergedSeries = False
-    mapping = {
-        "reload client code" : Function(reloadClient),
-        "snore" : Function(snore_and_unload),
-        }
-    extras = []
-    defaults = {}
 
 client = DragonflyClient()
 

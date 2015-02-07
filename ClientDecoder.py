@@ -1,12 +1,7 @@
 from collections import namedtuple
-# from dragonfly import ( Integer, Dictation, RuleRef, Repetition, ListRef, MappingRule )
-from rules.Elements import *
+from dragonfly import ( Integer, Dictation, RuleRef, Repetition, ListRef, MappingRule )
 import json
-from protocol import *
-
-def getRule(ruleHash):
-    assert False
-    return None
+from protocol import HashedRule
 
 RuleRefPlaceholder = namedtuple("RuleRefPlaceholder", "rule_hash name")
 RepetitionPlaceholder = namedtuple("RepetitionPlaceholder", "rule_hash name")
@@ -29,6 +24,4 @@ class Decoder(object):
                 return self.placeholders[-1]
             elif dct["dataType"] == "ListRef":
                 return ListRef(dct["name"])
-            elif dct["dataType"] == "HashedRule":
-                return HashedRule(rule=dct["rule"], hash=dct["hash"])
         return dct

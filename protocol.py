@@ -4,6 +4,7 @@ from util import enum
 import json
 import md5
 from copy import deepcopy
+import struct
 
 # So here is how the protocol works. The server decides which rules should be
 # enabled. It sends an ENABLE_RULES with a list of md5 hashes of the rules
@@ -117,8 +118,8 @@ def parseNamedTuple(p, t):
     del p["dataType"]
     return t(**p)
 
-def parseMessage(json_msg):
-    p = json.loads(json_msg)
+def parseMessage(json_msg, object_hook=None):
+    p = json.loads(json_msg, object_hook=object_hook)
     if "dataType" not in p:
         raise ValueError("Missing dataType key in msg: [%s]" % json_msg)
     for t in msgTypes:
@@ -126,5 +127,30 @@ def parseMessage(json_msg):
         if t.__name__ == p["dataType"]:
             return parseNamedTuple(p, t)
     raise ValueError("Unknown message type [%s] in msg: [%s]" % (p["dataType"], json_msg))
+
+def parseStream(msgs, buf, nextMsgSize):
+    """Parses the TCP stream, returning new buf and nextMsgSize state."""
+    idx = 0
+
+    del msgs[:]
+
+    while idx < len(buf):
+        #print "idx: %d" % idx
+        if nextMsgSize == 0:
+            if len(buf) - idx >= 4:
+                nextMsgSize = struct.unpack("!I", buf[idx:idx+4])[0]
+                idx += 4
+            else:
+                break
+        
+        if len(buf) - idx >= nextMsgSize:
+            msgs.append(buf[idx:idx+nextMsgSize])
+            idx += nextMsgSize
+            nextMsgSize = 0
+        else:
+            break
+
+    return (msgs, buf[idx:], nextMsgSize)
+
 
 ### DRAGONSHARE RSYNC

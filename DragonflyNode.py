@@ -3,8 +3,9 @@ log = mdlog.getLogger(__name__)
 
 from hotCode import importOrReload
 
-import time, socket, errno, select
+import time, socket, errno, select, struct
 
+importOrReload("protocol", "parseStream")
 importOrReload("EventList", "DisconnectedEvent")
 
 class DragonflyNode(object):
@@ -14,6 +15,8 @@ class DragonflyNode(object):
         self.eventQ = eventQ
 
         self.outgoing = []
+        self.nextMsgSize = 0
+        self.buf = ""
 
     def makeSocket(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -27,9 +30,11 @@ class DragonflyNode(object):
             return
 
         messages = []
+        
+        
         try:
             self.buf += self.recv()
-            (self.buf, messages) = parseMessages(self.buf)
+            (messages, self.buf, self.nextMsgSize) = parseStream(messages, self.buf, self.nextMsgSize)
         except socket.timeout as e:
             pass
         except socket.error as e:
@@ -55,7 +60,7 @@ class DragonflyNode(object):
             self.sendMsg('')
 
     def recv(self):
-        #log.info('receiving...')
+        log.info('receiving...')
         self.other.setblocking(0)
         buf = []
         received = True
@@ -63,14 +68,14 @@ class DragonflyNode(object):
             while received:
                 received = unicode(self.other.recv(4096 * 1000), 'utf-8')
                 buf.append(received)
-                # log.info("received: %s" % received)
+                log.info("received: %s" % received)
         except socket.error as e:
             if e.errno == errno.EWOULDBLOCK:
                 pass
             else:
                 raise
             
-        # log.info("buf: [%s]" % buf)
+        log.info("buf: [%s]" % buf)
         return u''.join(buf)
 
     def cleanup(self):
@@ -97,17 +102,15 @@ class DragonflyNode(object):
             log.info("can't send msg, not connected")
             return
         
-        if len(msg) and not msg.startswith('ack'): # don't log.info(heartbeats)
-            pass
-
         try:
             try:
+                encodedMsg = msg.encode('utf-8')
+                data = struct.pack("I32", len(encodedMsg)) + encodedMsg 
                 self.other.settimeout(None)
-                self.other.sendall((msg + MESSAGE_TERMINATOR).encode('utf-8'))
+                self.other.sendall(data)
             except UnicodeDecodeError as e:
                 log.error(str(e))
-                log.error("attempted msg: [%s]" %msg)
-                #log.error("problem area: %s [%s]" % (msg[35683], msg[35680:35686]))
+                log.error("attempted msg: [%s]" % msg)
             self.lastMsgSendTime = time.time()
         except socket.error as e:
             log.info("Socket error: %s" % e)
