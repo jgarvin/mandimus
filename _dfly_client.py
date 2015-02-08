@@ -18,11 +18,12 @@ import sys, os, traceback
 from functools import partial
 from copy import copy
 from util import deepEmpty
+from collections import namedtuple
+import hashlib
 
-importOrReload("ClientDecoder", "Decoder")
 importOrReload("protocol", "EnableRulesMsg", "LoadRuleMsg", "LoadRuleFinishedMsg",
                "HeartbeatMsg", "MatchEventMsg", "MicStateMsg", "RecognitionStateMsg",
-               "RequestRulesMsg", "WordListMsg")
+               "RequestRulesMsg", "WordListMsg", "RuleType")
 importOrReload("SeriesMappingRule", "SeriesMappingRule", "combineSeriesMappingRules")
 importOrReload("DragonflyNode", "DragonflyNode")
 
@@ -54,8 +55,6 @@ class GlobalRules(MappingRule):
     extras = []
     defaults = {}
 
-class NeedsDependency(Exception): pass
-
 class FailureReportingGrammar(Grammar):
     def setClient(self, client):
         self.client = client
@@ -84,6 +83,118 @@ class ReportingAction(ActionBase):
     def __str__(self):
         return "ReportingAction," + self.grammarString
 
+# We map hashes of rules we know about from rule refs
+# but haven't loaded yet to these. This lets us store
+# the grammars depending on a rule so that when that rule
+# finally arrives we can finish building the grammar and
+# activate it, provided at this point it's still the active
+# master grammar. 
+class NeedDependency(object): pass
+class MissingDependency(Exception): pass
+
+class MasterGrammar(object):
+    """A MasterGrammar is built up from a specific set of active rules. They
+    synthesize the different rule types into one dragonfly grammar. There is
+    only ever one master grammar active at a time."""
+
+    def __init__(self, baseRuleSet):
+        # Hashes that are directly part of this grammar
+        self.baseRuleSet = baseRuleSet
+        # Hashes of rules that we discover are dependencies
+        # of the base rule set
+        self.dependencyRuleSet = set()
+
+        # Rule references are stored as hashes, so rules that
+        # contain rule refs already effectively include those
+        # rules in their hash, so just hashing the base set is
+        # all we need.
+        x = hashlib.sha256()
+        x.update([r for r in self.baseRuleSet])
+        self.hash = x.hexdigest()
+
+        # Hashes of rules we depend on but haven't arrived yet.
+        # These will be discovered during the dfly grammar building
+        # process.
+        self.missing = set()
+        self.dflyGrammar = None
+
+    @property
+    def fullRullSet(self):
+        return self.baseRuleSet + self.dependencyRuleSet
+
+    def satisfyDependency(self, r):
+        "Marks dependency on hash r as satisfied, returns true if no more known
+        deps are missing. During the build process new indirect dependencies may
+        still be discovered however."
+        assert r in self.missing
+        self.missing.remove(r)
+        return len(self.missing) == 0
+
+    def checkDep(self, r, ruleCache):
+        "Checks if dep r is present. Not recursive."
+        if r not in ruleCache:
+            ruleCache[r] = NeedDependency()
+        if isinstance(ruleCache[r], NeedDependency):
+            ruleCache[r].add(self.hash)
+            self.missing.add(r)
+            return False
+        return True
+
+    def checkMissing(self):
+        if self.missing:
+            raise MissingDependency("Can't build MasterGrammar, missing hashes: [%s]" self.missing)
+
+    def checkDeps(self, ruleCache, ruleSet):
+        "Recursively check if all deps in ruleSet are satisfied."
+        if not ruleSet:
+            return True
+
+        newDeps = set()
+        for r in ruleSet:
+            if self.checkDep(r, ruleCache):
+                rule = self.ruleCache[r] # HashedRule
+                rule = rule.rule
+                for e in rule["extras"]:
+                    if "rule_ref" in e:
+                        newDeps.add(e["rule_ref"])
+                        
+        self.dependencyRuleSet.update(newDeps)
+        self.checkDeps(ruleCache, newDeps)
+
+    def build(self, ruleCache):
+        self.checkDeps(ruleCache, self.fullRullSet)
+        self.checkMissing()
+
+        # from here on we assume all deps are present all the way down
+        seriesGroups = {}
+        terminal = {}
+        independent = set()
+        for r in self.fullRullSet:
+            rule = self.ruleCache[r].rule
+            if rule["ruleType"] == RuleType.SERIES:
+                if rule["seriesMergeGroup"] not in seriesGroups:
+                    rule["seriesMergeGroup"] = {}
+                x = seriesGroups[rule["seriesMergeGroup"]]
+            elif rule["ruleType"] == RuleType.TERMINAL:
+                x = terminal
+            elif rule["ruleType"] == RuleType.INDEPENDENT:
+                x = {}
+
+            if "mapping" not in x:
+                x["mapping"] = {}
+            if "extras" not in x:
+                x["extras"] = {}
+            if "defaults" not in x:
+                x["defaults"] = {}
+
+            x["mapping"].update(rule["mapping"])
+            x["extras"].update(rule["extras"])
+            x["defaults"].update(rule["defaults"])
+
+            if rule["ruleType"] == RuleType.INDEPENDENT:
+                independent.add(x)
+            
+
 class DragonflyClient(DragonflyNode):
     def __init__(self):
         # Natlink doesn't provide a way to poll files or sockets,
@@ -93,11 +204,10 @@ class DragonflyClient(DragonflyNode):
         self.timer = get_engine().create_timer(self._eventLoop, 1)
         self.buf = ""
 
-        # universal rule cache, stores several possible types:
+        # rule cache, stores types:
         # hash -> HashedRule
-        # hash of series rule hashes -> SeriesMappingRule
-        # hash of terminator rule hashes -> MappingRule
-        # hash of activated rules -> Grammar (master)
+        # hash of component rule hashes -> MasterGrammar
+        # hash of unloaded rule -> NeedDependency
         self.hashedRules = {}
         self.activatedRules = set() # set of HashRules
 
@@ -346,6 +456,7 @@ class DragonflyClient(DragonflyNode):
 
         # TODO: What about the placeholders? Wanted to cache those.
         self.hashedRules[msg.hash] = msg.rule
+        
 
     def parseMappingRuleMsg(self, msg, mappingCls):
         allargs = msg.split(ARG_DELIMETER)

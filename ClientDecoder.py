@@ -25,3 +25,4 @@ class Decoder(object):
             elif dct["dataType"] == "ListRef":
                 return ListRef(dct["name"])
         return dct
+ 
