@@ -7,11 +7,10 @@ log.info("-----------load--------------")
 from hotCode import importOrReload, unloadCode, reloadCode, resetImportState
 resetImportState()
 
+import dragonfly as dfly
 from dragonfly import (
     Grammar, CompoundRule, MappingRule, ActionBase,
-    Key, Text, Integer, Dictation, RuleRef, Repetition, MappingRule,
-    Function )
-from dragonfly import get_engine
+    Key, Text, MappingRule, Function, get_engine )
 import natlink
 import socket
 import sys, os, traceback
@@ -21,6 +20,7 @@ from util import deepEmpty
 from collections import namedtuple
 import hashlib
 
+importOrReload("protocol")
 importOrReload("protocol", "EnableRulesMsg", "LoadRuleMsg", "LoadRuleFinishedMsg",
                "HeartbeatMsg", "MatchEventMsg", "MicStateMsg", "RecognitionStateMsg",
                "RequestRulesMsg", "WordListMsg", "RuleType")
@@ -97,12 +97,23 @@ class MasterGrammar(object):
     synthesize the different rule types into one dragonfly grammar. There is
     only ever one master grammar active at a time."""
 
-    def __init__(self, baseRuleSet):
+    def __init__(self, baseRuleSet, client):
+        self.client = client
+        
         # Hashes that are directly part of this grammar
         self.baseRuleSet = baseRuleSet
         # Hashes of rules that we discover are dependencies
         # of the base rule set
         self.dependencyRuleSet = set()
+
+        # hash -> dragonfly rule
+        self.concreteRules = {}
+        # one hash per merge group, hash is of hashes of rules that were merged
+        self.seriesRules = set()
+        # one hash, hash is of hashes of rules that were merged
+        self.terminatorRule = ""
+        # one hash per rule, hash is the rule's actual hash
+        self.independentRules = set()
 
         # Rule references are stored as hashes, so rules that
         # contain rule refs already effectively include those
@@ -117,6 +128,7 @@ class MasterGrammar(object):
         # process.
         self.missing = set()
         self.dflyGrammar = None
+
 
     @property
     def fullRullSet(self):
@@ -154,9 +166,9 @@ class MasterGrammar(object):
             if self.checkDep(r, ruleCache):
                 rule = self.ruleCache[r] # HashedRule
                 rule = rule.rule
-                for e in rule["extras"]:
-                    if "rule_ref" in e:
-                        newDeps.add(e["rule_ref"])
+                for e in rule.extras:
+                    if hasattr(e, "rule_ref"):
+                        newDeps.add(e.rule_ref)
                         
         self.dependencyRuleSet.update(newDeps)
         self.checkDeps(ruleCache, newDeps)
@@ -169,31 +181,161 @@ class MasterGrammar(object):
         seriesGroups = {}
         terminal = {}
         independent = set()
+
+        allRules = set()
+
+        # Merge series and terminal rules, set independent rules aside
+        self.fullName = []
         for r in self.fullRullSet:
             rule = self.ruleCache[r].rule
-            if rule["ruleType"] == RuleType.SERIES:
-                if rule["seriesMergeGroup"] not in seriesGroups:
-                    rule["seriesMergeGroup"] = {}
-                x = seriesGroups[rule["seriesMergeGroup"]]
-            elif rule["ruleType"] == RuleType.TERMINAL:
+            if rule.ruleType == RuleType.SERIES:
+                if rule.seriesMergeGroup not in seriesGroups:
+                    seriesGroups[rule.seriesMergeGroup] = {}
+                x = seriesGroups[rule.seriesMergeGroup]
+            elif ruleruleType == RuleType.TERMINAL:
                 x = terminal
-            elif rule["ruleType"] == RuleType.INDEPENDENT:
+            elif rule.ruleType == RuleType.INDEPENDENT:
                 x = {}
+                independent.add(x)
 
             if "mapping" not in x:
                 x["mapping"] = {}
             if "extras" not in x:
-                x["extras"] = {}
+                x["extras"] = set()
             if "defaults" not in x:
                 x["defaults"] = {}
+            if "name" not in x:
+                x["name"] = ""
+            if "hash" not in x:
+                x["hash"] = set()    
 
-            x["mapping"].update(rule["mapping"])
-            x["extras"].update(rule["extras"])
-            x["defaults"].update(rule["defaults"])
+            x["ruleType"] = rule.ruleType
+            x["seriesMergeGroup"] = rule.seriesMergeGroup
+            x["name"] = x["name"] + ("," if x["name"] else "") + rule.name
+            x["mapping"].update(rule.mapping.items())
+            x["extras"].update(rule.extras)
+            x["defaults"].update(rule.defaults.items())
+            x["hash"].add(rule.hash)
 
-            if rule["ruleType"] == RuleType.INDEPENDENT:
-                independent.add(x)
-            
+            self.fullName.append(x["name"])
+
+            # allRules will contain all the rules we have left
+            # *after* merging. So only one series rule per merge
+            # group and only one terminal rule.
+            allRules.add(x)
+
+        self.fullName = ",".join(self.fullName)
+
+        # We really should be doing a topological sort, but this
+        # isn't a frequent operation so this inefficiency should
+        # be OK. Keep trying to link deps until they're all good.
+        allRules = list(allRules)
+        while allRules:
+            x = allRules.pop()
+            if not self.cleanupProtoRule(x):
+                allRules.append(x)
+                continue
+            self.buildConcreteRule(x)
+
+        self.buildFinalMergedRule()
+
+    def buildFinalMergedRule(self):
+        extras = []
+        seriesRefNames = []
+        for i, r in enumerate(self.seriesRules):
+            name = "s" + str(i)
+            seriesRefNames.append(name)
+            ref = dfly.RuleRef(self.concreteRules[r], name)
+            extras.append(ref)
+        seriesPart = "[" + " | ".join([("<" + r + ">") for r in seriesRefNames]) + "]"
+
+        extras.append(dfly.RuleRef(self.concreteRules[self.terminatorRule], "terminator"))
+        terminatorPart = "[<terminator>]"
+
+        masterPhrase = seriesPart + " " + terminatorPart
+        mapping = {
+            masterPhrase : ReportingAction(masterPhrase, self.client)
+        }
+
+        self.finalDflyRule = MappingRule(name=self.fullName, mapping=mapping, extras=extras,
+                                         defaults={})
+
+        self.dflyGrammar = Grammar(self.fullName + "Grammar")
+        self.dflyGrammar.add_rule(self.finalDflyRule)
+        for r in self.independentRules:
+            self.dflyGrammar.add_rule(self.concreteRules[r])
+        get_engine().set_exclusiveness(grammar, 1)
+        self.dflyGrammar.load()
+
+        # rules only enabled via being a dependency need to have disable called
+        # on their dragonfly version so that they don't get recognized by themselves,
+        # this is a quirk of dragonfly
+        notEnabledRules = self.dependencyRuleSet - self.baseRuleSet
+        for r in notEnabledRules:
+            self.concreteRules[r].disable()
+
+    def activate(self):
+        self.dflyGrammar.activate()
+
+    def deactivate(self):
+        self.dflyGrammar.deactivate()
+
+    def buildConcreteRule(self, r):
+        if r["ruleType"] == RuleType.SERIES:
+            t = SeriesMappingRule
+        else:
+            t = MappingRule
+
+        rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
+                 defaults=r["defaults"])
+
+        self.concreteRules[r["hash"]] = rule
+
+        if r["ruleType"] == RuleType.SERIES:
+            self.seriesRules.add(r["hash"])
+        elif r["ruleType"] == RuleType.TERMINAL:
+            self.terminatorRule = r["hash"]
+        elif r["ruleType"] == RuleType.INDEPENDENT:
+            self.independentRules.add(r["hash"])
+        else:
+            assert False
+
+    def cleanupProtoRule(self, r):
+        if len(r["hash"]) == 1:
+            r["hash"] = r["hash"][0]
+        else:
+            hashes = sorted(list(r.hash))
+            x = hashlib.sha256()
+            x.update("".join([h for h in hashes]))
+            r["hash"] = x.hexdigest()
+
+        for k in r["mapping"]:
+            r["mapping"][k] = ReportingAction(k, self.client)
+
+        newExtras = []
+        for e in r["extras"]:
+            if isinstance(e, protocol.Integer):
+                newExtras.append(dfly.Integer(e.name, e.min, e.max))
+            elif isinstance(e, protocol.Dictation):
+                newExtras.append(dfly.Dictation(e.name))
+            elif isinstance(e, protocol.Repetition):
+                if e.rule_ref in self.concreteRules:
+                    newExtras.append(dfly.Repetition(self.concreteRules[e.rule_ref],
+                                                     e.min, e.max, e.name))
+                else:
+                    return False
+            elif isinstance(e, protocol.RuleRef):
+                if e.rule_ref in self.concreteRules:
+                    newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name)
+                else:
+                    return False
+            elif isinstance(e, protocol.ListRef):
+                newExtras.append(dfly.ListRef(e.name, e.list))
+            else:
+                raise Exception("Unknown extra type: [%s]" % e)
+
+        r["extras"] = newExtras
+        return True
 
 class DragonflyClient(DragonflyNode):
     def __init__(self):

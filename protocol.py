@@ -53,23 +53,29 @@ class HashedRule(HashedRuleBase):
     def __hash__(self):
         return hash(self.hash)
 
-msgTypes = set()
+dataTypes = set()
 
-def _newMsgType(name, members):
+def _newDataType(name, members):
     newType = namedtuple(name, members)
-    global msgTypes
-    msgTypes.add(newType)
+    global dataTypes
+    dataTypes.add(newType)
     return newType
 
-EnableRulesMsg = _newMsgType("EnableRulesMsg", "hashes")
-HeartbeatMsg = _newMsgType("HeartbeatMsg", "unused")
-LoadRuleFinishedMsg = _newMsgType("LoadRuleFinishedMsg", "hash")
-LoadRuleMsg = _newMsgType("LoadRuleMsg", "rule hash")
-MatchEventMsg = _newMsgType("MatchEventMsg", "hash phrase extras")
-MicStateMsg = _newMsgType("MicStateMsg", "state")
-RecognitionStateMsg = _newMsgType("RecognitionStateMsg", "state")
-RequestRulesMsg = _newMsgType("RequestRulesMsg", "hashes")
-WordListMsg = _newMsgType("WordListMsg", "name list")
+EnableRulesMsg = _newDataType("EnableRulesMsg", "hashes")
+HeartbeatMsg = _newDataType("HeartbeatMsg", "unused")
+LoadRuleFinishedMsg = _newDataType("LoadRuleFinishedMsg", "hash")
+LoadRuleMsg = _newDataType("LoadRuleMsg", "rule hash")
+MatchEventMsg = _newDataType("MatchEventMsg", "hash phrase extras")
+MicStateMsg = _newDataType("MicStateMsg", "state")
+RecognitionStateMsg = _newDataType("RecognitionStateMsg", "state")
+RequestRulesMsg = _newDataType("RequestRulesMsg", "hashes")
+WordListMsg = _newDataType("WordListMsg", "name list")
+
+Integer = _newDataType("Integer", "name min max")
+Dictation = _newDataType("Dictation", "name")
+Repetition = _newDataType("Repetition", "rule_ref min max name")
+RuleRef = _newDataType("RuleRef", "rule_ref name")
+ListRef = _newDataType("ListRef", "name list")
 
 def makeJSONRepresentable(t):
     toEncode = t
@@ -118,15 +124,16 @@ def parseNamedTuple(p, t):
     del p["dataType"]
     return t(**p)
 
-def parseMessage(json_msg, object_hook=None):
-    p = json.loads(json_msg, object_hook=object_hook)
-    if "dataType" not in p:
-        raise ValueError("Missing dataType key in msg: [%s]" % json_msg)
-    for t in msgTypes:
-        print "comparing %s %s" % (t.__name__, p["dataType"])
-        if t.__name__ == p["dataType"]:
-            return parseNamedTuple(p, t)
-    raise ValueError("Unknown message type [%s] in msg: [%s]" % (p["dataType"], json_msg))
+def asDataType(dct):
+    if "dataType" in dct:
+        for t in dataTypes:
+            if t.__name__ == dct["dataType"]:
+                return parseNamedTuple(dct, t)
+    return dct
+
+def parseMessage(json_msg):
+    p = json.loads(json_msg, object_hook=asDataType)
+    raise p
 
 def parseStream(msgs, buf, nextMsgSize):
     """Parses the TCP stream, returning new buf and nextMsgSize state."""
