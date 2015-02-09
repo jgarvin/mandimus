@@ -2,13 +2,13 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
-from Elements import Integer, Dictation, RuleRef, Repetition
 from listHelpers import dictReplace
 #from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs, NotEmacs
 from EventList import RuleActivateEvent
 import string
+from protocol import Integer, Dictation, RuleRef, Repetition
 
 # class PressKey(object):
 #     def __init__(self, force_shift=False):

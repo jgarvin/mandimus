@@ -5,7 +5,7 @@ from hotCode import importOrReload
 
 import time, socket, errno, select, struct
 
-importOrReload("protocol", "parseStream")
+importOrReload("protocol", "parseStream", "HeartbeatMsg", "makeJSON")
 importOrReload("EventList", "DisconnectedEvent")
 
 class DragonflyNode(object):
@@ -57,7 +57,7 @@ class DragonflyNode(object):
         # heartbeating
         newtime = time.time()
         if newtime - self.lastMsgSendTime > 1 and self.other is not None:
-            self.sendMsg('')
+            self.sendMsg(makeJSON(HeartbeatMsg("")))
 
     def recv(self):
         log.info('receiving...')

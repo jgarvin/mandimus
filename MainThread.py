@@ -15,9 +15,6 @@ import time
 import traceback
 from EventList import (MicrophoneEvent, ConnectedEvent, WindowListEvent,
                        ExitEvent, RestartEvent)
-from rules.SeriesMappingRule import SeriesMappingRule
-from rules.MappingRule import MappingRule
-from rules.Elements import Integer, Dictation
 from rules.ContextualRule import makeContextualRule
 import EventList
 import select

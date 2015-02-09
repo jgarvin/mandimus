@@ -20,11 +20,12 @@ from util import deepEmpty
 from collections import namedtuple
 import hashlib
 
-importOrReload("protocol")
-importOrReload("protocol", "EnableRulesMsg", "LoadRuleMsg", "LoadRuleFinishedMsg",
-               "HeartbeatMsg", "MatchEventMsg", "MicStateMsg", "RecognitionStateMsg",
-               "RequestRulesMsg", "WordListMsg", "RuleType")
-importOrReload("SeriesMappingRule", "SeriesMappingRule", "combineSeriesMappingRules")
+import protocol
+from protocol import (EnableRulesMsg, LoadRuleMsg, LoadRuleFinishedMsg,
+                      HeartbeatMsg, MatchEventMsg, MicStateMsg, RecognitionStateMsg,
+                      RequestRulesMsg, WordListMsg, RuleType, parseMessage)
+
+importOrReload("SeriesMappingRule", "SeriesMappingRule")
 importOrReload("DragonflyNode", "DragonflyNode")
 
 def reloadClient():
@@ -136,9 +137,9 @@ class MasterGrammar(object):
         return self.baseRuleSet + self.dependencyRuleSet
 
     def satisfyDependency(self, r):
-        "Marks dependency on hash r as satisfied, and tries to build if no more known
+        """Marks dependency on hash r as satisfied, and tries to build if no more known
         deps are missing. During the build process new indirect dependencies may still
-        be discovered however."
+        be discovered however."""
         assert r in self.missing
         self.missing.remove(r)
         if not self.missing:
@@ -156,7 +157,7 @@ class MasterGrammar(object):
 
     def checkMissing(self):
         if self.missing:
-            raise MissingDependency("Can't build MasterGrammar, missing hashes: [%s]" self.missing)
+            raise MissingDependency("Can't build MasterGrammar, missing hashes: [%s]" % self.missing)
 
     def checkDeps(self, ruleSet):
         "Recursively check if all deps in ruleSet are satisfied."
@@ -368,7 +369,7 @@ class DragonflyClient(DragonflyNode):
         self.recognitionState = "success"
 
         self.globalRule = GlobalRules(name="GlobalRules")
-        self.globalRuleGrammar = FailureReportingGrammar(name)
+        self.globalRuleGrammar = FailureReportingGrammar(self.globalRule.name)
         self.globalRuleGrammar.setClient(self)
         self.globalRuleGrammar.add_rule(self.globalRule)
         self.globalRuleGrammar.load()
@@ -376,7 +377,6 @@ class DragonflyClient(DragonflyNode):
 
     def dumpOther(self):
         # on disconnect unload all the rules
-        self.unloadAllRules()
         self.pendingRules = {}
         self.lastMicState = None
         DragonflyNode.dumpOther(self)
@@ -416,25 +416,26 @@ class DragonflyClient(DragonflyNode):
 
         micOn = (natlink.getMicState() == "on")
         if self.recognitionState == "thinking" and micOn:
-            self.sendMsg("START_RECOGNITION")
+            pass
+            #self.sendMsg("START_RECOGNITION")
         elif self.recognitionState in ["failure", "success"] and micOn:
-            self.sendMsg("STOP_RECOGNITION")
+            pass
+            #self.sendMsg("STOP_RECOGNITION")
 
         self.sendMicState()
 
     def sendMicState(self):
-        if not self.other:
-            return
+        pass
+        # if not self.other:
+        #     return
         
-        micState = natlink.getMicState()
-        if micState == "on":
-            micState = self.recognitionState
+        # micState = natlink.getMicState()
+        # if micState == "on":
+        #     micState = self.recognitionState
         
-        if self.lastMicState is None or micState != self.lastMicState:
-            self.lastMicState = micState
-            self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
-        #log.info("Sending mic event %s" % natlink.getMicState())
-        #self.sendMsg("MICSTATE" + ARG_DELIMETER + natlink.getMicState())
+        # if self.lastMicState is None or micState != self.lastMicState:
+        #     self.lastMicState = micState
+        #     self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
 
     def onMessage(self, json_msg):
         msg = parseMessage(json_msg)
@@ -494,29 +495,29 @@ class DragonflyClient(DragonflyNode):
                 return
 
     def onMatch(self, grammarString, data):
-        if natlink.getMicState() != 'on':
-            return
+        # if natlink.getMicState() != 'on':
+        #     return
 
         log.info('match -- %s -- %s -- %s' %
                  (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))
-        # log.info('data ' + unicode(data))
-        # log.info('node ' + u' '.join(data['_node'].words()))
-        # log.info('rule ' + unicode(data['_rule'].name))
-        #log.info('grammar ' + unicode(data['_grammar'].name))
-        msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
-        msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
-        if data:
-            # TODO: we really should be sending the whole node structure
-            # so we can have more elaborate phrases that change meaning
-            # based on what was actually said...
-            for key, value in data.items():
-                assert not isinstance(value, str) # should be unicode
-                if isinstance(value, int) or isinstance(value, unicode):
-                    msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value), ARG_DELIMETER]
-                elif isinstance(value, get_engine().DictationContainer):
-                    # log.info(('valuecont',value.words,unicode(value)))
-                    msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value.format()), ARG_DELIMETER]
-        self.sendMsg(u''.join(msg))
+        log.info('data ' + unicode(data))
+        log.info('node ' + u' '.join(data['_node'].words()))
+        log.info('rule ' + unicode(data['_rule'].name))
+        log.info('grammar ' + unicode(data['_grammar'].name))
+        # msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
+        # msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
+        # if data:
+        #     # TODO: we really should be sending the whole node structure
+        #     # so we can have more elaborate phrases that change meaning
+        #     # based on what was actually said...
+        #     for key, value in data.items():
+        #         assert not isinstance(value, str) # should be unicode
+        #         if isinstance(value, int) or isinstance(value, unicode):
+        #             msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value), ARG_DELIMETER]
+        #         elif isinstance(value, get_engine().DictationContainer):
+        #             # log.info(('valuecont',value.words,unicode(value)))
+        #             msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value.format()), ARG_DELIMETER]
+        #self.sendMsg(u''.join(msg))
 
     def cleanup(self):
         self.globalRuleGrammar.disable()
@@ -526,7 +527,8 @@ class DragonflyClient(DragonflyNode):
                 grammar.unload()
         self.timer.stop()
         try:
-            self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
+            pass
+            #self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
         except socket.error:
             pass
         DragonflyNode.cleanup(self)

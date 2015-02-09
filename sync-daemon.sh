@@ -12,7 +12,7 @@ while true; do
         if tail $f | grep 'DRAGONSHARE RSYNC' > /dev/null; then
             rsync --relative $f ~/dragonshare/NatLink/NatLink/MacroSystem
             # touch so that dragon will reload
-            #touch ~/dragonshare/NatLink/NatLink/MacroSystem/*.py
+            touch ~/dragonshare/NatLink/NatLink/MacroSystem/*.py
         fi
     done
 done &> ~/.sync-log &; disown

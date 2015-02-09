@@ -13,10 +13,9 @@ from DragonflyNode import DragonflyNode
 from namedtuple import namedtuple
 from Actions import RepeatPreviousAction
 from EventLoop import getLoop
-from rules.SeriesMappingRule import SeriesMappingRule
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
-                       RuleDeactivateEvent)
+                       RuleDeactivateEvent, LoadingRulesEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadRuleFinishedMsg, RequestRulesMsg, RecognitionStateMsg,
@@ -116,7 +115,7 @@ class DragonflyThread(DragonflyNode):
         if self.activatedRules - self.activatedLastCommit == set():
             return
         self.activatedLastCommit = copy(self.activatedRules)
-        log.info("Committing rule activations: %s" % [rule.name for rule in self.activatedRules])
+        log.info("Committing rule activations: %s" % [rule.rule.name for rule in self.activatedRules])
         self.sendMsg(makeJSON(EnableRulesMsg([r.hash for r in self.activatedRules])))
 
     def onConnect(self):
