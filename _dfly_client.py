@@ -97,11 +97,12 @@ class MasterGrammar(object):
     synthesize the different rule types into one dragonfly grammar. There is
     only ever one master grammar active at a time."""
 
-    def __init__(self, baseRuleSet, client):
+    def __init__(self, baseRuleSet, client, ruleCache):
         self.client = client
+        self.ruleCache = ruleCache
         
         # Hashes that are directly part of this grammar
-        self.baseRuleSet = baseRuleSet
+        self.baseRuleSet = set(baseRuleSet)
         # Hashes of rules that we discover are dependencies
         # of the base rule set
         self.dependencyRuleSet = set()
@@ -127,27 +128,28 @@ class MasterGrammar(object):
         # These will be discovered during the dfly grammar building
         # process.
         self.missing = set()
+        self.checkDeps(self.fullRullSet) # build self.missing
         self.dflyGrammar = None
-
 
     @property
     def fullRullSet(self):
         return self.baseRuleSet + self.dependencyRuleSet
 
     def satisfyDependency(self, r):
-        "Marks dependency on hash r as satisfied, returns true if no more known
-        deps are missing. During the build process new indirect dependencies may
-        still be discovered however."
+        "Marks dependency on hash r as satisfied, and tries to build if no more known
+        deps are missing. During the build process new indirect dependencies may still
+        be discovered however."
         assert r in self.missing
         self.missing.remove(r)
-        return len(self.missing) == 0
+        if not self.missing:
+            self.build()
 
-    def checkDep(self, r, ruleCache):
+    def checkDep(self, r):
         "Checks if dep r is present. Not recursive."
-        if r not in ruleCache:
-            ruleCache[r] = NeedDependency()
-        if isinstance(ruleCache[r], NeedDependency):
-            ruleCache[r].add(self.hash)
+        if r not in self.ruleCache:
+            self.ruleCache[r] = NeedDependency()
+        if isinstance(self.ruleCache[r], NeedDependency):
+            self.ruleCache[r].add(self.hash)
             self.missing.add(r)
             return False
         return True
@@ -156,14 +158,14 @@ class MasterGrammar(object):
         if self.missing:
             raise MissingDependency("Can't build MasterGrammar, missing hashes: [%s]" self.missing)
 
-    def checkDeps(self, ruleCache, ruleSet):
+    def checkDeps(self, ruleSet):
         "Recursively check if all deps in ruleSet are satisfied."
         if not ruleSet:
             return True
 
         newDeps = set()
         for r in ruleSet:
-            if self.checkDep(r, ruleCache):
+            if self.checkDep(r):
                 rule = self.ruleCache[r] # HashedRule
                 rule = rule.rule
                 for e in rule.extras:
@@ -171,10 +173,13 @@ class MasterGrammar(object):
                         newDeps.add(e.rule_ref)
                         
         self.dependencyRuleSet.update(newDeps)
-        self.checkDeps(ruleCache, newDeps)
+        self.checkDeps(newDeps)
 
-    def build(self, ruleCache):
-        self.checkDeps(ruleCache, self.fullRullSet)
+    def ready(self):
+        return len(self.missing) == 0
+
+    def build(self):
+        self.checkDeps(self.fullRullSet)
         self.checkMissing()
 
         # from here on we assume all deps are present all the way down
@@ -280,6 +285,10 @@ class MasterGrammar(object):
     def deactivate(self):
         self.dflyGrammar.deactivate()
 
+    def unload(self):
+        if self.dflyGrammar:
+            self.dflyGrammar.unload()
+
     def buildConcreteRule(self, r):
         if r["ruleType"] == RuleType.SERIES:
             t = SeriesMappingRule
@@ -326,7 +335,7 @@ class MasterGrammar(object):
                     return False
             elif isinstance(e, protocol.RuleRef):
                 if e.rule_ref in self.concreteRules:
-                    newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name)
+                    newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name))
                 else:
                     return False
             elif isinstance(e, protocol.ListRef):
@@ -358,56 +367,12 @@ class DragonflyClient(DragonflyNode):
         self.lastMicState = None
         self.recognitionState = "success"
 
-        #self.globalRule = GlobalRules(name="GlobalRules") 
-        #self.addRule(self.globalRule, "GlobalRules")
-        #self.makeRuleGrammar(self.globalRule, "GlobalRules")
-
-    def addRule(self, rule, name):
-        log.info('adding rule: %s %s' % (rule.name, name))
-
-        if name in self.rules:
-            log.info("Rule already exists: " + name)
-            if self.rules[name].mapping.keys() == rule.mapping.keys():
-                log.info("Rule hasn't changed, ignoring.")
-                return
-
-            log.info("Removing existing copy of rule.")
-            self.removeRule(name, replacing=True)
-
-        self.rules[name] = rule
-        rule.disable()
-        self.rulesNewThisTick.append(name)
-
-    def removeRule(self, name, replacing=False):
-        log.info('Removing rule: ' + name)
-        if not replacing:
-            try:
-                self.enabledRules.remove(name)
-            except KeyError:
-                pass
-        try:
-            del self.rules[name]
-        except KeyError:
-            log.info('Rule not found: %s, ignoring' % name)
-        try:
-            self.grammars[name].unload()
-            del self.grammars[name]
-        except KeyError:
-            log.info('Grammar not found: %s, ignoring' % name)
-
-    def makeRuleGrammar(self, rule, name):
-        #log.info("making grammar %s" % rule.name)
-        if name == "GlobalRules":
-            grammar = FailureReportingGrammar(name)
-            grammar.setClient(self)
-        else:
-            grammar = Grammar(name)
-        grammar.add_rule(rule)
-        #grammar.disable()
-        grammar.load()
-        ##grammar.enable()
-        get_engine().set_exclusiveness(grammar, 1)
-        self.grammars[name] = grammar        
+        self.globalRule = GlobalRules(name="GlobalRules")
+        self.globalRuleGrammar = FailureReportingGrammar(name)
+        self.globalRuleGrammar.setClient(self)
+        self.globalRuleGrammar.add_rule(self.globalRule)
+        self.globalRuleGrammar.load()
+        get_engine().set_exclusiveness(self.globalRuleGrammar, 1)
 
     def dumpOther(self):
         # on disconnect unload all the rules
@@ -445,26 +410,6 @@ class DragonflyClient(DragonflyNode):
         self.retrieveMessages()
         self.heartbeat()
         self.sendMicState()
-
-        for name in self.rulesNewThisTick:
-            if name in self.pendingRules:
-                pendingLst = self.pendingRules[name]
-                for msg in pendingLst:
-                    while pendingLst:
-                        x = pendingLst.pop()
-                        try:
-                            self._parseMessage(x)
-                        except NeedsDependency as e:
-                            # may have more deps needed
-                            if e.message not in self.pendingRules:
-                                self.pendingRules[e.message] = []
-                            self.pendingRules[e.message].append(x)
-        if self.rulesNewThisTick:
-            self.commitRuleEnabledness()
-        if deepEmpty(self.pendingRules) and self.startupCompleteRequested:
-            self.startupCompleteRequested = False
-            self.sendMsg("STARTUP_COMPLETE")
-        self.rulesNewThisTick = []
             
     def setRecognitionState(self, state):
         self.recognitionState = state
@@ -491,100 +436,15 @@ class DragonflyClient(DragonflyNode):
         #log.info("Sending mic event %s" % natlink.getMicState())
         #self.sendMsg("MICSTATE" + ARG_DELIMETER + natlink.getMicState())
 
-    def parseEnableMsg(self, msg):
-        log.info("Received enable message: %s" % msg)
-        
-        args = msg.split(ARG_DELIMETER)
-        self.resetEnabledRules()
-
-        rules = args[1:]
-        #log.info("rule list from server: %s" % rules)
-        for name in rules:
-            #log.info("attempting to enable %s" % name)
-            rule = self.getRule(name)
-            if not rule:
-                log.info("Marking %s as enabled, but can't find it yet." % name)
-            self.enabledRules.add(name)
-
-        self.commitRuleEnabledness()
-
-    def commitRuleEnabledness(self):
-        # load anything new that was registered or that changed
-        allRules = set([v for k, v in self.rules.items()])
-
-        active = {self.rules[name] for name in self.enabledRules if name in self.rules}
-
-        #log.info("active: %s" % [i.name for i in active])
-
-        combine_series = []
-        
-        for l in active:
-            allowCombining = "ALLOWCOMBINING" in l.mandimusFlags
-            if isinstance(l, SeriesMappingRule) and allowCombining and not l.isMergedSeries:
-                #log.info("including in combo: %s" % l.name)
-                combine_series.append(l)
-
-        # can't be separately enabled in the series rule and on its own at
-        # the same time
-        for s in combine_series:
-            active.remove(s)
-
-        # sort so they'll compare reliably
-        combine_series.sort(key=lambda x: x.name)
-        combine_series_name = ','.join([x.name for x in combine_series])
-
-        if combine_series:
-            if combine_series_name in self.rules:
-                # just make sure the already existing rule stays in the active set
-                self.combinedSeries = self.rules[combine_series_name]
-            else:
-                # build a new combined rule
-                self.combinedSeries = combineSeriesMappingRules(combine_series)
-                log.info("Series combining: %s" % [x.name for x in self.combinedSeries.parts]) 
-                self.addRule(self.combinedSeries, self.combinedSeries.name)
-            active.add(self.combinedSeries)
-
-        # note that these 'enabled' checks are for dragon,
-        # separate from our own concept of enabledness. We
-        # might have a rule 'enabled' as part of a series,
-        # but it will be disabled here because the combined
-        # series containing it already has it
-        inactive = allRules - active        
-        for u in inactive:
-            if u.name not in self.grammars:
-                continue
-            if u.enabled:
-                #log.info("disabling for real %s" % u.name)
-                u.disable()
-            else:
-                #log.info("not disabling for real %s" % u.name)
-                pass
-
-        for l in active:
-            if l.name not in self.grammars:
-                self.makeRuleGrammar(l, l.name)
-            if not l.enabled:
-                log.info("Enabling for real %s" % l.name)
-                try:
-                    l.enable()
-                except natlink.BadGrammar as e:
-                    log.error("Grammar was too complex: %s" % l.name)
-                    self.removeRule(l.name)
-                    continue
-            else:
-                #log.info("not Enabling for real %s" % l.name)
-                pass
-
     def onMessage(self, json_msg):
-        decoder = Decoder()
-        msg = parseMessage(json_msg, object_hook=decoder.decode)
+        msg = parseMessage(json_msg)
         try:
             if isinstance(msg, EnableRulesMsg):
-                pass
+                self.onEnableRulesMsg(msg)
             elif isinstance(msg, HeartbeatMsg):
                 log.debug("Heartbeat")
             elif isinstance(msg, LoadRuleMsg):
-                self.onLoadRuleMsg(msg, decoder.placeholders)
+                self.onLoadRuleMsg(msg)
             else:
                 log.error("Unknown message type, ignoring: [%s]" % json_msg)
                 return
@@ -592,70 +452,47 @@ class DragonflyClient(DragonflyNode):
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
-    def onLoadRuleMsg(msg, placeholders):
+    def onLoadRuleMsg(msg):
+        inNeed = set() 
         if msg.hash in self.hashedRules:
-            log.error("Sent already cached rule, ignoring [%s -- %s]" % msg)
+            if isinstance(self.hashedRules[msg.hash], NeedsDependency):
+                inNeed = self.hashedRules[msg.hash]
+            else:
+                log.error("Sent already cached rule, ignoring [%s -- %s]" % msg)
+                return
 
-        # TODO: What about the placeholders? Wanted to cache those.
         self.hashedRules[msg.hash] = msg.rule
-        
+        for grammar in inNeed:
+            try:
+                grammar.satisfyDependency(msg.hash)
+                if self.activeMasterGrammar == grammar.hash:
+                    grammar.activate()
+            except MissingDependency:
+                pass
 
-    def parseMappingRuleMsg(self, msg, mappingCls):
-        allargs = msg.split(ARG_DELIMETER)
+    def onEnableRulesMsg(self, msg):
+        x = hashlib.sha256()
+        x.update("".join([r for r in msg.hashes]))
+        hash = x.hexdigest()
 
-        typ = allargs[0]
-        rule_name = allargs[1]
-        idx = 2
+        grammar = None
+        if hash in self.hashedRules:
+            assert isinstance(self.hashedRules[hash], MasterGrammar)
+            grammar = self.hashedRules[hash]
+        else:
+            grammar = MasterGrammar(msg.hashes, self, self.hashedRules)
+            self.hashedRules[hash] = grammar
 
-        rules = []
-        for arg in allargs[idx:]:
-            idx += 1
-            if arg == "EXTRAS":
-                break
-            rules.append(arg)
-        rules = self.transformMapping(rules)
+        self.activeMasterGrammar = hash
 
-        extras = []
-        for arg in allargs[idx:]:
-            idx += 1
-            if arg == "DEFAULTS":
-                break
-            extras.append(arg)
-        extras = self.parseExtras(extras)
+        if grammar.ready():
+            try:
+                grammar.build()
+                grammar.activate()
+            except MissingDependency:
+                log.info("Can't build grammar yet, still missing deps.")
+                return
 
-        defaults = []
-        for arg in allargs[idx:]:
-            idx += 1
-            if arg == "FLAGS":
-                break
-            defaults.append(arg)
-        defaults = self.parseDefaults(defaults)
-
-        flags = []
-        for arg in allargs[idx:]:
-            if arg:
-                flags.append(arg)
-            idx += 1
-
-        try:
-            new_rule = mappingCls(name=rule_name, mapping=rules, extras=extras, defaults=defaults)
-            setattr(new_rule, "mandimusFlags", flags)
-            setattr(new_rule, "isMergedSeries", False)
-            setattr(new_rule, "mapping", rules)
-            setattr(new_rule, "extras", extras)
-            setattr(new_rule, "defaults", defaults)
-            self.addRule(new_rule, rule_name)
-        except SyntaxError:
-            exc_type, exc_value, exc_traceback = sys.exc_info()
-            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            log.info("Mapping rule %s: " % rule_name)
-            log.info(rules)
-            log.info("Extras:")
-            log.info(extras)
-            log.info("Defaults:")
-            log.info(defaults)
-            return
-        
     def onMatch(self, grammarString, data):
         if natlink.getMicState() != 'on':
             return
@@ -682,22 +519,17 @@ class DragonflyClient(DragonflyNode):
         self.sendMsg(u''.join(msg))
 
     def cleanup(self):
-        for name, grammar in self.grammars.items():
-            grammar.unload()
+        self.globalRuleGrammar.disable()
+        self.globalRuleGrammar.unload()
+        for hash, grammar in self.hashedRules.items():
+            if hasattr(grammar, "unload"):
+                grammar.unload()
         self.timer.stop()
         try:
             self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
         except socket.error:
             pass
         DragonflyNode.cleanup(self)
-
-    def transformMapping(self, grammarList):
-        """We never perform actions directly, we just send
-        back to the client that we have a match."""
-        mapping = {}
-        for g in grammarList:
-            mapping[g] = ReportingAction(g, self)
-        return mapping
 
 client = DragonflyClient()
 
