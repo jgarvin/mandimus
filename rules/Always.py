@@ -8,7 +8,7 @@ from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs, NotEmacs
 from EventList import RuleActivateEvent
 import string
-from protocol import Integer, Dictation, RuleRef, Repetition
+from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 
 # class PressKey(object):
 #     def __init__(self, force_shift=False):
@@ -79,21 +79,21 @@ mapping = {
     "type <text>" : Text("%(text)s", False),
 }
 
-TypingRule = makeContextualRule("TypingRule", mapping, extras, {})
+TypingRule = makeContextualRule("TypingRule", mapping, extras, {}, RuleType.TERMINAL)
 TypingRule.context.addRequirement(NotEmacs)
 
 mapping = {
     "camel <text>" : Camel("%(text)s"),
 }
 
-CamelRule = makeContextualRule("CamelRule", mapping, extras, {})
+CamelRule = makeContextualRule("CamelRule", mapping, extras, {}, RuleType.TERMINAL)
 CamelRule.context.addRequirement(NotEmacs)
 
 mapping = {
     "stud <text>" : Camel("%(text)s", True),
 }
 
-StudRule = makeContextualRule("StudRule", mapping, extras, {})
+StudRule = makeContextualRule("StudRule", mapping, extras, {}, RuleType.TERMINAL)
 StudRule.context.addRequirement(NotEmacs)
 
 mapping = {
@@ -101,7 +101,7 @@ mapping = {
     "cap hyphen <text>" : Hyphen("%(text)s", True),
 }    
 
-HypenRule = makeContextualRule("HypenRule", mapping, extras, {})
+HypenRule = makeContextualRule("HypenRule", mapping, extras, {}, RuleType.TERMINAL)
 HypenRule.context.addRequirement(NotEmacs)
 
 mapping = {
@@ -109,5 +109,5 @@ mapping = {
     "cap score <text>" : Underscore("%(text)s", True),
 }
 
-UnderscoreRule = makeContextualRule("UnderscoreRule", mapping, extras, {})
+UnderscoreRule = makeContextualRule("UnderscoreRule", mapping, extras, {}, RuleType.TERMINAL)
 UnderscoreRule.context.addRequirement(NotEmacs)

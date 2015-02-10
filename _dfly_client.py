@@ -23,7 +23,8 @@ import hashlib
 import protocol
 from protocol import (EnableRulesMsg, LoadRuleMsg, LoadRuleFinishedMsg,
                       HeartbeatMsg, MatchEventMsg, MicStateMsg, RecognitionStateMsg,
-                      RequestRulesMsg, WordListMsg, RuleType, parseMessage)
+                      RequestRulesMsg, WordListMsg, RuleType, parseMessage,
+                      makeJSON)
 
 importOrReload("SeriesMappingRule", "SeriesMappingRule")
 importOrReload("DragonflyNode", "DragonflyNode")
@@ -90,8 +91,11 @@ class ReportingAction(ActionBase):
 # finally arrives we can finish building the grammar and
 # activate it, provided at this point it's still the active
 # master grammar. 
-class NeedDependency(object): pass
-class MissingDependency(Exception): pass
+class NeedDependency(set): pass
+
+class MissingDependency(Exception):
+    def __init__(self, hashes):
+        self.hashes = hashes
 
 class MasterGrammar(object):
     """A MasterGrammar is built up from a specific set of active rules. They
@@ -122,7 +126,7 @@ class MasterGrammar(object):
         # rules in their hash, so just hashing the base set is
         # all we need.
         x = hashlib.sha256()
-        x.update([r for r in self.baseRuleSet])
+        x.update("".join([r for r in self.baseRuleSet]))
         self.hash = x.hexdigest()
 
         # Hashes of rules we depend on but haven't arrived yet.
@@ -134,7 +138,7 @@ class MasterGrammar(object):
 
     @property
     def fullRullSet(self):
-        return self.baseRuleSet + self.dependencyRuleSet
+        return self.baseRuleSet | self.dependencyRuleSet
 
     def satisfyDependency(self, r):
         """Marks dependency on hash r as satisfied, and tries to build if no more known
@@ -157,7 +161,7 @@ class MasterGrammar(object):
 
     def checkMissing(self):
         if self.missing:
-            raise MissingDependency("Can't build MasterGrammar, missing hashes: [%s]" % self.missing)
+            raise MissingDependency(copy(self.missing))
 
     def checkDeps(self, ruleSet):
         "Recursively check if all deps in ruleSet are satisfied."
@@ -168,6 +172,7 @@ class MasterGrammar(object):
         for r in ruleSet:
             if self.checkDep(r):
                 rule = self.ruleCache[r] # HashedRule
+                
                 rule = rule.rule
                 for e in rule.extras:
                     if hasattr(e, "rule_ref"):
@@ -180,6 +185,11 @@ class MasterGrammar(object):
         return len(self.missing) == 0
 
     def build(self):
+        if self.dflyGrammar:
+            # already built
+            return
+
+        self.checkMissing()
         self.checkDeps(self.fullRullSet)
         self.checkMissing()
 
@@ -281,6 +291,7 @@ class MasterGrammar(object):
             self.concreteRules[r].disable()
 
     def activate(self):
+        self.build()
         self.dflyGrammar.activate()
 
     def deactivate(self):
@@ -368,6 +379,9 @@ class DragonflyClient(DragonflyNode):
         self.lastMicState = None
         self.recognitionState = "success"
 
+        # hashes we've asked for but haven't got a reply for yet
+        self.requestedLoads = set()
+
         self.globalRule = GlobalRules(name="GlobalRules")
         self.globalRuleGrammar = FailureReportingGrammar(self.globalRule.name)
         self.globalRuleGrammar.setClient(self)
@@ -398,6 +412,11 @@ class DragonflyClient(DragonflyNode):
                 #self.other.connect(("10.0.0.2", 23133))
                 self.other.connect(("192.168.56.1", 23133))
                 log.info('connected')
+
+                if self.requestedLoads:
+                    oldRequests = self.requestedLoads
+                    self.requestedLoads = set()
+                    sendLoadRequest(oldRequests)
             except socket.error as e:
                 log.info('connect error')
                 self.dumpOther()
@@ -439,39 +458,53 @@ class DragonflyClient(DragonflyNode):
 
     def onMessage(self, json_msg):
         msg = parseMessage(json_msg)
+        log.info("recv type: [%s]" % type(msg))
         try:
             if isinstance(msg, EnableRulesMsg):
                 self.onEnableRulesMsg(msg)
             elif isinstance(msg, HeartbeatMsg):
-                log.debug("Heartbeat")
+                log.info("Heartbeat")
             elif isinstance(msg, LoadRuleMsg):
                 self.onLoadRuleMsg(msg)
             else:
-                log.error("Unknown message type, ignoring: [%s]" % json_msg)
+                log.error("Unknown message type, ignoring: [%s]" % msg)
                 return
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
-    def onLoadRuleMsg(msg):
+    def sendLoadRequest(self, hashes):
+        unrequested = hashes - self.requestedLoads
+        self.requestedLoads.update(unrequested)
+        self.sendMsg(makeJSON(RequestRulesMsg(unrequested)))
+
+    def onLoadRuleMsg(self, msg):
+        if msg.hash in self.requestedLoads:
+            self.requestedLoads.remove(msg.hash)
+
         inNeed = set() 
         if msg.hash in self.hashedRules:
-            if isinstance(self.hashedRules[msg.hash], NeedsDependency):
-                inNeed = self.hashedRules[msg.hash]
+            entry = self.hashedRules[msg.hash]
+            if isinstance(entry, NeedDependency):
+                inNeed = entry 
             else:
-                log.error("Sent already cached rule, ignoring [%s -- %s]" % msg)
+                log.error("Received already cached rule, ignoring [%s of type %s]" % (msg, type(entry)))
                 return
 
         self.hashedRules[msg.hash] = msg.rule
-        for grammar in inNeed:
+        for grammarHash in inNeed:
+            grammar = self.hashedRules[grammarHash]
             try:
                 grammar.satisfyDependency(msg.hash)
                 if self.activeMasterGrammar == grammar.hash:
                     grammar.activate()
-            except MissingDependency:
-                pass
+            except MissingDependency as e:
+                log.info("Can't load rule yet, still missing deps: [%s]" % e.hashes)
+                self.sendLoadRequest(e.hashes)
 
     def onEnableRulesMsg(self, msg):
+        log.info("Called onEnableRulesMsg")
+
         x = hashlib.sha256()
         x.update("".join([r for r in msg.hashes]))
         hash = x.hexdigest()
@@ -486,13 +519,11 @@ class DragonflyClient(DragonflyNode):
 
         self.activeMasterGrammar = hash
 
-        if grammar.ready():
-            try:
-                grammar.build()
-                grammar.activate()
-            except MissingDependency:
-                log.info("Can't build grammar yet, still missing deps.")
-                return
+        try:
+            grammar.activate()
+        except MissingDependency as e:
+            log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
+            self.sendLoadRequest(e.hashes)
 
     def onMatch(self, grammarString, data):
         # if natlink.getMicState() != 'on':

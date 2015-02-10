@@ -131,7 +131,7 @@ class DragonflyThread(DragonflyNode):
 
         msg = parseMessage(json_msg)
         if isinstance(msg, HeartbeatMsg):
-            log.debug("Heartbeat")
+            log.info("Heartbeat")
         elif isinstance(msg, LoadRuleFinishedMsg):
             self.onLoadFinished(msg)
         elif isinstance(msg, MatchEventMsg):

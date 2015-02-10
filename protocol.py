@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from collections import namedtuple, OrderedDict
 import hashlib
 from util import enum
@@ -38,11 +41,19 @@ import struct
 # to appear as an isolated utterance however.
 RuleType = enum(SERIES=0, TERMINAL=1, INDEPENDENT=2)
 
+dataTypes = set()
+
+def _newDataType(name, members):
+    newType = namedtuple(name, members)
+    global dataTypes
+    dataTypes.add(newType)
+    return newType
+
 # type is rule type
 # seriesMergeGroup lets you have mutually exclusive series rules, to
 #   avoid for example having window commands mixed with editing.
 # mapping, extras, default have their normal dragonfly MappingRule meanings
-Rule = namedtuple("Rule", "ruleType seriesMergeGroup name mapping extras defaults")
+Rule = _newDataType("Rule", "ruleType seriesMergeGroup name mapping extras defaults")
 HashedRuleBase = namedtuple("HashedRule", "rule hash")
 
 class HashedRule(HashedRuleBase):
@@ -52,14 +63,7 @@ class HashedRule(HashedRuleBase):
         return self.hash != other.hash
     def __hash__(self):
         return hash(self.hash)
-
-dataTypes = set()
-
-def _newDataType(name, members):
-    newType = namedtuple(name, members)
-    global dataTypes
-    dataTypes.add(newType)
-    return newType
+dataTypes.add(HashedRule)
 
 EnableRulesMsg = _newDataType("EnableRulesMsg", "hashes")
 HeartbeatMsg = _newDataType("HeartbeatMsg", "unused")
@@ -76,6 +80,7 @@ Dictation = _newDataType("Dictation", "name")
 Repetition = _newDataType("Repetition", "rule_ref min max name")
 RuleRef = _newDataType("RuleRef", "rule_ref name")
 ListRef = _newDataType("ListRef", "name list")
+
 
 def makeJSONRepresentable(t):
     toEncode = t
@@ -133,7 +138,8 @@ def asDataType(dct):
 
 def parseMessage(json_msg):
     p = json.loads(json_msg, object_hook=asDataType)
-    raise p
+    log.info("type: [%s]" % type(p))
+    return p
 
 def parseStream(msgs, buf, nextMsgSize):
     """Parses the TCP stream, returning new buf and nextMsgSize state."""
@@ -142,7 +148,6 @@ def parseStream(msgs, buf, nextMsgSize):
     del msgs[:]
 
     while idx < len(buf):
-        #print "idx: %d" % idx
         if nextMsgSize == 0:
             if len(buf) - idx >= 4:
                 nextMsgSize = struct.unpack("!I", buf[idx:idx+4])[0]
@@ -158,6 +163,5 @@ def parseStream(msgs, buf, nextMsgSize):
             break
 
     return (msgs, buf[idx:], nextMsgSize)
-
 
 ### DRAGONSHARE RSYNC

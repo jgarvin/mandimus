@@ -5,8 +5,8 @@ from hotCode import importOrReload
 
 import time, socket, errno, select, struct
 
-importOrReload("protocol", "parseStream", "HeartbeatMsg", "makeJSON")
-importOrReload("EventList", "DisconnectedEvent")
+from protocol import parseStream, HeartbeatMsg, makeJSON
+from EventList import DisconnectedEvent
 
 class DragonflyNode(object):
     def __init__(self, eventQ=None):
@@ -30,7 +30,6 @@ class DragonflyNode(object):
             return
 
         messages = []
-        
         
         try:
             self.buf += self.recv()
@@ -60,23 +59,24 @@ class DragonflyNode(object):
             self.sendMsg(makeJSON(HeartbeatMsg("")))
 
     def recv(self):
-        log.info('receiving...')
+        # log.info('receiving...')
         self.other.setblocking(0)
         buf = []
         received = True
         try:
             while received:
-                received = unicode(self.other.recv(4096 * 1000), 'utf-8')
+                #received = unicode(self.other.recv(4096 * 1000), 'utf-8')
+                received = self.other.recv(4096 * 1000)
                 buf.append(received)
-                log.info("received: %s" % received)
+                log.info("received: [%s]" % received)
         except socket.error as e:
             if e.errno == errno.EWOULDBLOCK:
                 pass
             else:
                 raise
             
-        log.info("buf: [%s]" % buf)
-        return u''.join(buf)
+        # log.info("buf: [%s]" % buf)
+        return ''.join(buf)
 
     def cleanup(self):
         if self.other is not None:
@@ -105,7 +105,8 @@ class DragonflyNode(object):
         try:
             try:
                 encodedMsg = msg.encode('utf-8')
-                data = struct.pack("I32", len(encodedMsg)) + encodedMsg 
+                log.info("Sending: [%s]" % encodedMsg)
+                data = struct.pack("!I", len(encodedMsg)) + encodedMsg 
                 self.other.settimeout(None)
                 self.other.sendall(data)
             except UnicodeDecodeError as e:
