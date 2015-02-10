@@ -198,17 +198,18 @@ class MasterGrammar(object):
         terminal = {}
         independent = set()
 
-        allRules = set()
+        allRules = []
 
         # Merge series and terminal rules, set independent rules aside
         self.fullName = []
         for r in self.fullRullSet:
             rule = self.ruleCache[r].rule
+            hash = self.ruleCache[r].hash
             if rule.ruleType == RuleType.SERIES:
                 if rule.seriesMergeGroup not in seriesGroups:
                     seriesGroups[rule.seriesMergeGroup] = {}
                 x = seriesGroups[rule.seriesMergeGroup]
-            elif ruleruleType == RuleType.TERMINAL:
+            elif rule.ruleType == RuleType.TERMINAL:
                 x = terminal
             elif rule.ruleType == RuleType.INDEPENDENT:
                 x = {}
@@ -231,21 +232,23 @@ class MasterGrammar(object):
             x["mapping"].update(rule.mapping.items())
             x["extras"].update(rule.extras)
             x["defaults"].update(rule.defaults.items())
-            x["hash"].add(rule.hash)
-
-            self.fullName.append(x["name"])
+            x["hash"].add(hash)
 
             # allRules will contain all the rules we have left
             # *after* merging. So only one series rule per merge
             # group and only one terminal rule.
-            allRules.add(x)
-
-        self.fullName = ",".join(self.fullName)
+            allRules.append(x)
 
         # We really should be doing a topological sort, but this
         # isn't a frequent operation so this inefficiency should
         # be OK. Keep trying to link deps until they're all good.
-        allRules = list(allRules)
+        uniqueRules = []
+        for r in allRules:
+            if r not in uniqueRules:
+                uniqueRules.append(r)
+                self.fullName.append(r["name"])
+        allRules = uniqueRules
+        self.fullName = ",".join(self.fullName)
         while allRules:
             x = allRules.pop()
             if not self.cleanupProtoRule(x):
@@ -280,8 +283,8 @@ class MasterGrammar(object):
         self.dflyGrammar.add_rule(self.finalDflyRule)
         for r in self.independentRules:
             self.dflyGrammar.add_rule(self.concreteRules[r])
-        get_engine().set_exclusiveness(grammar, 1)
         self.dflyGrammar.load()
+        get_engine().set_exclusiveness(self.dflyGrammar, 1)
 
         # rules only enabled via being a dependency need to have disable called
         # on their dragonfly version so that they don't get recognized by themselves,
@@ -292,10 +295,10 @@ class MasterGrammar(object):
 
     def activate(self):
         self.build()
-        self.dflyGrammar.activate()
+        self.dflyGrammar.enable()
 
     def deactivate(self):
-        self.dflyGrammar.deactivate()
+        self.dflyGrammar.disable()
 
     def unload(self):
         if self.dflyGrammar:
@@ -325,7 +328,7 @@ class MasterGrammar(object):
         if len(r["hash"]) == 1:
             r["hash"] = r["hash"][0]
         else:
-            hashes = sorted(list(r.hash))
+            hashes = sorted(list(r["hash"]))
             x = hashlib.sha256()
             x.update("".join([h for h in hashes]))
             r["hash"] = x.hexdigest()
@@ -410,6 +413,7 @@ class DragonflyClient(DragonflyNode):
             self.other.settimeout(0.05)
             try:
                 #self.other.connect(("10.0.0.2", 23133))
+                log.info("attempting to connect")
                 self.other.connect(("192.168.56.1", 23133))
                 log.info('connected')
 
@@ -475,27 +479,29 @@ class DragonflyClient(DragonflyNode):
 
     def sendLoadRequest(self, hashes):
         unrequested = hashes - self.requestedLoads
-        self.requestedLoads.update(unrequested)
-        self.sendMsg(makeJSON(RequestRulesMsg(unrequested)))
+        if unrequested:
+            self.requestedLoads.update(unrequested)
+            self.sendMsg(makeJSON(RequestRulesMsg(unrequested)))
 
     def onLoadRuleMsg(self, msg):
-        if msg.hash in self.requestedLoads:
-            self.requestedLoads.remove(msg.hash)
+        if msg.rule.hash in self.requestedLoads:
+            self.requestedLoads.remove(msg.rule.hash)
 
         inNeed = set() 
-        if msg.hash in self.hashedRules:
-            entry = self.hashedRules[msg.hash]
+        if msg.rule.hash in self.hashedRules:
+            entry = self.hashedRules[msg.rule.hash]
             if isinstance(entry, NeedDependency):
                 inNeed = entry 
             else:
                 log.error("Received already cached rule, ignoring [%s of type %s]" % (msg, type(entry)))
                 return
 
-        self.hashedRules[msg.hash] = msg.rule
+        self.hashedRules[msg.rule.hash] = msg.rule
+        log.info("Inserting type [%s] in hashedRules" % type(msg.rule))
         for grammarHash in inNeed:
             grammar = self.hashedRules[grammarHash]
             try:
-                grammar.satisfyDependency(msg.hash)
+                grammar.satisfyDependency(msg.rule.hash)
                 if self.activeMasterGrammar == grammar.hash:
                     grammar.activate()
             except MissingDependency as e:

@@ -102,7 +102,7 @@ class DragonflyThread(DragonflyNode):
             return
         
         log.info("Loading rule: %s" % (self.hashedRules[hash],))
-        self.sendMsg(makeJSON(LoadRuleMsg(self.hashedRules[hash].rule, hash)))
+        self.sendMsg(makeJSON(LoadRuleMsg(self.hashedRules[hash])))
         self.waitingForLoadConfirmation.add(hash)
         self.pushQ.put(LoadingRulesEvent(True))
 
