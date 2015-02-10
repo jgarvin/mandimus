@@ -18,6 +18,7 @@ from EventList import (MicrophoneEvent, ConnectedEvent, WindowListEvent,
 from rules.ContextualRule import makeContextualRule
 import EventList
 import select
+from protocol import RuleType
 
 badWindows = {
     "Desktop",
@@ -92,7 +93,7 @@ class MainThread(object):
         
         mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
                     "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
-        self.MainControlRule = makeContextualRule("MainControlRule", mapping)
+        self.MainControlRule = makeContextualRule("MainControlRule", mapping, ruleType=RuleType.INDEPENDENT)
         self.MainControlRule.activate()
         
     def subscribeEvent(self, eventType, handler, priority=100):

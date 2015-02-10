@@ -9,8 +9,9 @@ resetImportState()
 
 import dragonfly as dfly
 from dragonfly import (
-    Grammar, CompoundRule, MappingRule, ActionBase,
+    Grammar, CompoundRule, MappingRule, ActionBase, 
     Key, Text, MappingRule, Function, get_engine )
+from dragonfly.actions.action_base import BoundAction
 import natlink
 import socket
 import sys, os, traceback
@@ -126,7 +127,7 @@ class MasterGrammar(object):
         # rules in their hash, so just hashing the base set is
         # all we need.
         x = hashlib.sha256()
-        x.update("".join([r for r in self.baseRuleSet]))
+        x.update("".join(sorted([r for r in self.baseRuleSet])))
         self.hash = x.hexdigest()
 
         # Hashes of rules we depend on but haven't arrived yet.
@@ -174,6 +175,7 @@ class MasterGrammar(object):
                 rule = self.ruleCache[r] # HashedRule
                 
                 rule = rule.rule
+                log.info("rule [%s] extras [%s]" % (rule, rule.extras))
                 for e in rule.extras:
                     if hasattr(e, "rule_ref"):
                         newDeps.add(e.rule_ref)
@@ -196,7 +198,6 @@ class MasterGrammar(object):
         # from here on we assume all deps are present all the way down
         seriesGroups = {}
         terminal = {}
-        independent = set()
 
         allRules = []
 
@@ -213,7 +214,6 @@ class MasterGrammar(object):
                 x = terminal
             elif rule.ruleType == RuleType.INDEPENDENT:
                 x = {}
-                independent.add(x)
 
             if "mapping" not in x:
                 x["mapping"] = {}
@@ -326,11 +326,11 @@ class MasterGrammar(object):
 
     def cleanupProtoRule(self, r):
         if len(r["hash"]) == 1:
-            r["hash"] = r["hash"][0]
+            r["hash"] = r["hash"].pop()
         else:
             hashes = sorted(list(r["hash"]))
             x = hashlib.sha256()
-            x.update("".join([h for h in hashes]))
+            x.update("".join(sorted([h for h in hashes])))
             r["hash"] = x.hexdigest()
 
         for k in r["mapping"]:
@@ -484,6 +484,12 @@ class DragonflyClient(DragonflyNode):
             self.sendMsg(makeJSON(RequestRulesMsg(unrequested)))
 
     def onLoadRuleMsg(self, msg):
+        assert isinstance(msg.rule.rule.ruleType, int)
+        assert isinstance(msg.rule.rule.seriesMergeGroup, int)
+        assert isinstance(msg.rule.rule.mapping, dict)
+        assert isinstance(msg.rule.rule.extras, list)
+        assert isinstance(msg.rule.rule.defaults, dict)
+        
         if msg.rule.hash in self.requestedLoads:
             self.requestedLoads.remove(msg.rule.hash)
 
@@ -512,7 +518,7 @@ class DragonflyClient(DragonflyNode):
         log.info("Called onEnableRulesMsg")
 
         x = hashlib.sha256()
-        x.update("".join([r for r in msg.hashes]))
+        x.update("".join(sorted([r for r in msg.hashes])))
         hash = x.hexdigest()
 
         grammar = None
@@ -531,16 +537,63 @@ class DragonflyClient(DragonflyNode):
             log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
             self.sendLoadRequest(e.hashes)
 
+    def pprint(self, node, indent=""):
+        if not node.children:
+            return "%s%s -> %s" % (indent, node.name, node.value())
+        else:
+            return "%s%s -> %r\n" % (indent, node.name, node.value()) \
+                + "\n".join([self.pprint(n, indent + "  ") \
+                             for n in node.children])
+
+    def collectValues(self, node, values=None):
+        if values is None:
+            values = {}
+
+        if node.name:
+            v = node.value()
+            log.info("testing [%s] [%s]" % (node.name, v))
+            if isinstance(v, get_engine().DictationContainer):
+                v = v.words
+            elif isinstance(v, BoundAction):
+                v = v._action.grammarString
+            elif isinstance(v, list) or isinstance(v, tuple):
+                x = []
+                for i in v:
+                    if isinstance(i, BoundAction):
+                        x.append(i._action.grammarString)
+                v = x
+            values.update({ node.name : v })
+        for n in node.children:
+            self.collectValues(n, values)
+
+        return values
+
     def onMatch(self, grammarString, data):
         # if natlink.getMicState() != 'on':
         #     return
 
-        log.info('match -- %s -- %s -- %s' %
-                 (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))
-        log.info('data ' + unicode(data))
-        log.info('node ' + u' '.join(data['_node'].words()))
-        log.info('rule ' + unicode(data['_rule'].name))
-        log.info('grammar ' + unicode(data['_grammar'].name))
+        values = self.collectValues(data['_node'])
+        log.info("Values: [%s]" % values)
+
+        # log.info('match -- %s -- %s -- %s' %
+        #          (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))
+        # log.info('data ' + unicode(data))
+        # for k, v in data.items():
+        #     if isinstance(v, list):
+        #         for x in v:
+        #             log.info("inside type: %s" % type(x._action))
+        #             log.info("inside words: %s" % (x._action.grammarString))
+        #     log.info("k [%s] type(v) %s dir(v) [%s]" % (k, type(v), dir(v)))
+        #     if hasattr(v, "grammarString"):
+        #         log.info("subdata [%s] : [%s]" % (k, v.grammarString))
+
+        # for c in data['_node'].children:
+        #     log.info()
+        # log.info('node ' + u' '.join(data['_node'].words()))
+        # log.info("node tree:")
+        # log.info(self.pprint(data['_node']))
+        # log.info('rule ' + unicode(data['_rule'].name))
+        # log.info('grammar ' + unicode(data['_grammar'].name))
         # msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
         # msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
         # if data:
