@@ -113,16 +113,24 @@ def makeJSON(t):
     return json.dumps(d)
 
 def makeHashedRule(name, mapping, extras, defaults, ruleType=RuleType.SERIES, seriesMergeGroup=0):
+    # Make copies so we can't accidentally make changes to the inputs and
+    # break the hash.
+    mapping = deepcopy(mapping)
+    extras = deepcopy(extras)
+    defaults = deepcopy(defaults)
+
     # For the mapping hash we only care about the spoken part of the rule, not the action
     # taken in response.
-    mapping = {k : None for k in mapping.keys()}
+    forHashMapping = {k : None for k in mapping.keys()}
 
-    # Make copies so we can't accidentally make changes to the inputs that
-    # break the hash.
-    r = Rule(ruleType, seriesMergeGroup, name,
-             deepcopy(mapping), deepcopy(extras), deepcopy(defaults))
+    # So generate the hash with the actions missing
+    r = Rule(ruleType, seriesMergeGroup, name, forHashMapping, extras, defaults)
     x = hashlib.sha256()
     x.update(makeJSON(r))
+
+    # Then remake the rule with the actions included. Up to server to strip them again
+    # before sending to client.
+    r = Rule(ruleType, seriesMergeGroup, name, mapping, extras, defaults)
     return HashedRule(r, x.hexdigest())
 
 def parseNamedTuple(p, t):

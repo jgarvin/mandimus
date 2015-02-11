@@ -421,7 +421,7 @@ class DragonflyClient(DragonflyNode):
                 if self.requestedLoads:
                     oldRequests = self.requestedLoads
                     self.requestedLoads = set()
-                    sendLoadRequest(oldRequests)
+                    self.sendLoadRequest(oldRequests)
             except socket.error as e:
                 log.info('connect error')
                 self.dumpOther()
@@ -550,70 +550,21 @@ class DragonflyClient(DragonflyNode):
                 + "\n".join([self.pprint(n, indent + "  ") \
                              for n in node.children])
 
-    def getNodeValue(node):
-        v = node.value()
-        if isinstance(v, get_engine().DictationContainer):
-            v = v.words
-        elif isinstance(v, BoundAction):
-            v = v._action.grammarString
-        elif isinstance(v, list) or isinstance(v, tuple):
-            x = []
-            for i in v:
-                val = getNodeValue(i)
-                if val:
-                    x.append(val)
-            v = x
-        return v
-
-    # def getNodeKeyValue(node):
-    #     if not node.name:
-    #         return None
-
-    #     if hasattr(node.actor, "hash"):
-    #         k = node.actor.hash
-    #     else:
-    #         k = node.name
-        
-    #     v = getNodeValue(node)
-    #     return { k : v }
-        
-    # def collectValues(self, node, values=None):
-    #     if values is None:
-    #         values = {}
-
-    #     if node.name:
-    #         v = node.value()
-    #         log.info("testing [%s] [%s]" % (node.name, v))
-    #         if isinstance(v, get_engine().DictationContainer):
-    #             v = v.words
-    #         elif isinstance(v, BoundAction):
-    #             v = v._action.grammarString
-    #         elif isinstance(v, list) or isinstance(v, tuple):
-    #             x = []
-    #             for i in v:
-    #                 if isinstance(i, BoundAction):
-    #                     x.append(i._action.grammarString)
-    #             v = x
-    #         values.update({ node.name : v })
-    #     for n in node.children:
-    #         self.collectValues(n, values)
-
-    #     return values
-
     def collectValues(self, node, values=None):
         if values is None:
             values = {}
 
         if node.name and isinstance(node.actor, ElementBase):
-            v = node.value()
-            w = node.words()
-            if isinstance(v, get_engine().DictationContainer):
-                # The value vs. words distinction is to help with things
-                # like numbers where the value is 3 but the words are "three".
-                # For dictated text there is no distinction.
-                v = w
-            log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
-            values.update({ node.name : (v, w) })
+            # v = node.value()
+            w = ' '.join(node.words())
+            # if isinstance(v, get_engine().DictationContainer):
+            #     # The value vs. words distinction is to help with things
+            #     # like numbers where the value is 3 but the words are "three".
+            #     # For dictated text there is no distinction.
+            #     v = w
+            # log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
+            #values.update({ node.name : (v, w) })
+            values.update({ node.name : w })
         for n in node.children:
             self.collectValues(n, values)
 

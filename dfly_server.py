@@ -20,7 +20,7 @@ from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadRuleFinishedMsg, RequestRulesMsg, RecognitionStateMsg,
                       MatchEventMsg, HeartbeatMsg, WordListMsg, makeJSON,
-                      parseMessage)
+                      parseMessage, Rule, HashedRule)
 
 BLOCK_TIME = 0.05
 
@@ -97,7 +97,13 @@ class DragonflyThread(DragonflyNode):
             self.server_socket.close()
 
     def stripActions(self, hash):
-        pass
+        r = self.hashedRules[hash].rule
+        # We never send actions to the client, and the hashes are generated
+        # without including the actions.
+        forSendingMapping = { k : None for k in r.mapping.keys() }
+        r = HashedRule(Rule(r.ruleType, r.seriesMergeGroup, r.name, forSendingMapping,
+                            r.extras, r.defaults), hash)
+        return r
 
     def loadRule(self, hash):
         if hash not in self.hashedRules:
@@ -105,7 +111,7 @@ class DragonflyThread(DragonflyNode):
             return
         
         log.info("Loading rule: %s" % (self.hashedRules[hash],))
-        self.sendMsg(makeJSON(LoadRuleMsg(self.hashedRules[hash])))
+        self.sendMsg(makeJSON(LoadRuleMsg(self.stripActions(hash))))
         self.waitingForLoadConfirmation.add(hash)
         self.pushQ.put(LoadingRulesEvent(True))
 
@@ -186,7 +192,7 @@ class DragonflyThread(DragonflyNode):
             else:
                 self.history.append(RuleMatchEvent(rule, extras))
 
-            log.info('match %s -- %s -- %s -- %s' % (rule.name, phrase, words, hash))
+            log.info('match %s -- %s -- %s -- %s -- %s' % (rule.name, phrase, words, extras, hash))
             self.utterance.append(words)
             cb(extras)
         except Exception as e:
