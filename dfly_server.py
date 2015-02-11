@@ -96,6 +96,9 @@ class DragonflyThread(DragonflyNode):
         if self.server_socket is not None:
             self.server_socket.close()
 
+    def stripActions(self, hash):
+        pass
+
     def loadRule(self, hash):
         if hash not in self.hashedRules:
             log.error("Client requested rule we don't have! Hash: %s" % hash)
@@ -135,7 +138,7 @@ class DragonflyThread(DragonflyNode):
         elif isinstance(msg, LoadRuleFinishedMsg):
             self.onLoadFinished(msg)
         elif isinstance(msg, MatchEventMsg):
-            self.onMatch(msg.hash, msg.phrase, msg.extras)
+            self.onMatch(msg.hash, msg.phrase, msg.extras, msg.words)
         elif isinstance(msg, MicStateMsg):
             self.pushQ.put(MicrophoneEvent(msg.state))
         elif isinstance(msg, RecognitionStateMsg):
@@ -154,7 +157,7 @@ class DragonflyThread(DragonflyNode):
             log.error("Unknown message type, ignoring: [%s]" % json_msg)
             return
 
-    def onMatch(self, hash, phrase, extras):
+    def onMatch(self, hash, phrase, extras, words):
         if hash not in self.hashedRules:
             log.error("Received match for unknown hash [%s]" % hash)
             return
@@ -183,8 +186,8 @@ class DragonflyThread(DragonflyNode):
             else:
                 self.history.append(RuleMatchEvent(rule, extras))
 
-            log.info('match %s -- %s -- %s' % (rule.name, phrase, extras['words']))
-            self.utterance.append(extras['words'])
+            log.info('match %s -- %s -- %s -- %s' % (rule.name, phrase, words, hash))
+            self.utterance.append(words)
             cb(extras)
         except Exception as e:
             # don't want the whole thing to crash just because

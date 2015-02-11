@@ -12,6 +12,7 @@ from dragonfly import (
     Grammar, CompoundRule, MappingRule, ActionBase, 
     Key, Text, MappingRule, Function, get_engine )
 from dragonfly.actions.action_base import BoundAction
+from dragonfly.grammar.elements import ElementBase
 import natlink
 import socket
 import sys, os, traceback
@@ -79,7 +80,6 @@ class ReportingAction(ActionBase):
         self.dclient = dclient
         self.grammarString = grammarString
         self.ruleHash = ruleHash
-        self.name = type(self).__name__
         ActionBase.__init__(self)
         
     def _execute(self, data=None):
@@ -312,6 +312,8 @@ class MasterGrammar(object):
         else:
             t = MappingRule
 
+        # rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
+        #          defaults=r["defaults"])
         rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
                  defaults=r["defaults"])
 
@@ -602,68 +604,54 @@ class DragonflyClient(DragonflyNode):
         if values is None:
             values = {}
 
-        if node.name:
+        if node.name and isinstance(node.actor, ElementBase):
             v = node.value()
             w = node.words()
+            if isinstance(v, get_engine().DictationContainer):
+                # The value vs. words distinction is to help with things
+                # like numbers where the value is 3 but the words are "three".
+                # For dictated text there is no distinction.
+                v = w
+            log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
             values.update({ node.name : (v, w) })
         for n in node.children:
             self.collectValues(n, values)
 
         return values
 
+    def getMatchFromNode(self, node):
+        extras = {}
+        for c in node.children:
+            self.collectValues(c, extras)
+        words = node.words()
+        phrase = node.value()._action.grammarString
+        hash = node.value()._action.ruleHash
+        log.info("Extras [%s] Words [%s] Phrase [%s] Hash [%s]" % (extras, words, phrase, hash))
+        return MatchEventMsg(hash, phrase, extras, words)
+        
     def onMatch(self, grammarString, data):
         if natlink.getMicState() != 'on':
             return
 
+        matches = []
         node = data['_node']
         seriesNode = node.get_child_by_name('series')
-        individualMatches = seriesNode.get_children_by_name('MappingRule')
-        for m in individualMatches:
-            extras = {}
-            for c in m.children:
-                self.collectValues(c, extras)
-            words = m.words()
-            phrase = m.value()._action.grammarString
-            hash  = m.value()._action.ruleHash
-            log.info("Extras [%s] Words [%s] Phrase [%s] Hash [%s]" % (extras, words, phrase, hash))
+        if seriesNode:
+            individualMatches = seriesNode.get_children_by_name('MappingRule')
+            for m in individualMatches:
+                matches.append(self.getMatchFromNode(m))
 
-        # log.info('node ' + u' '.join(data['_node'].words()))
-        # values = self.collectValues(data['_node'])
-        # log.info("Values: [%s]" % values)
+        terminator = node.get_child_by_name('terminator')
+        if terminator:
+            matches.append(self.getMatchFromNode(terminator))
 
-        # log.info('match -- %s -- %s -- %s' %
-        #          (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))
-        # log.info('data ' + unicode(data))
-        # for k, v in data.items():
-        #     if isinstance(v, list):
-        #         for x in v:
-        #             log.info("inside type: %s" % type(x._action))
-        #             log.info("inside words: %s" % (x._action.grammarString))
-        #     log.info("k [%s] type(v) %s dir(v) [%s]" % (k, type(v), dir(v)))
-        #     if hasattr(v, "grammarString"):
-        #         log.info("subdata [%s] : [%s]" % (k, v.grammarString))
+        # TODO: what about independent activated rules?
 
-        # for c in data['_node'].children:
-        #     log.info()
-        # log.info('node ' + u' '.join(data['_node'].words()))
-        log.info("node tree:")
-        log.info(self.pprint(data['_node']))
-        # log.info('rule ' + unicode(data['_rule'].name))
-        # log.info('grammar ' + unicode(data['_grammar'].name))
-        # msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
-        # msg += [u' '.join(data['_node'].words()), ARG_DELIMETER]
-        # if data:
-        #     # TODO: we really should be sending the whole node structure
-        #     # so we can have more elaborate phrases that change meaning
-        #     # based on what was actually said...
-        #     for key, value in data.items():
-        #         assert not isinstance(value, str) # should be unicode
-        #         if isinstance(value, int) or isinstance(value, unicode):
-        #             msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value), ARG_DELIMETER]
-        #         elif isinstance(value, get_engine().DictationContainer):
-        #             # log.info(('valuecont',value.words,unicode(value)))
-        #             msg += [unicode(key), KEY_VALUE_SEPARATOR, unicode(value.format()), ARG_DELIMETER]
-        #self.sendMsg(u''.join(msg))
+        log.debug("node tree:")
+        log.debug(self.pprint(data['_node']))
+
+        for m in matches:
+            self.sendMsg(makeJSON(m))
 
     def cleanup(self):
         self.globalRuleGrammar.disable()
