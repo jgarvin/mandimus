@@ -75,9 +75,11 @@ class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
     informs the server that grammar rules have been matched.
     Then it's up to the server to do whatever it wants."""
-    def __init__(self, grammarString, dclient):
+    def __init__(self, grammarString, dclient, ruleHash):
         self.dclient = dclient
         self.grammarString = grammarString
+        self.ruleHash = ruleHash
+        self.name = type(self).__name__
         ActionBase.__init__(self)
         
     def _execute(self, data=None):
@@ -273,7 +275,7 @@ class MasterGrammar(object):
 
         masterPhrase = seriesPart + " " + terminatorPart
         mapping = {
-            masterPhrase : ReportingAction(masterPhrase, self.client)
+            masterPhrase : ReportingAction(masterPhrase, self.client, self.hash)
         }
 
         self.finalDflyRule = MappingRule(name=self.fullName, mapping=mapping, extras=extras,
@@ -332,9 +334,6 @@ class MasterGrammar(object):
             x = hashlib.sha256()
             x.update("".join(sorted([h for h in hashes])))
             r["hash"] = x.hexdigest()
-
-        for k in r["mapping"]:
-            r["mapping"][k] = ReportingAction(k, self.client)
 
         newExtras = []
         for e in r["extras"]:
@@ -502,8 +501,12 @@ class DragonflyClient(DragonflyNode):
                 log.error("Received already cached rule, ignoring [%s of type %s]" % (msg, type(entry)))
                 return
 
-        self.hashedRules[msg.rule.hash] = msg.rule
         log.info("Inserting type [%s] in hashedRules" % type(msg.rule))
+        self.hashedRules[msg.rule.hash] = msg.rule
+        mapping = self.hashedRules[msg.rule.hash].rule.mapping 
+        for k in mapping:
+            mapping[k] = ReportingAction(k, self, msg.rule.hash)
+        
         for grammarHash in inNeed:
             grammar = self.hashedRules[grammarHash]
             try:
@@ -545,35 +548,88 @@ class DragonflyClient(DragonflyNode):
                 + "\n".join([self.pprint(n, indent + "  ") \
                              for n in node.children])
 
+    def getNodeValue(node):
+        v = node.value()
+        if isinstance(v, get_engine().DictationContainer):
+            v = v.words
+        elif isinstance(v, BoundAction):
+            v = v._action.grammarString
+        elif isinstance(v, list) or isinstance(v, tuple):
+            x = []
+            for i in v:
+                val = getNodeValue(i)
+                if val:
+                    x.append(val)
+            v = x
+        return v
+
+    # def getNodeKeyValue(node):
+    #     if not node.name:
+    #         return None
+
+    #     if hasattr(node.actor, "hash"):
+    #         k = node.actor.hash
+    #     else:
+    #         k = node.name
+        
+    #     v = getNodeValue(node)
+    #     return { k : v }
+        
+    # def collectValues(self, node, values=None):
+    #     if values is None:
+    #         values = {}
+
+    #     if node.name:
+    #         v = node.value()
+    #         log.info("testing [%s] [%s]" % (node.name, v))
+    #         if isinstance(v, get_engine().DictationContainer):
+    #             v = v.words
+    #         elif isinstance(v, BoundAction):
+    #             v = v._action.grammarString
+    #         elif isinstance(v, list) or isinstance(v, tuple):
+    #             x = []
+    #             for i in v:
+    #                 if isinstance(i, BoundAction):
+    #                     x.append(i._action.grammarString)
+    #             v = x
+    #         values.update({ node.name : v })
+    #     for n in node.children:
+    #         self.collectValues(n, values)
+
+    #     return values
+
     def collectValues(self, node, values=None):
         if values is None:
             values = {}
 
         if node.name:
             v = node.value()
-            log.info("testing [%s] [%s]" % (node.name, v))
-            if isinstance(v, get_engine().DictationContainer):
-                v = v.words
-            elif isinstance(v, BoundAction):
-                v = v._action.grammarString
-            elif isinstance(v, list) or isinstance(v, tuple):
-                x = []
-                for i in v:
-                    if isinstance(i, BoundAction):
-                        x.append(i._action.grammarString)
-                v = x
-            values.update({ node.name : v })
+            w = node.words()
+            values.update({ node.name : (v, w) })
         for n in node.children:
             self.collectValues(n, values)
 
         return values
 
     def onMatch(self, grammarString, data):
-        # if natlink.getMicState() != 'on':
-        #     return
+        if natlink.getMicState() != 'on':
+            return
 
-        values = self.collectValues(data['_node'])
-        log.info("Values: [%s]" % values)
+        node = data['_node']
+        seriesNode = node.get_child_by_name('series')
+        individualMatches = seriesNode.get_children_by_name('MappingRule')
+        for m in individualMatches:
+            extras = {}
+            for c in m.children:
+                self.collectValues(c, extras)
+            words = m.words()
+            phrase = m.value()._action.grammarString
+            hash  = m.value()._action.ruleHash
+            log.info("Extras [%s] Words [%s] Phrase [%s] Hash [%s]" % (extras, words, phrase, hash))
+
+        # log.info('node ' + u' '.join(data['_node'].words()))
+        # values = self.collectValues(data['_node'])
+        # log.info("Values: [%s]" % values)
 
         # log.info('match -- %s -- %s -- %s' %
         #          (unicode(data['_grammar'].name), grammarString, u' '.join(data['_node'].words())))
@@ -590,8 +646,8 @@ class DragonflyClient(DragonflyNode):
         # for c in data['_node'].children:
         #     log.info()
         # log.info('node ' + u' '.join(data['_node'].words()))
-        # log.info("node tree:")
-        # log.info(self.pprint(data['_node']))
+        log.info("node tree:")
+        log.info(self.pprint(data['_node']))
         # log.info('rule ' + unicode(data['_rule'].name))
         # log.info('grammar ' + unicode(data['_grammar'].name))
         # msg = [MATCH_MSG_START, grammarString, ARG_DELIMETER]
