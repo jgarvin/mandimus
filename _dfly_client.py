@@ -83,7 +83,12 @@ class ReportingAction(ActionBase):
         ActionBase.__init__(self)
         
     def _execute(self, data=None):
-        self.dclient.onMatch(self.grammarString, data)
+        try:
+            self.dclient.onMatch(self.grammarString, data)
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            #self.cleanup()
 
     def __str__(self):
         return "ReportingAction," + self.grammarString
@@ -426,7 +431,7 @@ class DragonflyClient(DragonflyNode):
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            self.cleanup()
+            #self.cleanup()
             #raise
 
     def eventLoop(self):
@@ -529,7 +534,11 @@ class DragonflyClient(DragonflyNode):
         
         for grammarHash in inNeed:
             grammar = self.hashedRules[grammarHash]
-            grammar.satisfyDependency(msg.rule.hash)
+            try:
+                grammar.satisfyDependency(msg.rule.hash)
+            except MissingDependency as e:
+                log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
+                self.sendLoadRequest(e.hashes)
             if self.activeMasterGrammar == grammar.hash:
                 self.tryActivatingMaster()
 
@@ -588,7 +597,13 @@ class DragonflyClient(DragonflyNode):
                 # like numbers where the value is 3 but the words are "three".
                 # For dictated text there is no distinction.
                 v = w
+            elif isinstance(v, ActionBase):
+                # When we have rule refs to other mapping rules, the value ends up
+                # being the looked up action, which is not what we want. We want to
+                # know which phrse was triggered.
+                v = v._action.grammarString
             # log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
+            log.info("extra [%s] value [%s] words [%s]" % (node.name, v, w))
             #values.update({ node.name : (v, w) })
             values.update({ node.name : v })
         for n in node.children:

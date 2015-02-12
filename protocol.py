@@ -89,8 +89,7 @@ def makeJSONRepresentable(t):
         d = OrderedDict()
         d["dataType"] = type(t).__name__
         if "rule_ref" in toEncode._fields:
-            toEncode = t
-            toEncode.rule_ref = t.rule_ref.hash
+            toEncode = t._replace(rule_ref=t.rule_ref.hash)
         objDict = toEncode._asdict()
         for key, val in objDict.items():
             d[makeJSONRepresentable(key)] = makeJSONRepresentable(val)
