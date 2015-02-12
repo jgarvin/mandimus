@@ -183,7 +183,7 @@ class MasterGrammar(object):
                 rule = self.ruleCache[r] # HashedRule
                 
                 rule = rule.rule
-                log.info("rule [%s] extras [%s]" % (rule, rule.extras))
+                log.info("rule [%s]" % (rule,))
                 for e in rule.extras:
                     if hasattr(e, "rule_ref"):
                         newDeps.add(e.rule_ref)
@@ -240,6 +240,7 @@ class MasterGrammar(object):
             x["mapping"].update(rule.mapping.items())
             x["extras"].update(rule.extras)
             x["defaults"].update(rule.defaults.items())
+            log.info("Adding hash [%s] to name [%s]" % (hash, x["name"]))
             x["hash"].add(hash)
 
             # allRules will contain all the rules we have left
@@ -258,16 +259,22 @@ class MasterGrammar(object):
         allRules = uniqueRules
         self.fullName = ",".join(self.fullName)
         while allRules:
-            x = allRules.pop()
+            log.info("iteration, left: [%s]" % len(allRules))
+            x = allRules.pop(0)
+            log.info("popped: %s" % x["name"])
+            
             if not self.cleanupProtoRule(x):
                 allRules.append(x)
                 continue
             self.buildConcreteRule(x)
 
+
+        #log.info("made it out of loop")
         self.buildFinalMergedRule()
         self.setupFinalDflyGrammar()
 
     def buildFinalMergedRule(self):
+        #log.info("Building final merged rule.")
         if not self.seriesRules and not self.terminatorRule:
             return
 
@@ -296,6 +303,8 @@ class MasterGrammar(object):
                                          defaults={})
 
     def setupFinalDflyGrammar(self):
+        log.info("Setting up final grammar.")
+        
         assert not self.dflyGrammar
         self.dflyGrammar = Grammar(self.fullName + "Grammar")
         if self.finalDflyRule:
@@ -341,7 +350,7 @@ class MasterGrammar(object):
 
         rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
                  defaults=r["defaults"])
-        log.info("Building rule with defaults: %s -- %s" % (r["name"], r["defaults"]))
+        log.info("Building rule with defaults: %s -- %s -- %s" % (r["name"], r["defaults"], r["hash"]))
 
         self.concreteRules[r["hash"]] = rule
 
@@ -354,14 +363,23 @@ class MasterGrammar(object):
         else:
             assert False
 
+        log.info("done building")
+
     def cleanupProtoRule(self, r):
-        if len(r["hash"]) == 1:
-            r["hash"] = r["hash"].pop()
-        else:
+        assert type(r["hash"]) == set
+        assert len(r["hash"]) >= 1
+        if r["ruleType"] in (RuleType.SERIES, RuleType.TERMINAL):
+            # We generate a composite hash for our new composite rules
+            log.info("Multi-hash: [%s]" % r["hash"])
             hashes = sorted(list(r["hash"]))
             x = hashlib.sha256()
             x.update("".join(sorted([h for h in hashes])))
-            r["hash"] = x.hexdigest()
+            hash = x.hexdigest()
+            log.info("Composite: [%s]" % hash)
+        else:
+            # We just use the exising hash for a rule if it's not composite
+            [hash] = r["hash"]
+            log.info("Single hash: [%s]" % r["hash"])
 
         newExtras = []
         for e in r["extras"]:
@@ -374,11 +392,13 @@ class MasterGrammar(object):
                     newExtras.append(dfly.Repetition(self.concreteRules[e.rule_ref],
                                                      e.min, e.max, e.name))
                 else:
+                    log.info("Missing [%s]" % (e,))
                     return False
             elif isinstance(e, protocol.RuleRef):
                 if e.rule_ref in self.concreteRules:
                     newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name))
                 else:
+                    log.info("Missing [%s]" % (e,))
                     return False
             elif isinstance(e, protocol.ListRef):
                 newExtras.append(dfly.ListRef(e.name, e.list))
@@ -386,6 +406,9 @@ class MasterGrammar(object):
                 raise Exception("Unknown extra type: [%s]" % e)
 
         r["extras"] = newExtras
+        # we only do this after we know there are no missing deps, otherwise
+        # the hash changing logic at the top can get applied multiple times!
+        r["hash"] = hash
         return True
 
 class DragonflyClient(DragonflyNode):
@@ -526,7 +549,7 @@ class DragonflyClient(DragonflyNode):
                 log.error("Received already cached rule, ignoring [%s of type %s]" % (msg, type(entry)))
                 return
 
-        log.info("Inserting type [%s] in hashedRules" % type(msg.rule))
+        log.info("Inserting [%s] in hashedRules" % (msg.rule,))
         self.hashedRules[msg.rule.hash] = msg.rule
         mapping = self.hashedRules[msg.rule.hash].rule.mapping 
         for k in mapping:
