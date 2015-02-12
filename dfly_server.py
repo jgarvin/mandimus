@@ -193,7 +193,7 @@ class DragonflyThread(DragonflyNode):
                 self.history.append(RuleMatchEvent(rule, extras))
 
             log.info('match %s -- %s -- %s -- %s -- %s' % (rule.name, phrase, words, extras, hash))
-            self.utterance.append(words)
+            self.utterance.extend(words)
             cb(extras)
         except Exception as e:
             # don't want the whole thing to crash just because

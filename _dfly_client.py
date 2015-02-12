@@ -300,7 +300,9 @@ class MasterGrammar(object):
         self.dflyGrammar.enable()
 
     def deactivate(self):
-        self.dflyGrammar.disable()
+        # it's possible we never built successfully
+        if self.dflyGrammar:
+            self.dflyGrammar.disable()
 
     def unload(self):
         if self.dflyGrammar:
@@ -440,26 +442,23 @@ class DragonflyClient(DragonflyNode):
 
         micOn = (natlink.getMicState() == "on")
         if self.recognitionState == "thinking" and micOn:
-            pass
-            #self.sendMsg("START_RECOGNITION")
+            self.sendMsg(makeJSON(RecognitionStateMsg("start")))
         elif self.recognitionState in ["failure", "success"] and micOn:
-            pass
-            #self.sendMsg("STOP_RECOGNITION")
+            self.sendMsg(makeJSON(RecognitionStateMsg("stop")))
 
         self.sendMicState()
 
     def sendMicState(self):
-        pass
-        # if not self.other:
-        #     return
+        if not self.other:
+            return
         
-        # micState = natlink.getMicState()
-        # if micState == "on":
-        #     micState = self.recognitionState
+        micState = natlink.getMicState()
+        if micState == "on":
+            micState = self.recognitionState
         
-        # if self.lastMicState is None or micState != self.lastMicState:
-        #     self.lastMicState = micState
-        #     self.sendMsg("MICSTATE" + ARG_DELIMETER + self.lastMicState)
+        if self.lastMicState is None or micState != self.lastMicState:
+            self.lastMicState = micState
+            self.sendMsg(makeJSON(MicStateMsg(self.lastMicState)))
 
     def onMessage(self, json_msg):
         msg = parseMessage(json_msg)
@@ -511,13 +510,9 @@ class DragonflyClient(DragonflyNode):
         
         for grammarHash in inNeed:
             grammar = self.hashedRules[grammarHash]
-            try:
-                grammar.satisfyDependency(msg.rule.hash)
-                if self.activeMasterGrammar == grammar.hash:
-                    grammar.activate()
-            except MissingDependency as e:
-                log.info("Can't load rule yet, still missing deps: [%s]" % e.hashes)
-                self.sendLoadRequest(e.hashes)
+            grammar.satisfyDependency(msg.rule.hash)
+            if self.activeMasterGrammar == grammar.hash:
+                self.tryActivatingMaster()
 
     def onEnableRulesMsg(self, msg):
         log.info("Called onEnableRulesMsg")
@@ -534,8 +529,20 @@ class DragonflyClient(DragonflyNode):
             grammar = MasterGrammar(msg.hashes, self, self.hashedRules)
             self.hashedRules[hash] = grammar
 
-        self.activeMasterGrammar = hash
+        self.switchMasterGrammar(hash)
 
+    def switchMasterGrammar(self, newHash):
+        if self.activeMasterGrammar:
+            self.hashedRules[self.activeMasterGrammar].deactivate()
+            self.activeMasterGrammar = None
+
+        assert newHash in self.hashedRules
+        self.activeMasterGrammar = newHash
+
+        self.tryActivatingMaster()
+
+    def tryActivatingMaster(self):
+        grammar = self.hashedRules[self.activeMasterGrammar]
         try:
             grammar.activate()
         except MissingDependency as e:
@@ -612,8 +619,7 @@ class DragonflyClient(DragonflyNode):
                 grammar.unload()
         self.timer.stop()
         try:
-            pass
-            #self.sendMsg("MICSTATE" + ARG_DELIMETER + "disconnected")
+            self.sendMsg(makeJSON(MicStateMsg("disconnected")))
         except socket.error:
             pass
         DragonflyNode.cleanup(self)
