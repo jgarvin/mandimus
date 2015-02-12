@@ -288,9 +288,16 @@ class MasterGrammar(object):
         self.dflyGrammar.load()
         get_engine().set_exclusiveness(self.dflyGrammar, 1)
 
-        # rules only enabled via being a dependency need to have disable called
-        # on their dragonfly version so that they don't get recognized by themselves,
-        # this is a quirk of dragonfly
+        # These should never be recognized on their own, only as part of the
+        # master rule, quirk of dragonfly that you have to do this even though
+        # they're only pulled in by ruleref.
+        for r in self.seriesRules:
+            self.concreteRules[r].disable()
+        self.concreteRules[self.terminatorRule].disable()
+
+        # independent rules only enabled via being a dependency need to have disable
+        # called on their dragonfly version so that they don't get recognized by
+        # themselves, same quirk.
         notEnabledRules = self.dependencyRuleSet - self.baseRuleSet
         for r in notEnabledRules:
             self.concreteRules[r].disable()
@@ -314,10 +321,9 @@ class MasterGrammar(object):
         else:
             t = MappingRule
 
-        # rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
-        #          defaults=r["defaults"])
         rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
                  defaults=r["defaults"])
+        log.info("Building rule with defaults: %s -- %s" % (r["name"], r["defaults"]))
 
         self.concreteRules[r["hash"]] = rule
 
@@ -551,9 +557,9 @@ class DragonflyClient(DragonflyNode):
 
     def pprint(self, node, indent=""):
         if not node.children:
-            return "%s%s -> %s" % (indent, node.name, node.value())
+            return "%s%s :: %s -> %s :: %s" % (indent, node.name, type(node).__name__, node.value(), type(node.value()).__name__)
         else:
-            return "%s%s -> %r\n" % (indent, node.name, node.value()) \
+            return "%s%s :: %s -> %r :: %s\n" % (indent, node.name, type(node).__name__, node.value(), type(node.value()).__name__) \
                 + "\n".join([self.pprint(n, indent + "  ") \
                              for n in node.children])
 
@@ -562,16 +568,16 @@ class DragonflyClient(DragonflyNode):
             values = {}
 
         if node.name and isinstance(node.actor, ElementBase):
-            # v = node.value()
+            v = node.value()
             w = ' '.join(node.words())
-            # if isinstance(v, get_engine().DictationContainer):
-            #     # The value vs. words distinction is to help with things
-            #     # like numbers where the value is 3 but the words are "three".
-            #     # For dictated text there is no distinction.
-            #     v = w
+            if isinstance(v, get_engine().DictationContainer):
+                # The value vs. words distinction is to help with things
+                # like numbers where the value is 3 but the words are "three".
+                # For dictated text there is no distinction.
+                v = w
             # log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
             #values.update({ node.name : (v, w) })
-            values.update({ node.name : w })
+            values.update({ node.name : v })
         for n in node.children:
             self.collectValues(n, values)
 
@@ -584,6 +590,12 @@ class DragonflyClient(DragonflyNode):
         words = node.words()
         phrase = node.value()._action.grammarString
         hash = node.value()._action.ruleHash
+
+        rule = self.hashedRules[hash].rule
+        for e in rule.extras:
+            if e.name not in extras and e.name in rule.defaults:
+                extras[e.name] = rule.defaults[e.name]
+        
         log.info("Extras [%s] Words [%s] Phrase [%s] Hash [%s]" % (extras, words, phrase, hash))
         return MatchEventMsg(hash, phrase, extras, words)
         
@@ -595,6 +607,8 @@ class DragonflyClient(DragonflyNode):
         node = data['_node']
         seriesNode = node.get_child_by_name('series')
         if seriesNode:
+            log.info("series parts: %s" % dir(seriesNode))
+            log.info("series parts: %s" % dir(seriesNode.actor))
             individualMatches = seriesNode.get_children_by_name('MappingRule')
             for m in individualMatches:
                 matches.append(self.getMatchFromNode(m))
@@ -605,8 +619,9 @@ class DragonflyClient(DragonflyNode):
 
         # TODO: what about independent activated rules?
 
-        log.debug("node tree:")
-        log.debug(self.pprint(data['_node']))
+        log.info("node tree:")
+        log.info(self.pprint(data['_node']))
+        log.info("data: %s" % data)
 
         for m in matches:
             self.sendMsg(makeJSON(m))

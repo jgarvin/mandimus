@@ -146,7 +146,7 @@ def asDataType(dct):
 
 def parseMessage(json_msg):
     p = json.loads(json_msg, object_hook=asDataType)
-    log.info("type: [%s]" % type(p))
+    #log.info("type: [%s]" % type(p))
     return p
 
 def parseStream(msgs, buf, nextMsgSize):

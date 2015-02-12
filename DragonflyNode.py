@@ -68,7 +68,7 @@ class DragonflyNode(object):
                 #received = unicode(self.other.recv(4096 * 1000), 'utf-8')
                 received = self.other.recv(4096 * 1000)
                 buf.append(received)
-                log.info("received: [%s]" % received)
+                #log.info("received: [%s]" % received)
         except socket.error as e:
             if e.errno == errno.EWOULDBLOCK:
                 pass
