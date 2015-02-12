@@ -423,6 +423,7 @@ class Emacs(EmacsBase):
         "insert character"             : Key("c-x,8,enter"),
         "complete"                     : Minibuf("company-complete"),
         "open this"                    : Minibuf("find-file-at-point"),
+        "shell command"                : Minibuf("etc-shell-command"),
     }
 
     

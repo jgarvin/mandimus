@@ -49,14 +49,15 @@ class ActionRule(MappingRule):
 @registerRule
 class EditRules(EmacsBase):
     mapping = {
-        "zap <charrule> [<n>]"  : CharCmd("(zap-up-to-char 1 %s)"),
-        "taze <charrule> [<n>]" : CharCmd("(zap-up-to-char -1 %s)"),
+        "zap <charrule> [<n>]"   : CharCmd("(zap-up-to-char 1 %s)"),
+        "taze <charrule> [<n>]"  : CharCmd("(zap-up-to-char -1 %s)"),
         #"fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 %s)"),
         #"buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 %s)"),
-        "trans [<n>]"           : Cmd("(transpose-sexps 1)"),
-        "snart [<n>]"           : Cmd("(transpose-sexps -1)"),
-        "rise [<n>]"            : Key("a-up:%(n)d"),
-        "drop [<n>]"            : Key("a-down:%(n)d"),
-        "var <charrule> [<n>]"  : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
+        "trans [<n>]"            : Cmd("(transpose-sexps 1)"),
+        "snart [<n>]"            : Cmd("(transpose-sexps -1)"),
+        "rise [<n>]"             : Key("a-up:%(n)d"),
+        "drop [<n>]"             : Key("a-down:%(n)d"),
+        "var <charrule> [<n>]"   : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
+        "phone [<n>]"              : Cmd("(md-cycle-homophones-at-point)"),
     }
 
