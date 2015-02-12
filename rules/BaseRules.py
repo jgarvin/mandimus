@@ -23,7 +23,7 @@ class AlphaRule(MappingRule):
         "osh"   : "o", 
         "pig"   : "p",
         "quid"  : "q",
-        "rob"   : "r", 
+        "robe"  : "r", 
         "shoe"  : "s",
         "tang"  : "t",
         "unk"   : "u",
