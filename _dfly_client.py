@@ -137,6 +137,7 @@ class MasterGrammar(object):
         # process.
         self.missing = set()
         self.checkDeps(self.fullRullSet) # build self.missing
+        self.finalDflyRule = None
         self.dflyGrammar = None
 
     @property
@@ -259,8 +260,12 @@ class MasterGrammar(object):
             self.buildConcreteRule(x)
 
         self.buildFinalMergedRule()
+        self.setupFinalDflyGrammar()
 
     def buildFinalMergedRule(self):
+        if not self.seriesRules and not self.terminatorRule:
+            return
+
         extras = []
         seriesRefNames = []
         for i, r in enumerate(self.seriesRules):
@@ -270,19 +275,26 @@ class MasterGrammar(object):
             extras.append(ref)
         seriesPart = "[" + " | ".join([("<" + r + ">") for r in seriesRefNames]) + "]"
 
-        extras.append(dfly.RuleRef(self.concreteRules[self.terminatorRule], "terminator"))
-        terminatorPart = "[<terminator>]"
+        terminatorPart = ""
+        if self.terminatorRule:
+            extras.append(dfly.RuleRef(self.concreteRules[self.terminatorRule], "terminator"))
+            terminatorPart = " [<terminator>]"
 
-        masterPhrase = seriesPart + " " + terminatorPart
+        masterPhrase = seriesPart + terminatorPart
         mapping = {
             masterPhrase : ReportingAction(masterPhrase, self.client, self.hash)
         }
 
+        log.info("Building master grammar rule with name [%s] mapping [%s] extras [%s] defaults [%s]"
+                 % (self.fullName, mapping, extras, {}))
         self.finalDflyRule = MappingRule(name=self.fullName, mapping=mapping, extras=extras,
                                          defaults={})
 
+    def setupFinalDflyGrammar(self):
+        assert not self.dflyGrammar
         self.dflyGrammar = Grammar(self.fullName + "Grammar")
-        self.dflyGrammar.add_rule(self.finalDflyRule)
+        if self.finalDflyRule:
+            self.dflyGrammar.add_rule(self.finalDflyRule)
         for r in self.independentRules:
             self.dflyGrammar.add_rule(self.concreteRules[r])
         self.dflyGrammar.load()
@@ -293,7 +305,8 @@ class MasterGrammar(object):
         # they're only pulled in by ruleref.
         for r in self.seriesRules:
             self.concreteRules[r].disable()
-        self.concreteRules[self.terminatorRule].disable()
+        if self.terminatorRule:
+            self.concreteRules[self.terminatorRule].disable()
 
         # independent rules only enabled via being a dependency need to have disable
         # called on their dragonfly version so that they don't get recognized by
@@ -301,7 +314,7 @@ class MasterGrammar(object):
         notEnabledRules = self.dependencyRuleSet - self.baseRuleSet
         for r in notEnabledRules:
             self.concreteRules[r].disable()
-
+        
     def activate(self):
         self.build()
         self.dflyGrammar.enable()
@@ -468,12 +481,12 @@ class DragonflyClient(DragonflyNode):
 
     def onMessage(self, json_msg):
         msg = parseMessage(json_msg)
-        log.info("recv type: [%s]" % type(msg))
+        #log.info("recv type: [%s]" % type(msg))
         try:
             if isinstance(msg, EnableRulesMsg):
                 self.onEnableRulesMsg(msg)
             elif isinstance(msg, HeartbeatMsg):
-                log.info("Heartbeat")
+                log.debug("Heartbeat")
             elif isinstance(msg, LoadRuleMsg):
                 self.onLoadRuleMsg(msg)
             else:
@@ -588,8 +601,14 @@ class DragonflyClient(DragonflyNode):
         for c in node.children:
             self.collectValues(c, extras)
         words = node.words()
-        phrase = node.value()._action.grammarString
-        hash = node.value()._action.ruleHash
+        if isinstance(node.value(), ReportingAction):
+            # independent case
+            action = node.value()
+        else:
+            # series/terminator case
+            action = node.value()._action
+        phrase = action.grammarString
+        hash = action.ruleHash
 
         rule = self.hashedRules[hash].rule
         for e in rule.extras:
@@ -604,18 +623,20 @@ class DragonflyClient(DragonflyNode):
             return
 
         matches = []
-        node = data['_node']
-        seriesNode = node.get_child_by_name('series')
+        root = data['_node']
+        seriesNode = root.get_child_by_name('series')
         if seriesNode:
-            log.info("series parts: %s" % dir(seriesNode))
-            log.info("series parts: %s" % dir(seriesNode.actor))
             individualMatches = seriesNode.get_children_by_name('MappingRule')
             for m in individualMatches:
                 matches.append(self.getMatchFromNode(m))
 
-        terminator = node.get_child_by_name('terminator')
+        terminator = root.get_child_by_name('terminator')
         if terminator:
             matches.append(self.getMatchFromNode(terminator))
+
+        if not seriesNode and not terminator:
+            # we have a match on a independent rule
+            matches.append(self.getMatchFromNode(root))
 
         # TODO: what about independent activated rules?
 
@@ -624,6 +645,7 @@ class DragonflyClient(DragonflyNode):
         log.info("data: %s" % data)
 
         for m in matches:
+            log.info("Sending match: %s" % (m,))
             self.sendMsg(makeJSON(m))
 
     def cleanup(self):

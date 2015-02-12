@@ -3,7 +3,7 @@ log = mdlog.getLogger(__name__)
 
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
 from listHelpers import dictReplace
-#from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
+# from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs, NotEmacs
 from EventList import RuleActivateEvent
@@ -50,18 +50,16 @@ from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 mapping = {
     #"command tally"                            : (lambda x: Speak(str(commandTally()))()),
     'rep [<n>]'                                : RepeatPreviousAction(),
-    #"[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
+    # "[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
     'scoot [<n>]'                              : Key("tab:%(n)d"),
     'cap scoot [<n>]'                          : Key("s-tab:%(n)d"),
 }
-
-# charref = RuleRef(CharRule, "charrule")
 
 extras = [
     Integer("n", 2, 20),
     Integer("digit", 0, 10),
     Dictation("text"),
-#    charref,
+    # RuleRef(CharRule, "charrule")
 ]
 
 defaults = {

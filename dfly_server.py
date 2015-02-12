@@ -1,5 +1,6 @@
 import mdlog
 log = mdlog.getLogger(__name__)
+log.info("\n--------------------------------------------------------------------------------\n")
 
 import socket
 import sys
@@ -15,7 +16,7 @@ from Actions import RepeatPreviousAction
 from EventLoop import getLoop
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
-                       RuleDeactivateEvent, LoadingRulesEvent)
+                       RuleRegisterEvent, RuleDeactivateEvent, LoadingRulesEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadRuleFinishedMsg, RequestRulesMsg, RecognitionStateMsg,
@@ -50,12 +51,16 @@ class DragonflyThread(DragonflyNode):
 
         getLoop().subscribeTimer(BLOCK_TIME, self)
         getLoop().subscribeEvent(RuleActivateEvent, self.onRuleActivate)
+        getLoop().subscribeEvent(RuleRegisterEvent, self.onRuleRegister)
         getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
 
-    def onRuleActivate(self, ev):
+    def onRuleRegister(self, ev):
         if ev.rule.hash not in self.hashedRules:
             log.info("Adding new hashed rule [%s]" % (ev.rule,))
             self.hashedRules[ev.rule.hash] = ev.rule
+
+    def onRuleActivate(self, ev):
+        self.onRuleRegister(ev)
 
         if ev.rule in self.activatedRules:
             log.info("Requested to activate already activated rule [%s], ignoring." % (ev.rule,))
@@ -136,11 +141,11 @@ class DragonflyThread(DragonflyNode):
         self.pushQ.put(ConnectedEvent())
 
     def onMessage(self, json_msg):
-        log.info("Client msg: [%s]" % json_msg)
+        log.debug("Client msg: [%s]" % json_msg)
 
         msg = parseMessage(json_msg)
         if isinstance(msg, HeartbeatMsg):
-            log.info("Heartbeat")
+            log.debug("Heartbeat")
         elif isinstance(msg, LoadRuleFinishedMsg):
             self.onLoadFinished(msg)
         elif isinstance(msg, MatchEventMsg):

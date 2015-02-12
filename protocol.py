@@ -112,7 +112,7 @@ def makeJSON(t):
     d = makeJSONRepresentable(t)
     return json.dumps(d)
 
-def makeHashedRule(name, mapping, extras, defaults, ruleType=RuleType.SERIES, seriesMergeGroup=0):
+def makeHashedRule(name, mapping, extras=[], defaults={}, ruleType=RuleType.SERIES, seriesMergeGroup=0):
     # Make copies so we can't accidentally make changes to the inputs and
     # break the hash.
     mapping = deepcopy(mapping)

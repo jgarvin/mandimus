@@ -2,37 +2,37 @@ from MappingRule import MappingRule
 from Rule import registerRule
 from Elements import RuleRef
 
-@registerRule
-class AlphaRule(MappingRule):
-    refOnly = True
-    mapping = {
-        "abe"   : "a",
-        "brov"  : "b",
-        "coup"  : "c",
-        "dealt" : "d",
-        "echo"  : "e",
-        "fox"   : "f",
-        "golf"  : "g",
-        "his"   : "h",
-        "ivy"   : "i", 
-        "john"  : "j",
-        "king"  : "k",
-        "lima"  : "l",
-        "mike"  : "m",
-        "no"    : "n",
-        "osh"   : "o", 
-        "pig"   : "p",
-        "quid"  : "q",
-        "robe"  : "r", 
-        "shoe"  : "s",
-        "tang"  : "t",
-        "unk"   : "u",
-        "vict"  : "v",
-        "web"   : "w", 
-        "xray"  : "x",
-        "yes"   : "y",
-        "zulu"  : "z",
-    }
+mapping = {
+    "abe"   : "a",
+    "brov"  : "b",
+    "coup"  : "c",
+    "dealt" : "d",
+    "echo"  : "e",
+    "fox"   : "f",
+    "golf"  : "g",
+    "his"   : "h",
+    "ivy"   : "i", 
+    "john"  : "j",
+    "king"  : "k",
+    "lima"  : "l",
+    "mike"  : "m",
+    "no"    : "n",
+    "osh"   : "o", 
+    "pig"   : "p",
+    "quid"  : "q",
+    "robe"  : "r", 
+    "shoe"  : "s",
+    "tang"  : "t",
+    "unk"   : "u",
+    "vict"  : "v",
+    "web"   : "w", 
+    "xray"  : "x",
+    "yes"   : "y",
+    "zulu"  : "z",
+}
+
+AlphaRule = makeHashedRule("AlphaRule", mapping, ruleType=RuleType.INDEPENDENT)
+getLoop().put(RuleRegisterEvent(AlphaRule))
     
 @registerRule
 class DigitRule(MappingRule):

@@ -1,6 +1,7 @@
 from namedtuple import namedtuple
 
 RuleActivateEvent = namedtuple("RuleActivateEvent", "rule")
+RuleRegisterEvent = namedtuple("RuleRegisterEvent", "rule")
 RuleDeactivateEvent = namedtuple("RuleDeactivateEvent", "rule")
 MicrophoneEvent = namedtuple("MicrophoneEvent", "state")
 RuleMatchEvent = namedtuple("RuleMatchEvent", "rule, extras")

@@ -105,7 +105,7 @@ class DragonflyNode(object):
         try:
             try:
                 encodedMsg = msg.encode('utf-8')
-                log.info("Sending: [%s]" % encodedMsg)
+                #log.info("Sending: [%s]" % encodedMsg)
                 data = struct.pack("!I", len(encodedMsg)) + encodedMsg 
                 self.other.settimeout(None)
                 self.other.sendall(data)
