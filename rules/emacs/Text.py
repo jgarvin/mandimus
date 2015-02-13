@@ -1,11 +1,8 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 
-from rules.MappingRule import MappingRule
-from rules.emacs.Cmd import runEmacsCmd, Cmd
-from rules.Rule import registerRule
-from Actions import Text, Camel, Hyphen, Underscore, Action, FormatState
-from rules.Elements import Integer, Dictation
+from Actions import Text
+from rules.emacs.Cmd import runEmacsCmd
 
 def emacsBool(b):
     if b:

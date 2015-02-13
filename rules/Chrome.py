@@ -42,7 +42,6 @@ _defaults = {
 
 ChromeSearchRule = makeContextualRule("ChromeSearch", _mapping, _extras, _defaults, ruleType=RuleType.INDEPENDENT)
 ChromeSearchRule.context.addRequirement(IsChrome)
-ChromeSearchRule.activate()
 
 _mapping  = {
     "new"                           : Key("c-t"),
@@ -88,4 +87,3 @@ _defaults = {
 
 ChromeRule = makeContextualRule("Chrome", _mapping, _extras, _defaults)
 ChromeRule.context.addRequirement(IsChrome)
-ChromeRule.activate()

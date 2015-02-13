@@ -45,5 +45,4 @@ _defaults = {
 
 CUARule = makeContextualRule("CUA", _mapping, _extras, _defaults)
 CUARule.context.addRequirement(NotEmacs)
-CUARule.activate()
 
