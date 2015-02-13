@@ -1,6 +1,5 @@
 import mdlog
 log = mdlog.getLogger(__name__)
-log.info("\n--------------------------------------------------------------------------------\n")
 
 import socket
 import sys
@@ -16,7 +15,8 @@ from Actions import RepeatPreviousAction
 from EventLoop import getLoop
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
-                       RuleRegisterEvent, RuleDeactivateEvent, LoadingRulesEvent)
+                       RuleRegisterEvent, RuleDeactivateEvent, LoadingRulesEvent,
+                       EventsDrainedEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadRuleFinishedMsg, RequestRulesMsg, RecognitionStateMsg,
@@ -53,6 +53,7 @@ class DragonflyThread(DragonflyNode):
         getLoop().subscribeEvent(RuleActivateEvent, self.onRuleActivate)
         getLoop().subscribeEvent(RuleRegisterEvent, self.onRuleRegister)
         getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
+        getLoop().subscribeEvent(EventsDrainedEvent, self.commitRuleEnabledness)
 
     def onRuleRegister(self, ev):
         if ev.rule.hash not in self.hashedRules:
@@ -125,8 +126,8 @@ class DragonflyThread(DragonflyNode):
         if not self.waitingForLoadConfirmation:
             self.pushQ.put(LoadingRulesEvent(False))
 
-    def commitRuleEnabledness(self):
-        if self.activatedRules - self.activatedLastCommit == set():
+    def commitRuleEnabledness(self, ev=None):
+        if self.activatedRules == self.activatedLastCommit:
             return
         self.activatedLastCommit = copy(self.activatedRules)
         log.info("Committing rule activations: %s" % [rule.rule.name for rule in self.activatedRules])

@@ -2,6 +2,7 @@ import mdlog, os
 mdlog.initLogging("server", "/tmp", stdOut=True)
 log = mdlog.getLogger(__name__)
 log.setLevel(10)
+log.info("\n--------------------------------------------------------------------------------\n")
 
 import os, sys
 from dfly_server import DragonflyThread
@@ -14,7 +15,7 @@ import re
 import time
 import traceback
 from EventList import (MicrophoneEvent, ConnectedEvent, WindowListEvent,
-                       ExitEvent, RestartEvent)
+                       ExitEvent, RestartEvent, EventsDrainedEvent)
 from rules.ContextualRule import makeContextualRule
 import EventList
 import select
@@ -146,6 +147,7 @@ class MainThread(object):
                     continue
 
     def drainEvents(self):
+        ranOnce = False
         try:
             while self.run:
                 try:
@@ -154,6 +156,10 @@ class MainThread(object):
                     break
 
                 self.processEvent(ev)
+                ranOnce = True
+
+            if ranOnce:
+                self.processEvent(EventsDrainedEvent())
         except KeyboardInterrupt:
             self.stop()
             sys.exit()

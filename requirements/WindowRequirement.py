@@ -17,7 +17,6 @@ class WindowRequirement(Requirement):
         if type(self.wmclass) in (str, unicode):
             self.wmclass = [self.wmclass]
         for c in self.wmclass:
-            log.info("wmclass %s negate %s c %s xor %s" % (self.wmclass, self.negate, c, ((c in ev.window.wmclass) ^ self.negate)))
             if (c in ev.window.wmclass) ^ self.negate:
                 for ctx in self.contexts:
                     ctx.met(self)

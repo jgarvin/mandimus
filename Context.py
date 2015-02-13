@@ -7,6 +7,7 @@ class Context(object):
         self.requirements = set()
         self.metReqs = set()
         self.targets = targets
+        self.lastState = False # unmet
     
     def addTarget(self, target):
         self.targets.add(target)
@@ -14,7 +15,8 @@ class Context(object):
 
     def removeTarget(self, target):
         self.targets.remove(target)
-        target.deactivate()
+        if self.lastState == True:
+            target.deactivate()
 
     def addRequirement(self, req):
         self.requirements.add(req)
@@ -41,8 +43,12 @@ class Context(object):
 
     def _maybeFire(self):
         if not (self.requirements - self.metReqs):
-            for t in self.targets:
-                t.activate()
+            if self.lastState == False:
+                for t in self.targets:
+                    t.activate()
+            self.lastState = True
         else:
-            for t in self.targets:
-                t.deactivate()
+            if self.lastState == True:
+                for t in self.targets:
+                    t.deactivate()
+            self.lastState = False
