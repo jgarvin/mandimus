@@ -254,7 +254,7 @@ if __name__ == "__main__":
         # ('rules.emacs.Snippet', ['']),
         # ('rules.emacs.SymbolPicker', ['']),
         ('rules.XMonad', ['']),
-        # ('rules.CUA', ['']),
+        ('rules.CUA', ['']),
         # ('rules.Chrome', ['']),
 
         # ('RefreshClient', ['']),

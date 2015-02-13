@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from EventLoop import getLoop
 from EventList import FocusChangeEvent
 from requirements.Requirement import Requirement
@@ -10,9 +13,14 @@ class WindowRequirement(Requirement):
         getLoop().subscribeEvent(FocusChangeEvent, self.onFocusChange)
 
     def onFocusChange(self, ev):
+        log.info("detecting focus changes")
         if type(self.wmclass) in (str, unicode):
             self.wmclass = [self.wmclass]
         for c in self.wmclass:
+            log.info("wmclass %s negate %s c %s xor %s" % (self.wmclass, self.negate, c, ((c in ev.window.wmclass) ^ self.negate)))
             if (c in ev.window.wmclass) ^ self.negate:
                 for ctx in self.contexts:
                     ctx.met(self)
+            else:
+                for ctx in self.contexts:
+                    ctx.unmet(self)

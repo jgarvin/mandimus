@@ -33,7 +33,10 @@ class Context(object):
 
     def unmet(self, req):
         assert req in self.requirements
-        self.metReqs.remove(req)
+        try:
+            self.metReqs.remove(req)
+        except KeyError:
+            pass
         self._maybeFire()
 
     def _maybeFire(self):
