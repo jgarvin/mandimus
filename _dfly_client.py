@@ -299,7 +299,7 @@ class MasterGrammar(object):
 
         log.info("Building master grammar rule with name [%s] mapping [%s] extras [%s] defaults [%s]"
                  % (self.fullName, mapping, extras, {}))
-        self.finalDflyRule = MappingRule(name=self.fullName, mapping=mapping, extras=extras,
+        self.finalDflyRule = MappingRule(name=self.hash, mapping=mapping, extras=extras,
                                          defaults={})
 
     def setupFinalDflyGrammar(self):
@@ -343,12 +343,22 @@ class MasterGrammar(object):
             self.dflyGrammar.unload()
 
     def buildConcreteRule(self, r):
+        # for independent rules we can use the plain
+        # name, but it turns out Dragon crashes if your
+        # names get too long, so for combined rules we
+        # just use the hash as the name... hopefully
+        # that's under the limit
+        name = r["name"]
         if r["ruleType"] == RuleType.SERIES:
             t = SeriesMappingRule
+            name = r["hash"]
+        elif r["ruleType"] == RuleType.TERMINAL:
+            t = MappingRule
+            name = r["hash"]
         else:
             t = MappingRule
 
-        rule = t(name=r["name"], mapping=r["mapping"], extras=r["extras"],
+        rule = t(name=name, mapping=r["mapping"], extras=r["extras"],
                  defaults=r["defaults"])
         log.info("Building rule with defaults: %s -- %s -- %s" % (r["name"], r["defaults"], r["hash"]))
 
@@ -677,8 +687,15 @@ class DragonflyClient(DragonflyNode):
             individualMatches = self.getChildrenByActorType(seriesNode, MappingRule)
             log.info("Matches: %s" % individualMatches)
             for m in individualMatches:
-                matches.append(self.getMatchFromNode(m))
-
+                # TODO: This is a less than ideal hack. MappingRule type children
+                # happen for all matches, even those through RuleRefs, so when saying
+                # 'pig' you get a match on the series rule, the char rule, and the alpha
+                # rule. We filter the latter 2 by only including enabled things like
+                # this.
+                # ... probably we shuld really only be looking at ReportingAction nodes?
+                if m.actor.enabled:
+                    matches.append(self.getMatchFromNode(m))
+        
         terminator = root.get_child_by_name('terminator')
         if terminator:
             matches.append(self.getMatchFromNode(terminator))

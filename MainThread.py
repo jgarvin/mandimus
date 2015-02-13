@@ -261,9 +261,8 @@ if __name__ == "__main__":
         # ('rules.emacs.SymbolPicker', ['']),
         ('rules.XMonad', ['']),
         ('rules.CUA', ['']),
-        # ('rules.Chrome', ['']),
-
-        # ('RefreshClient', ['']),
+        ('rules.Chrome', ['']),
+        ('RefreshClient', ['']),
     ]
 
     # TODO: catch syntax errors, make copies of module files, then

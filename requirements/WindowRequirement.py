@@ -13,7 +13,6 @@ class WindowRequirement(Requirement):
         getLoop().subscribeEvent(FocusChangeEvent, self.onFocusChange)
 
     def onFocusChange(self, ev):
-        log.info("detecting focus changes")
         if type(self.wmclass) in (str, unicode):
             self.wmclass = [self.wmclass]
         for c in self.wmclass:
