@@ -12,7 +12,8 @@ class SeriesMappingRule(CompoundRule):
     
     def __init__(self, name=None, mapping=None, extras=None, defaults=None):
         mapping_rule = MappingRule(mapping=mapping, extras=extras,
-            defaults=defaults, exported=False)
+                                   defaults=defaults, exported=False,
+                                   name=name + "Mapping")
         single = RuleRef(rule=mapping_rule)
         series = Repetition(single, min=1, max=8, name="series")
 

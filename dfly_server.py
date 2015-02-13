@@ -183,6 +183,8 @@ class DragonflyThread(DragonflyNode):
             log.error("Received match on phrase not in rule! Phrase [%s] Rule [%s -- %s]" (phrase, rule.name, hash))
             return
 
+        extras["words"] = words
+
         # todo replace this with MatchEvent
         try:
             cb = rule.mapping[phrase]
@@ -193,7 +195,7 @@ class DragonflyThread(DragonflyNode):
                     rule, extras = self.history[-1]
                     for i in range(repetitions):
                         self.onMatch(rule, extras)
-                    return
+                return
             else:
                 self.history.append(RuleMatchEvent(rule, extras))
 

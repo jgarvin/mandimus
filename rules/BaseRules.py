@@ -2,7 +2,7 @@ from protocol import RuleRef, makeHashedRule, RuleType
 from EventList import RuleRegisterEvent
 from EventLoop import pushEvent
 
-mapping = {
+_mapping = {
     "abe"   : "a",
     "brov"  : "b",
     "coup"  : "c",
@@ -31,10 +31,10 @@ mapping = {
     "zulu"  : "z",
 }
 
-AlphaRule = makeHashedRule("AlphaRule", mapping, ruleType=RuleType.INDEPENDENT)
+AlphaRule = makeHashedRule("AlphaRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(AlphaRule))
     
-mapping = {
+_mapping = {
     "zero"  : "0",
     "one"   : "1",
     "two"   : "2",
@@ -47,10 +47,10 @@ mapping = {
     "nine"  : "9",
 }
 
-DigitRule = makeHashedRule("DigitRule", mapping, ruleType=RuleType.INDEPENDENT)
+DigitRule = makeHashedRule("DigitRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(DigitRule))
 
-mapping = {
+_mapping = {
     "backtick"    : "backtick",
     "backslash"   : "backslash",
     "equal"       : "equal",
@@ -122,32 +122,28 @@ _literalMapping = {
     "pa"          : " ",
 }
 
-SymRule = makeHashedRule("SymRule", mapping, ruleType=RuleType.INDEPENDENT)
+SymRule = makeHashedRule("SymRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(SymRule))
 
 # TODO: another rule for all the keys that *don't*
 # have a character, so you can request shift+pgdown
 # and ctrl+enter
 
-mapping = {
+_mapping = {
     "(<alpharule> | num <digitrule> | <symrule>)" : ""
 }
 
-extras = [
+_charExtras = [
     RuleRef(AlphaRule, "alpharule"),
     RuleRef(DigitRule, "digitrule"),
     RuleRef(SymRule, "symrule"),
     ]
 
-CharRule = makeHashedRule("CharRule", mapping, extras, ruleType=RuleType.INDEPENDENT)
+CharRule = makeHashedRule("CharRule", _mapping, _charExtras, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(CharRule))
 
-def lookup(i):
-    for rule in [AlphaRule.rule, DigitRule.rule]:
-        try:
-            return rule.mapping[i]
-        except KeyError:
-            pass
-    return _literalMapping[i]
-
+def lookup(extras):
+    for e in _charExtras:
+        if e.name in extras:
+            return e.rule_ref.rule.mapping[extras[e.name]]
 

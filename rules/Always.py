@@ -3,6 +3,7 @@ log = mdlog.getLogger(__name__)
 
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
 from listHelpers import dictReplace
+import rules.BaseRules as BaseRules
 from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs, NotEmacs
@@ -10,56 +11,49 @@ from EventList import RuleActivateEvent
 import string
 from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 
-# class PressKey(object):
-#     def __init__(self, force_shift=False):
-#         self.force_shift = force_shift
+class PressKey(object):
+    def __init__(self, force_shift=False):
+        self.force_shift = force_shift
     
-#     def __call__(self, extras):
-#         words = extras['words']
-#         log.info('w: ' + str(words))
-#         words = words.split()
-#         keystring = []
-#         foundModifier = True
+    def __call__(self, extras):
+        log.info("extras: [%s]" % (extras,))
+        words = extras['words']
+        log.info('w: ' + str(words))
+        keystring = []
+        foundModifier = True
 
-#         if self.force_shift and "cap" not in words:
-#             words = ["cap"] + words
+        if self.force_shift and "cap" not in words:
+            words = ["cap"] + words
         
-#         numIndex = None
-#         repetitions = extras['n']
-#         for i, word in enumerate(words):
-#             if word in ["control", "alt", "cap"]:
-#                 keystring.append(word[0] if word != "cap" else "s") 
-#                 foundModifier = True
-#             elif word == "num":
-#                 continue
-#             else:
-#                 break
+        repetitions = extras['n']
+        if "control" in words:
+            keystring.append('c')
+            foundModifier = True
+        if "alt" in words:
+            keystring.append('a')
+            foundModifier = True
+        if "cap" in words:
+            keystring.append('s')
+            foundModifier = True
+        
+        if foundModifier:
+            keystring.append('-')
 
-#         if foundModifier:
-#             keystring.append('-')
-                                  
-#         finalkey = words[i]
-#         #log.info('finalkey1: %s' % finalkey)
-#         finalkey = dictReplace(finalkey, dict(AlphaRule.mapping.items() + DigitRule.mapping.items() + SymRule.mapping.items()))
-#         #log.info('finalkey2: %s' % finalkey)
-#         keystring.append(finalkey)
-#         #log.info("keystring: %s" % keystring)
-#         for r in range(repetitions):
-#             Key(''.join(keystring))()
+        keystring.append(BaseRules.lookup(extras))
+        for r in range(repetitions):
+            Key(''.join(keystring))()
 
 testAction = lambda y: log.info("letter triggered %(charrule)s" % y)
 
-mapping = {
-    #"command tally"                            : (lambda x: Speak(str(commandTally()))()),
+_mapping = {
     'rep [<n>]'                                : RepeatPreviousAction(),
-    # "[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
-    "[control] [alt] [cap] <charrule> [<n>]"   : testAction,
+    "[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
     'scoot [<n>]'                              : Key("tab:%(n)d"),
     'cap scoot [<n>]'                          : Key("s-tab:%(n)d"),
     "letter <alpharule>" : testAction, 
 }
 
-extras = [
+_extras = [
     Integer("n", 2, 20),
     Integer("digit", 0, 10),
     Dictation("text"),
@@ -67,50 +61,50 @@ extras = [
     RuleRef(CharRule, "charrule"),
 ]
 
-defaults = {
+_defaults = {
     "n": 1,
 }
 
-AlwaysRule = makeContextualRule("Always", mapping, extras, defaults)
+AlwaysRule = makeContextualRule("Always", _mapping, _extras, _defaults)
 AlwaysRule.activate()
 
-extras = [
+_extras = [
     Dictation("text")
 ]
     
-mapping = {
+_mapping = {
     "type <text>" : Text("%(text)s", False),
 }
 
-TypingRule = makeContextualRule("TypingRule", mapping, extras, {}, RuleType.TERMINAL)
+TypingRule = makeContextualRule("TypingRule", _mapping, _extras, {}, RuleType.TERMINAL)
 TypingRule.context.addRequirement(NotEmacs)
 
-mapping = {
+_mapping = {
     "camel <text>" : Camel("%(text)s"),
 }
 
-CamelRule = makeContextualRule("CamelRule", mapping, extras, {}, RuleType.TERMINAL)
+CamelRule = makeContextualRule("CamelRule", _mapping, _extras, {}, RuleType.TERMINAL)
 CamelRule.context.addRequirement(NotEmacs)
 
-mapping = {
+_mapping = {
     "stud <text>" : Camel("%(text)s", True),
 }
 
-StudRule = makeContextualRule("StudRule", mapping, extras, {}, RuleType.TERMINAL)
+StudRule = makeContextualRule("StudRule", _mapping, _extras, {}, RuleType.TERMINAL)
 StudRule.context.addRequirement(NotEmacs)
 
-mapping = {
+_mapping = {
     "hyphen <text>"     : Hyphen("%(text)s"),
     "cap hyphen <text>" : Hyphen("%(text)s", True),
 }    
 
-HypenRule = makeContextualRule("HypenRule", mapping, extras, {}, RuleType.TERMINAL)
+HypenRule = makeContextualRule("HypenRule", _mapping, _extras, {}, RuleType.TERMINAL)
 HypenRule.context.addRequirement(NotEmacs)
 
-mapping = {
+_mapping = {
     "score <text>"     : Underscore("%(text)s"),
     "cap score <text>" : Underscore("%(text)s", True),
 }
 
-UnderscoreRule = makeContextualRule("UnderscoreRule", mapping, extras, {}, RuleType.TERMINAL)
+UnderscoreRule = makeContextualRule("UnderscoreRule", _mapping, _extras, {}, RuleType.TERMINAL)
 UnderscoreRule.context.addRequirement(NotEmacs)

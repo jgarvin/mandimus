@@ -600,11 +600,20 @@ class DragonflyClient(DragonflyNode):
             log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
             self.sendLoadRequest(e.hashes)
 
+    def getChildrenByActorType(self, node, actorType):
+        """Get all nodes below this node with the given name."""
+        matches = []
+        for child in node.children:
+            if isinstance(child.actor, actorType):
+                matches.append(child)
+            matches.extend(self.getChildrenByActorType(child, actorType))
+        return matches
+
     def pprint(self, node, indent=""):
         if not node.children:
-            return "%s%s :: %s -> %s :: %s" % (indent, node.name, type(node).__name__, node.value(), type(node.value()).__name__)
+            return "%s%s :: %s -> %s :: %s, actor :: %s" % (indent, node.name, type(node).__name__, node.value(), type(node.value()).__name__, type(node.actor).__name__)
         else:
-            return "%s%s :: %s -> %r :: %s\n" % (indent, node.name, type(node).__name__, node.value(), type(node.value()).__name__) \
+            return "%s%s :: %s -> %r :: %s, actor :: %s\n" % (indent, node.name, type(node).__name__, node.value(), type(node.value()).__name__, type(node.actor).__name__) \
                 + "\n".join([self.pprint(n, indent + "  ") \
                              for n in node.children])
 
@@ -664,7 +673,9 @@ class DragonflyClient(DragonflyNode):
         root = data['_node']
         seriesNode = root.get_child_by_name('series')
         if seriesNode:
-            individualMatches = seriesNode.get_children_by_name('MappingRule')
+            #individualMatches = seriesNode.get_children_by_name('MappingRule')
+            individualMatches = self.getChildrenByActorType(seriesNode, MappingRule)
+            log.info("Matches: %s" % individualMatches)
             for m in individualMatches:
                 matches.append(self.getMatchFromNode(m))
 

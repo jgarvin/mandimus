@@ -253,7 +253,7 @@ if __name__ == "__main__":
         # ('rules.emacs.ModeLine', ['']),
         # ('rules.emacs.Snippet', ['']),
         # ('rules.emacs.SymbolPicker', ['']),
-        # ('rules.XMonad', ['']),
+        ('rules.XMonad', ['']),
         # ('rules.CUA', ['']),
         # ('rules.Chrome', ['']),
 
