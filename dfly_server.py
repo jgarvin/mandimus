@@ -193,12 +193,12 @@ class DragonflyThread(DragonflyNode):
             if isinstance(cb, RepeatPreviousAction):
                 if len(self.history) >= 1:
                     repetitions = extras['n']
-                    rule, extras = self.history[-1]
+                    hash, phrase, extras, words = self.history[-1]
                     for i in range(repetitions):
-                        self.onMatch(rule, extras)
+                        self.onMatch(hash, phrase, extras, words)
                 return
             else:
-                self.history.append(RuleMatchEvent(rule, extras))
+                self.history.append(RuleMatchEvent(hash, phrase, extras, words))
 
             log.info('match %s -- %s -- %s -- %s -- %s' % (rule.name, phrase, words, extras, hash))
             self.utterance.extend(words)

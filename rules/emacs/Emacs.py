@@ -6,7 +6,8 @@ from Actions import (
     # SelectChoice,
 )
 
-from protocol import Integer, Dictation, RuleRef, RuleType
+from protocol import RuleType
+from rules.emacs.common import emacsExtras, emacsDefaults
 from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords
@@ -298,28 +299,8 @@ _mapping = {
     "toggle refresh client"          : toggleRefreshClientSources,
 }
 
-_extras = [
-    Integer("n", 2, 20),
-    Dictation("text"),
-    Dictation("match"),
-    Dictation("replace"),
-    Integer("big", 0, 2**14),
-    RuleRef(BaseRules.CharRule, "charrule"),
-    RuleRef(BaseRules.AlphaRule, "alpharule"),
-    # RuleRef(ModeVerbRule, "mode_verb_rule"),
-    Integer("i", 0, 10),
-    Integer("line", 0, 9999),
-    Dictation("text"),
-    Dictation("match"),
-    Dictation("replace"),
-]
 
-_defaults = {
-    "n"    : 1,
-    "text" : "",
-}
-
-EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, _extras, _defaults, ruleType=RuleType.INDEPENDENT)
+EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.INDEPENDENT)
 EmacsIsolatedRule.context.addRequirement(IsEmacs)
 
 _mapping  = {
@@ -425,5 +406,5 @@ _mapping  = {
     "shell command"                : Minibuf("etc-shell-command"),
 }
 
-EmacsRule = makeContextualRule("Emacs", _mapping, _extras, _defaults)
+EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)
 EmacsRule.context.addRequirement(IsEmacs)

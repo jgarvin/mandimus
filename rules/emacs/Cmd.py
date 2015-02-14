@@ -191,10 +191,7 @@ class Cmd(Action):
 class CharCmd(Cmd):
     classLog = False
     def _lisp(self, extras={}):
-        word = extras['words'].split()[1]
-        if word == "num":
-            word = extras['words'].split()[2]
-        char = BaseRules.CharRule.lookup(word)
+        char = BaseRules.lookup(extras)
         char = emacsChar(char)
         return self.data % char
 

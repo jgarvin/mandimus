@@ -1,13 +1,15 @@
-from rules.Rule import registerRule
-from rules.emacs.Base import EmacsBase
 from rules.emacs.Cmd import CharCmd, Cmd
+from rules.ContextualRule import makeContextualRule
+from requirements.Emacs import IsEmacs
+from rules.emacs.common import emacsExtras, emacsDefaults
 
-@registerRule
-class SnippetRules(EmacsBase):
-    mapping = {
-        "jump <charrule>" : CharCmd('(md-sn-find-slot %s)'),
-        "blank"           : Cmd('(md-sn-next-slot)'),
-        "make blank"      : Cmd('(md-sn-drop-slot)'),
-        "call [<i>]"      : Cmd("(md-insert-call-snippet %(i)d)"),
-    }
+_mapping = {
+    "jump <charrule>" : CharCmd('(md-sn-find-slot %s)'),
+    "blank"           : Cmd('(md-sn-next-slot)'),
+    "make blank"      : Cmd('(md-sn-drop-slot)'),
+    "call [<i>]"      : Cmd("(md-insert-call-snippet %(i)d)"),
+}
+
+SnippetRule = makeContextualRule("Snippet", _mapping, emacsExtras, emacsDefaults)
+SnippetRule.context.addRequirement(IsEmacs)
 

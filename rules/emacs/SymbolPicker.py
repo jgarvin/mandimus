@@ -1,42 +1,32 @@
-from Actions import Key, Text, SelectChoice
-from EventLoop import getLoop
-import EventList
-from EventList import FocusChangeEvent
-from rules.Elements import Dictation, Integer, RuleRef
-from rules.BaseRules import AlphaRule
-from rules.MappingRule import MappingRule
-from rules.SeriesMappingRule import SeriesMappingRule
-from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd
-from rules.Rule import registerRule
-from rules.emacs.grammar import updateListGrammar, getStringList
-from rules.emacs.Text import EmacsText
-from rules.emacs.Base import EmacsBase
-from rules.emacs.Cmd import CharCmd
-from wordUtils import extractWords
-import SelectOption
-from Window import getFocusedWindow
+from protocol import RuleType, RuleRef, makeHashedRule
+from EventLoop import pushEvent
+from EventList import RuleRegisterEvent
+import rules.BaseRules as BaseRules
+from rules.emacs.Cmd import CharCmd, Cmd
+from rules.ContextualRule import makeContextualRule
+from requirements.Emacs import IsEmacs
+from rules.emacs.common import emacsExtras, emacsDefaults
 
-@registerRule
-class ColorRule(MappingRule):
-    refOnly = True
-    mapping = {
-        "red"    : "red",
-        "green"  : "green",
-        "white"  : "white",
-        "purple" : "purple",
-        "yellow" : "yellow",
-        "orange" : "orange",
-    }
+_mapping = {
+    "red"    : "red",
+    "green"  : "green",
+    "white"  : "white",
+    "purple" : "purple",
+    "yellow" : "yellow",
+    "orange" : "orange",
+}
 
-@registerRule
-class AccentRule(MappingRule):
-    refOnly = True
-    mapping = {
-        "circle" : 0x030a,
-        "corner" : 0x031a,
-        "hair"   : 0x030f,
-    }
+ColorRule = makeHashedRule("ColorRule", _mapping, ruleType=RuleType.INDEPENDENT)
+pushEvent(RuleRegisterEvent(ColorRule))
+
+_mapping = {
+    "circle" : 0x030a,
+    "corner" : 0x031a,
+    "hair"   : 0x030f,
+}
+
+AccentRule = makeHashedRule("AccentRule", _mapping, ruleType=RuleType.INDEPENDENT)
+pushEvent(RuleRegisterEvent(AccentRule))
     
 class PickSymbol(Cmd):
     classLog = True
@@ -45,29 +35,23 @@ class PickSymbol(Cmd):
         Cmd.__init__(self, data)
 
     def _lisp(self, extras={}):
-        words = extras['words'].split()
-        color = ColorRule.mapping[words[0 + self.leadingWords]]
-        letter = AlphaRule.mapping[words[1 + self.leadingWords]]
-        mark = AccentRule.mapping[words[2 + self.leadingWords]] if len(words) > (2 + self.leadingWords) else None
+        color = extras['colorrule']
+        letter = BaseRules.lookup(extras)
+        mark = AccentRule.rule.mapping[extras['accentrule']] if 'accentrule' in extras else None
         mark = ("#x%x" % mark) if mark else "nil"
         return '(%s "%s" %s "%s")' % (self.data, letter, mark, color)
  
-@registerRule
-class SymbolPicker(EmacsBase):
-    mapping = {
-        "<colorrule> <alpharule> [<accentrule>]"      : PickSymbol("md-hl-insert-symbol", 0),
-        "jump <colorrule> <alpharule> [<accentrule>]" : PickSymbol("md-hl-jump-symbol"),
-        "toggle picker"                               : Cmd("(md-toggle-symbol-picker-mode)"),
-    }
+_mapping = {
+    "<colorrule> <alpharule> [<accentrule>]"      : PickSymbol("md-hl-insert-symbol", 0),
+    "jump <colorrule> <alpharule> [<accentrule>]" : PickSymbol("md-hl-jump-symbol"),
+    "toggle picker"                               : Cmd("(md-toggle-symbol-picker-mode)"),
+}
 
-    alpharef = RuleRef(AlphaRule, "alpharule")
-    colorref = RuleRef(ColorRule, "colorrule")
-    accentref = RuleRef(AccentRule, "accentrule")
-        
-    extras = EmacsBase.extras + [
-        alpharef,
-        colorref,
-        accentref,
-        ]
+_extras = emacsExtras + [
+    RuleRef(AccentRule, "accentrule"),
+    RuleRef(ColorRule, "colorrule"),
+    ]
 
-    
+SymbolPickerRule = makeContextualRule("SymbolPicker", _mapping, _extras, emacsDefaults)
+SymbolPickerRule.context.addRequirement(IsEmacs)
+
