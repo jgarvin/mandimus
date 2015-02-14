@@ -1,63 +1,45 @@
-from Actions import Key, Text
-from EventLoop import getLoop
-import EventList
-from EventList import FocusChangeEvent
-from rules.Elements import Dictation, Integer
-from rules.MappingRule import MappingRule
-from rules.SeriesMappingRule import SeriesMappingRule
-from rules.emacs.Emacs import Emacs
-from rules.emacs.Cmd import runEmacsCmd, Cmd
-from rules.Rule import registerRule
-from rules.emacs.grammar import updateListGrammar, getStringList
-from rules.emacs.Text import EmacsText
-from rules.emacs.Base import EmacsBase
-from rules.emacs.Cmd import CharCmd
-from wordUtils import extractWords
-import SelectOption
-from Window import getFocusedWindow
+from Actions import Key
+from rules.emacs.Cmd import CharCmd, Cmd
+from rules.ContextualRule import makeContextualRule
+from requirements.Emacs import IsEmacs
+from rules.emacs.common import emacsExtras, emacsDefaults
 
-# TODO: would be nice for all of these
-# to be ace'able
-@registerRule
-class UnitRule(MappingRule):
-    refOnly = True
-    mapping = {
-        "word"     : "'word",
-        "line"     : "'line",
-        "ace"      : "'ace",
-        "ace line" : "'ace-line",
-        "graph"    : "'paragraph",
-        "block"    : "'block",
-        "larp"     : "'parens",
-        "lack"     : "'brackets",
-        "lace"     : "'lace",
-        "lesser"   : "'angles",
-    }
+# # TODO: would be nice for all of these
+# # to be ace'able
+#     mapping = {
+#         "word"     : "'word",
+#         "line"     : "'line",
+#         "ace"      : "'ace",
+#         "ace line" : "'ace-line",
+#         "graph"    : "'paragraph",
+#         "block"    : "'block",
+#         "larp"     : "'parens",
+#         "lack"     : "'brackets",
+#         "lace"     : "'lace",
+#         "lesser"   : "'angles",
+#     }
 
+#     mapping = {
+#         "mark" : "'mark",
+#         "cut"  : "'cut",
+#         "copy" : "'copy",
+#         "dupe" : "'dupe",
+#         "swap" : "'swap",
+#     }
 
-@registerRule
-class ActionRule(MappingRule):
-    refOnly = True
-    mapping = {
-        "mark" : "'mark",
-        "cut"  : "'cut",
-        "copy" : "'copy",
-        "dupe" : "'dupe",
-        "swap" : "'swap",
-    }
+_mapping = {
+    "zap <charrule> [<n>]"   : CharCmd("(zap-up-to-char 1 %s)"),
+    "taze <charrule> [<n>]"  : CharCmd("(zap-up-to-char -1 %s)"),
+    #"fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 %s)"),
+    #"buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 %s)"),
+    "trans [<n>]"            : Cmd("(transpose-sexps 1)"),
+    "snart [<n>]"            : Cmd("(transpose-sexps -1)"),
+    "rise [<n>]"             : Key("a-up:%(n)d"),
+    "drop [<n>]"             : Key("a-down:%(n)d"),
+    "var <charrule> [<n>]"   : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
+    "phone [<n>]"              : Cmd("(md-cycle-homophones-at-point)"),
+}
 
-@registerRule
-class EditRules(EmacsBase):
-    mapping = {
-        "zap <charrule> [<n>]"   : CharCmd("(zap-up-to-char 1 %s)"),
-        "taze <charrule> [<n>]"  : CharCmd("(zap-up-to-char -1 %s)"),
-        #"fizz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char 1 %s)"),
-        #"buzz <charrule> [<n>]" : CharCmd("(md-copy-up-to-char -1 %s)"),
-        "trans [<n>]"            : Cmd("(transpose-sexps 1)"),
-        "snart [<n>]"            : Cmd("(transpose-sexps -1)"),
-        "rise [<n>]"             : Key("a-up:%(n)d"),
-        "drop [<n>]"             : Key("a-down:%(n)d"),
-        "var <charrule> [<n>]"   : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
-        "phone [<n>]"              : Cmd("(md-cycle-homophones-at-point)"),
-    }
+EditRule = makeContextualRule("Edit", _mapping, emacsExtras, emacsDefaults)
+EditRule.context.addRequirement(IsEmacs)
 

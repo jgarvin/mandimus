@@ -6,7 +6,7 @@ from listHelpers import dictReplace
 import rules.BaseRules as BaseRules
 from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
 from rules.ContextualRule import makeContextualRule
-from requirements.Emacs import IsEmacs, NotEmacs
+from requirements.Emacs import NotEmacs
 from EventList import RuleActivateEvent
 import string
 from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
