@@ -67,7 +67,7 @@ dataTypes.add(HashedRule)
 
 EnableRulesMsg = _newDataType("EnableRulesMsg", "hashes")
 HeartbeatMsg = _newDataType("HeartbeatMsg", "unused")
-LoadRuleFinishedMsg = _newDataType("LoadRuleFinishedMsg", "hash")
+LoadStateMsg = _newDataType("LoadStateMsg", "state")
 LoadRuleMsg = _newDataType("LoadRuleMsg", "rule")
 MatchEventMsg = _newDataType("MatchEventMsg", "hash phrase extras words")
 MicStateMsg = _newDataType("MicStateMsg", "state")
@@ -80,7 +80,6 @@ Dictation = _newDataType("Dictation", "name")
 Repetition = _newDataType("Repetition", "rule_ref min max name")
 RuleRef = _newDataType("RuleRef", "rule_ref name")
 ListRef = _newDataType("ListRef", "name list")
-
 
 def makeJSONRepresentable(t):
     toEncode = t

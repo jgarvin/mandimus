@@ -23,10 +23,10 @@ from collections import namedtuple
 import hashlib
 
 import protocol
-from protocol import (EnableRulesMsg, LoadRuleMsg, LoadRuleFinishedMsg,
+from protocol import (EnableRulesMsg, LoadRuleMsg, 
                       HeartbeatMsg, MatchEventMsg, MicStateMsg, RecognitionStateMsg,
                       RequestRulesMsg, WordListMsg, RuleType, parseMessage,
-                      makeJSON)
+                      makeJSON, LoadStateMsg)
 
 importOrReload("SeriesMappingRule", "SeriesMappingRule")
 importOrReload("DragonflyNode", "DragonflyNode")
@@ -537,6 +537,7 @@ class DragonflyClient(DragonflyNode):
     def sendLoadRequest(self, hashes):
         unrequested = hashes - self.requestedLoads
         if unrequested:
+            self.sendMsg(makeJSON(LoadStateMsg('loading')))
             self.requestedLoads.update(unrequested)
             self.sendMsg(makeJSON(RequestRulesMsg(unrequested)))
 
@@ -606,6 +607,7 @@ class DragonflyClient(DragonflyNode):
         grammar = self.hashedRules[self.activeMasterGrammar]
         try:
             grammar.activate()
+            self.sendMsg(makeJSON(LoadStateMsg('done')))
         except MissingDependency as e:
             log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
             self.sendLoadRequest(e.hashes)

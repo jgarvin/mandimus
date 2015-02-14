@@ -19,7 +19,7 @@ from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        EventsDrainedEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
-                      LoadRuleFinishedMsg, RequestRulesMsg, RecognitionStateMsg,
+                      LoadStateMsg, RequestRulesMsg, RecognitionStateMsg,
                       MatchEventMsg, HeartbeatMsg, WordListMsg, makeJSON,
                       parseMessage, Rule, HashedRule)
 
@@ -39,7 +39,6 @@ class DragonflyThread(DragonflyNode):
         # contains HashedRule's from last time we committed, so
         # we can check if we actually need to send changes
         self.activatedLastCommit = set()
-        self.waitingForLoadConfirmation = set()
         
         self.server_socket = self.makeSocket()
         self.server_socket.bind(self.address)
@@ -118,13 +117,6 @@ class DragonflyThread(DragonflyNode):
         
         log.info("Loading rule: %s" % (self.hashedRules[hash],))
         self.sendMsg(makeJSON(LoadRuleMsg(self.stripActions(hash))))
-        self.waitingForLoadConfirmation.add(hash)
-        self.pushQ.put(LoadingRulesEvent(True))
-
-    def onLoadFinished(self, hash):
-        self.waitingForLoadConfirmation.remove(hash)
-        if not self.waitingForLoadConfirmation:
-            self.pushQ.put(LoadingRulesEvent(False))
 
     def commitRuleEnabledness(self, ev=None):
         if self.activatedRules == self.activatedLastCommit:
@@ -134,8 +126,7 @@ class DragonflyThread(DragonflyNode):
         self.sendMsg(makeJSON(EnableRulesMsg([r.hash for r in self.activatedRules])))
 
     def onConnect(self):
-        self.waitingForLoadConfirmation = set()
-        self.pushQ.put(LoadingRulesEvent(False))
+        self.pushQ.put(LoadingRulesEvent('done'))
         self.activatedLastCommit = set()
         self.commitRuleEnabledness()
         log.info("Pushing connected event.")
@@ -147,8 +138,8 @@ class DragonflyThread(DragonflyNode):
         msg = parseMessage(json_msg)
         if isinstance(msg, HeartbeatMsg):
             log.debug("Heartbeat")
-        elif isinstance(msg, LoadRuleFinishedMsg):
-            self.onLoadFinished(msg)
+        elif isinstance(msg, LoadStateMsg):
+            self.pushQ.put(LoadingRulesEvent(msg.state))
         elif isinstance(msg, MatchEventMsg):
             self.onMatch(msg.hash, msg.phrase, msg.extras, msg.words)
         elif isinstance(msg, MicStateMsg):
