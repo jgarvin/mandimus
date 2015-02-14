@@ -250,7 +250,7 @@ if __name__ == "__main__":
         # ('rules.emacs.ERC', ['']),
         ('rules.emacs.VarNames', ['']),
         ('rules.emacs.Pairs', ['']),
-        # ('rules.emacs.Profiling', ['']),
+        ('rules.emacs.Profiling', ['']),
         # ('rules.emacs.Mic', ['']),
         # ('rules.emacs.Magit', ['']),
         ('rules.emacs.Nav', ['']),
