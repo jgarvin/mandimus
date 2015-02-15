@@ -15,10 +15,9 @@ class WindowRequirement(Requirement):
     def onFocusChange(self, ev):
         if type(self.wmclass) in (str, unicode):
             self.wmclass = [self.wmclass]
+        matched = False
         for c in self.wmclass:
             if (c in ev.window.wmclass) ^ self.negate:
-                for ctx in self.contexts:
-                    ctx.met(self)
-            else:
-                for ctx in self.contexts:
-                    ctx.unmet(self)
+                matched = True
+                break
+        self._met(matched)

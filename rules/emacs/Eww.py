@@ -1,13 +1,14 @@
-from Actions import Key 
-from rules.Rule import registerRule
-from rules.emacs.Base import EmacsBase
-from rules.emacs.Text import EmacsText
+from Actions import Key
+from rules.ContextualRule import makeContextualRule
+from requirements.Emacs import IsEmacs
+from requirements.ModeRequirement import ModeRequirement
+from rules.emacs.common import emacsExtras, emacsDefaults
 
-@registerRule
-class Eww(EmacsBase):
-    majorMode = ["eww-mode"]
+_mapping = {
+    "external"          : Key("ampersand"),
+}
 
-    mapping = {
-        "external"          : Key("ampersand"),
-    }
+EwwRule = makeContextualRule("Eww", _mapping, emacsExtras, emacsDefaults)
+EwwRule.context.addRequirement(IsEmacs)
+EwwRule.context.addRequirement(ModeRequirement(modes="eww-mode"))
 

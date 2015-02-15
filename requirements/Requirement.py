@@ -11,4 +11,13 @@ class Requirement(object):
     def removeContext(self, ctx):
         self.contexts.remove(ctx)
 
+    def _met(self, value=True):
+        if value:
+            for ctx in self.contexts:
+                ctx.met(self)
+        else:
+            self._unmet()
 
+    def _unmet(self):
+        for ctx in self.contexts:
+            ctx.unmet(self)
