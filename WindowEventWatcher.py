@@ -9,7 +9,6 @@ from copy import copy
 import time
 import re
 
-
 REFRESH_TIME = 0.25
 
 class WindowEventWatcher(object):

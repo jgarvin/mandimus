@@ -27,42 +27,7 @@ def getMajorMode():
 
 getLoop().subscribeEvent(FocusChangeEvent, updateMajorMode, priority=0)
 
-class KeywordCmd(Cmd):
-    def __init__(self, keywords, log=False):
-        self.writtenForms = {}
-        for i in keywords:
-            self.writtenForms[i[1]] = i[0]
-        Cmd.__init__(self, None, log)
 
-    def _lisp(self, extras={}):
-        words = extras['words'].split()
-        command = words[0]
-        # everything after command is part of key 
-        rest = words[1:]
-        if extras['n'] != 1:
-            # unless there's a number spoken at the end
-            rest = rest[:-1]
-        rest = self.writtenForms[" ".join(rest)]
-        if command == "key":
-            EmacsText("%s" % rest, lower=False)()
-        elif command == "new":
-            return "(md-insert-snippet \"%s\")" % rest
-        elif command == "prior":
-            return "(md-go-to-previous \"%s\")" % rest
-        elif command == "future":
-            return "(md-go-to-next \"%s\")" % rest
-        else:
-            assert False
-
-@registerRule
-class ModeVerbRule(MappingRule):
-    refOnly = True
-    mapping = {
-        "key" : None,
-        "new" : None,
-        "prior" : None,
-        "future" : None,
-    }
 
 class EmacsBase(SeriesMappingRule):
     majorMode = None

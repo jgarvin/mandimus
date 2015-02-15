@@ -606,6 +606,9 @@ class DragonflyClient(DragonflyNode):
     def tryActivatingMaster(self):
         grammar = self.hashedRules[self.activeMasterGrammar]
         try:
+            # TODO: test why this doesn't work. Would be nice for
+            # seeing true amount of loading...
+            #self.sendMsg(makeJSON(LoadStateMsg('loading')))
             grammar.activate()
             self.sendMsg(makeJSON(LoadStateMsg('done')))
         except MissingDependency as e:
