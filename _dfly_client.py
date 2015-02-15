@@ -10,7 +10,7 @@ resetImportState()
 import dragonfly as dfly
 from dragonfly import (
     Grammar, CompoundRule, MappingRule, ActionBase, 
-    Key, Text, MappingRule, Function, get_engine )
+    Key, Text, MappingRule, Function, get_engine, List )
 from dragonfly.actions.action_base import BoundAction
 from dragonfly.grammar.elements import ElementBase
 import natlink
@@ -145,6 +145,14 @@ class MasterGrammar(object):
         self.finalDflyRule = None
         self.dflyGrammar = None
 
+        # word lists are *not* hashed. they are global state the
+        # client can update at any time, and the change has to be
+        # propogated into the currently active grammar. the client
+        # can choose to make them rule specific by making the name
+        # be the hash of the rule the word list applies to, but this
+        # is only convention and not enforced
+        self.concreteWordLists = {}
+
     @property
     def fullRullSet(self):
         return self.baseRuleSet | self.dependencyRuleSet
@@ -226,7 +234,7 @@ class MasterGrammar(object):
             if "mapping" not in x:
                 x["mapping"] = {}
             if "extras" not in x:
-                x["extras"] = set()
+                x["extras"] = {}
             if "defaults" not in x:
                 x["defaults"] = {}
             if "name" not in x:
@@ -238,7 +246,8 @@ class MasterGrammar(object):
             x["seriesMergeGroup"] = rule.seriesMergeGroup
             x["name"] = x["name"] + ("," if x["name"] else "") + rule.name
             x["mapping"].update(rule.mapping.items())
-            x["extras"].update(rule.extras)
+            for e in rule.extras:
+                x["extras"][e.name] = e
             x["defaults"].update(rule.defaults.items())
             log.info("Adding hash [%s] to name [%s]" % (hash, x["name"]))
             x["hash"].add(hash)
@@ -391,6 +400,10 @@ class MasterGrammar(object):
             [hash] = r["hash"]
             log.info("Single hash: [%s]" % r["hash"])
 
+        # have to uniquify in this round about way because lists
+        # aren't hashable and we need them for ListRef
+        r["extras"] = r["extras"].values()
+
         newExtras = []
         for e in r["extras"]:
             if isinstance(e, protocol.Integer):
@@ -399,6 +412,7 @@ class MasterGrammar(object):
                 newExtras.append(dfly.Dictation(e.name))
             elif isinstance(e, protocol.Repetition):
                 if e.rule_ref in self.concreteRules:
+                    log.info("Trying to create repetition with [%s]" % (self.concreteRules[e.rule_ref],))
                     newExtras.append(dfly.Repetition(self.concreteRules[e.rule_ref],
                                                      e.min, e.max, e.name))
                 else:
@@ -411,7 +425,8 @@ class MasterGrammar(object):
                     log.info("Missing [%s]" % (e,))
                     return False
             elif isinstance(e, protocol.ListRef):
-                newExtras.append(dfly.ListRef(e.name, e.list))
+                self.updateWordList(e.name, e.words)
+                newExtras.append(dfly.ListRef(e.list_name, self.concreteWordLists[e.name]))
             else:
                 raise Exception("Unknown extra type: [%s]" % e)
 
@@ -420,6 +435,11 @@ class MasterGrammar(object):
         # the hash changing logic at the top can get applied multiple times!
         r["hash"] = hash
         return True
+
+    def updateWordList(self, name, words):
+        if name not in self.concreteWordLists:
+            self.concreteWordLists[name] = List(name + "ConcreteList")
+        self.concreteWordLists[name].set(words)
 
 class DragonflyClient(DragonflyNode):
     def __init__(self):
@@ -451,6 +471,8 @@ class DragonflyClient(DragonflyNode):
         self.globalRuleGrammar.add_rule(self.globalRule)
         self.globalRuleGrammar.load()
         get_engine().set_exclusiveness(self.globalRuleGrammar, 1)
+
+        self.wordLists = {}
 
     def dumpOther(self):
         # on disconnect unload all the rules
@@ -527,12 +549,20 @@ class DragonflyClient(DragonflyNode):
                 log.debug("Heartbeat")
             elif isinstance(msg, LoadRuleMsg):
                 self.onLoadRuleMsg(msg)
+            elif isinstance(msg, WordListMsg):
+                self.onWordListMsg(msg)
             else:
                 log.error("Unknown message type, ignoring: [%s]" % msg)
                 return
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+
+    def onWordListMsg(self, msg):
+        log.info("Received word list update [%s] -- [%s]" % (msg.name, msg.words))
+        self.wordLists[msg.name] = msg.words
+        if self.activeMasterGrammar:
+            self.hashedRules[self.activeMasterGrammar].updateWordList(msg.name, msg.words)
 
     def sendLoadRequest(self, hashes):
         unrequested = hashes - self.requestedLoads

@@ -240,6 +240,8 @@ if __name__ == "__main__":
     
     imports = [
         ('rules.Always', ['']),
+        ('rules.CUA', ['']),
+        ('rules.Chrome', ['']),
         ('rules.emacs.Belt', ['']),
         ('rules.emacs.Dired', ['']),
         ('rules.emacs.Emacs', ['']),
@@ -259,9 +261,8 @@ if __name__ == "__main__":
         ('rules.emacs.ModeLine', ['']),
         ('rules.emacs.Snippet', ['']),
         ('rules.emacs.SymbolPicker', ['']),
+        ('rules.WindowNames', ['']),
         ('rules.XMonad', ['']),
-        ('rules.CUA', ['']),
-        ('rules.Chrome', ['']),
         ('RefreshClient', ['']),
     ]
 

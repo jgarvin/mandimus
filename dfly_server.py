@@ -16,7 +16,7 @@ from EventLoop import getLoop
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
                        RuleRegisterEvent, RuleDeactivateEvent, LoadingRulesEvent,
-                       EventsDrainedEvent)
+                       EventsDrainedEvent, WordListEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadStateMsg, RequestRulesMsg, RecognitionStateMsg,
@@ -53,6 +53,11 @@ class DragonflyThread(DragonflyNode):
         getLoop().subscribeEvent(RuleRegisterEvent, self.onRuleRegister)
         getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
         getLoop().subscribeEvent(EventsDrainedEvent, self.commitRuleEnabledness)
+        getLoop().subscribeEvent(WordListEvent, self.onWordList)
+
+    def onWordList(self, ev):
+        log.info("Sending updated word list [%s] -- [%s]" % (ev.name, ev.words))
+        self.sendMsg(makeJSON(WordListMsg(ev.name, ev.words)))
 
     def onRuleRegister(self, ev):
         if ev.rule.hash not in self.hashedRules:

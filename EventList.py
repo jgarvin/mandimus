@@ -11,6 +11,7 @@ WordEvent = namedtuple("WordEvent", "words")
 EmacsConnectedEvent = namedtuple("EmacsConnectedEvent", [])
 LoadingRulesEvent = namedtuple("LoadingRulesEvent", "state")
 MajorModeEvent = namedtuple("MajorModeEvent", "modeList")
+WordListEvent = namedtuple("WordListEvent", "name words")
 
 # choice events
 BufferListEvent = namedtuple("BufferListEvent", "choices") 

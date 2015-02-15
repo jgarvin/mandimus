@@ -73,13 +73,17 @@ MatchEventMsg = _newDataType("MatchEventMsg", "hash phrase extras words")
 MicStateMsg = _newDataType("MicStateMsg", "state")
 RecognitionStateMsg = _newDataType("RecognitionStateMsg", "state")
 RequestRulesMsg = _newDataType("RequestRulesMsg", "hashes")
-WordListMsg = _newDataType("WordListMsg", "name list")
+WordListMsg = _newDataType("WordListMsg", "name words")
 
 Integer = _newDataType("Integer", "name min max")
 Dictation = _newDataType("Dictation", "name")
 Repetition = _newDataType("Repetition", "rule_ref min max name")
 RuleRef = _newDataType("RuleRef", "rule_ref name")
-ListRef = _newDataType("ListRef", "name list")
+# 'name' is used to key the global state on the client
+# 'list_name' is the name expected to be used inside rule specs
+# we draw this distiction so we don't have to worry about patching
+# specs for dynamically generated rules
+ListRef = _newDataType("ListRef", "name list_name words")
 
 def makeJSONRepresentable(t):
     toEncode = t
