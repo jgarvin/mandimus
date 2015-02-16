@@ -39,6 +39,7 @@ class DragonflyThread(DragonflyNode):
         # contains HashedRule's from last time we committed, so
         # we can check if we actually need to send changes
         self.activatedLastCommit = set()
+        self.lastWordList = {}
         
         self.server_socket = self.makeSocket()
         self.server_socket.bind(self.address)
@@ -56,8 +57,14 @@ class DragonflyThread(DragonflyNode):
         getLoop().subscribeEvent(WordListEvent, self.onWordList)
 
     def onWordList(self, ev):
+        # We track whether word lists have changed in the server class because
+        # the classes generateing the WordListEvents are not able to detect if
+        # sending fails.
+        if ev.name in self.lastWordList and self.lastWordList[ev.name] == ev.words:
+            return
         log.info("Sending updated word list [%s] -- [%s]" % (ev.name, ev.words))
         self.sendMsg(makeJSON(WordListMsg(ev.name, ev.words)))
+        self.lastWordList[ev.name] = copy(ev.words)
 
     def onRuleRegister(self, ev):
         if ev.rule.hash not in self.hashedRules:
@@ -133,6 +140,7 @@ class DragonflyThread(DragonflyNode):
     def onConnect(self):
         self.pushQ.put(LoadingRulesEvent('done'))
         self.activatedLastCommit = set()
+        self.lastWordList = {}
         self.commitRuleEnabledness()
         log.info("Pushing connected event.")
         self.pushQ.put(ConnectedEvent())

@@ -77,6 +77,13 @@ WordListMsg = _newDataType("WordListMsg", "name words")
 
 Integer = _newDataType("Integer", "name min max")
 Dictation = _newDataType("Dictation", "name")
+# The "rule_ref" attribute is special. On the server side it
+# will be an actual rule instance, but when we serialize to send
+# to the client we just send a hash. The client handles looking
+# up the hash and substituting the rule accordingly. Technically
+# in dragonfly Repetition takes a RuleRef object rather than a
+# rule directly, but we patch this up in the client to make rules
+# easier to write on the server.
 Repetition = _newDataType("Repetition", "rule_ref min max name")
 RuleRef = _newDataType("RuleRef", "rule_ref name")
 # 'name' is used to key the global state on the client

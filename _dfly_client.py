@@ -401,8 +401,11 @@ class MasterGrammar(object):
             log.info("Single hash: [%s]" % r["hash"])
 
         # have to uniquify in this round about way because lists
-        # aren't hashable and we need them for ListRef
-        r["extras"] = r["extras"].values()
+        # aren't hashable and we need them for ListRef. Also this
+        # cleanup function can be caled more than once if deps are
+        # missing so we have to have the check to make idempotent.
+        if type(r["extras"]) == dict:
+            r["extras"] = r["extras"].values()
 
         newExtras = []
         for e in r["extras"]:
@@ -412,8 +415,12 @@ class MasterGrammar(object):
                 newExtras.append(dfly.Dictation(e.name))
             elif isinstance(e, protocol.Repetition):
                 if e.rule_ref in self.concreteRules:
-                    log.info("Trying to create repetition with [%s]" % (self.concreteRules[e.rule_ref],))
-                    newExtras.append(dfly.Repetition(self.concreteRules[e.rule_ref],
+                    # Dragonfly wants RuleRef to take a RuleRef rather than an actual
+                    # Rule, so we just make one rather than forcing the server to
+                    # handle this, see protocol.py comments.
+                    concrete = self.concreteRules[e.rule_ref]
+                    log.info("concrete type: [%s]" % type(concrete))
+                    newExtras.append(dfly.Repetition(dfly.RuleRef(rule=concrete),
                                                      e.min, e.max, e.name))
                 else:
                     log.info("Missing [%s]" % (e,))
@@ -640,6 +647,12 @@ class DragonflyClient(DragonflyNode):
             # seeing true amount of loading...
             #self.sendMsg(makeJSON(LoadStateMsg('loading')))
             grammar.activate()
+            # Word lists may have changed since the last time the
+            # grammar was activated, and the lists have to be
+            # separately stored on a per grammar basis because
+            # dfly/natlink link them that way.
+            for name, words in self.wordLists.items():
+                grammar.updateWordList(name, words)
             self.sendMsg(makeJSON(LoadStateMsg('done')))
         except MissingDependency as e:
             log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
@@ -679,6 +692,9 @@ class DragonflyClient(DragonflyNode):
                 # being the looked up action, which is not what we want. We want to
                 # know which phrse was triggered.
                 v = v._action.grammarString
+            elif isinstance(v, list):
+                for i in v:
+                    log.info("iter: [%s] dir [%s] action [%s] [%s]" % (i, dir(i), i._action, dir(i._action)))
             # log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
             log.info("extra [%s] value [%s] words [%s]" % (node.name, v, w))
             #values.update({ node.name : (v, w) })
