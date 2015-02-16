@@ -1,5 +1,16 @@
 import StringIO
 import collections
+from itertools import dropwhile
+
+def rindex(lst, item):
+    # taken from: http://stackoverflow.com/a/6892096/50385
+    # by: 'senderle'
+    def index_ne(x):
+        return lst[x] != item
+    try:
+        return dropwhile(index_ne, reversed(xrange(len(lst)))).next()
+    except StopIteration:
+        raise ValueError, "rindex(lst, item): item not in list"
 
 def enum(**enums):
     return type('Enum', (), enums)
