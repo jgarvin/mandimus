@@ -12,6 +12,7 @@ from util import deepEmpty
 
 def runCmd(cmd):
     log.info('cmd: [' + cmd + ']')
+    # TODO: why calling with shell?!
     subprocess.call(cmd, shell=True)
 
 def splitKeyString(keyStr):

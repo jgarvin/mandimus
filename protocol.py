@@ -5,22 +5,21 @@ from collections import namedtuple, OrderedDict
 import hashlib
 from util import enum
 import json
-import md5
-from copy import deepcopy
+from copy import copy
 import struct
 
 # So here is how the protocol works. The server decides which rules should be
-# enabled. It sends an ENABLE_RULES with a list of md5 hashes of the rules
+# enabled. It sends an ENABLE_RULES with a list of sha256 hashes of the rules
 # it wants enabled. All other rules are implicitly disabled. The client
 # receives the message and sends back a REQUEST_RULES for any rules it
-# currently doesn't have in its md5 keyed cache. This means that rules don't
+# currently doesn't have in its sha256 keyed cache. This means that rules don't
 # get sent to the client until the first time they're used, and the server
 # doesn't have to track which rules it has or hasn't sent the client.
 #
 # When the client detects mic activity it updates the server with MIC_STATE,
 # START_RECOGNITION, and STOP_RECOGNITION messages.
 #
-# When a match occurs the client sends MATCH_EVENT w/ the md5 of the matching
+# When a match occurs the client sends MATCH_EVENT w/ the sha256 of the matching
 # rule and any associated extras data.
 #
 # The client and server also regularly send each other heartbeat messages. If
@@ -35,10 +34,9 @@ import struct
 # but only allow it to appear at the end of utterances, typically
 # because it contains a dictation element that would get confused
 # by commands in series occurring after.
-# INDEPENDENT means to make a separate grammar just for this rule.
-# This is ideal for constantly changing dynamic grammars, where you
-# want to be able to individually enable/disable phrases. They have
-# to appear as an isolated utterance however.
+# INDEPENDENT means to not merge this rule into the terminator or
+# terminal master rules. Typically this means you will only be
+# using the rule by reference.
 RuleType = enum(SERIES=0, TERMINAL=1, INDEPENDENT=2)
 
 dataTypes = set()
@@ -124,9 +122,9 @@ def makeJSON(t):
 def makeHashedRule(name, mapping, extras=[], defaults={}, ruleType=RuleType.SERIES, seriesMergeGroup=0):
     # Make copies so we can't accidentally make changes to the inputs and
     # break the hash.
-    mapping = deepcopy(mapping)
-    extras = deepcopy(extras)
-    defaults = deepcopy(defaults)
+    mapping = copy(mapping)
+    extras = copy(extras)
+    defaults = copy(defaults)
 
     # For the mapping hash we only care about the spoken part of the rule, not the action
     # taken in response.
