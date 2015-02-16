@@ -1,3 +1,5 @@
+import mdlog
+log = mdlog.getLogger(__name__)
 from rules.ContextualRule import makeContextualRule
 from wordUtils import extractWords
 from EventLoop import getLoop, pushEvent

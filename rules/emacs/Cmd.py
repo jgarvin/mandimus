@@ -191,7 +191,7 @@ class Cmd(Action):
 class CharCmd(Cmd):
     classLog = False
     def _lisp(self, extras={}):
-        char = BaseRules.lookup(extras)
+        char = BaseRules.lookup(extras["charrule"])
         char = emacsChar(char)
         return self.data % char
 

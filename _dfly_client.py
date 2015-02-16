@@ -675,11 +675,24 @@ class DragonflyClient(DragonflyNode):
                 + "\n".join([self.pprint(n, indent + "  ") \
                              for n in node.children])
 
+    def addValue(self, d, k, v):
+        if k in d:
+            # Single values get upgraded to lists if they occur multiple times 
+            if type(d[k]) != list:
+                d[k] = [d[k], v]
+            else:
+                d[k].append(v)
+        else:
+            d.update({ k : v })
+
     def collectValues(self, node, values=None):
         if values is None:
             values = {}
 
-        if node.name and isinstance(node.actor, ElementBase):
+        refTypes = (dfly.Repetition, dfly.RuleRef)
+        isRefType = any([isinstance(node.actor, t) for t in refTypes]) 
+
+        if node.name and isinstance(node.actor, ElementBase) and not isRefType:
             v = node.value()
             w = ' '.join(node.words())
             if isinstance(v, get_engine().DictationContainer):
@@ -687,20 +700,25 @@ class DragonflyClient(DragonflyNode):
                 # like numbers where the value is 3 but the words are "three".
                 # For dictated text there is no distinction.
                 v = w
-            elif isinstance(v, ActionBase):
-                # When we have rule refs to other mapping rules, the value ends up
-                # being the looked up action, which is not what we want. We want to
-                # know which phrse was triggered.
-                v = v._action.grammarString
-            elif isinstance(v, list):
-                for i in v:
-                    log.info("iter: [%s] dir [%s] action [%s] [%s]" % (i, dir(i), i._action, dir(i._action)))
-            # log.info("node [%s] value type [%s] actor type [%s]" % (node.name, type(v), type(node.actor)))
+            # elif isinstance(v, ActionBase):
+            #     # When we have rule refs to other mapping rules, the value ends up
+            #     # being the looked up action, which is not what we want. We want to
+            #     # know which phrse was triggered.
+            #     v = v._action.grammarString
             log.info("extra [%s] value [%s] words [%s]" % (node.name, v, w))
-            #values.update({ node.name : (v, w) })
-            values.update({ node.name : v })
-        for n in node.children:
-            self.collectValues(n, values)
+            self.addValue(values, node.name, v)
+
+        if node.name and isRefType:
+            repValues = {}
+            for n in node.children:
+                self.collectValues(n, repValues)
+            log.info("node.name [%s] repValues [%s]" % (node.name, repValues))
+            repValues.update({ 'words' : node.words() })
+            self.addValue(values, node.name, repValues)
+            #values.update({ node.name : repValues })
+        else:
+            for n in node.children:
+                self.collectValues(n, values)
 
         return values
 

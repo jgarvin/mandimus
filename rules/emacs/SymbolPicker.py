@@ -35,9 +35,9 @@ class PickSymbol(Cmd):
         Cmd.__init__(self, data)
 
     def _lisp(self, extras={}):
-        color = extras['colorrule']
+        color = extras['colorrule']["words"][0]
         letter = BaseRules.lookup(extras)
-        mark = AccentRule.rule.mapping[extras['accentrule']] if 'accentrule' in extras else None
+        mark = AccentRule.rule.mapping[extras['accentrule']["words"][0]] if 'accentrule' in extras else None
         mark = ("#x%x" % mark) if mark else "nil"
         return '(%s "%s" %s "%s")' % (self.data, letter, mark, color)
  

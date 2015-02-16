@@ -39,7 +39,7 @@ class PressKey(object):
         if foundModifier:
             keystring.append('-')
 
-        keystring.append(BaseRules.lookup(extras))
+        keystring.append(BaseRules.lookup(extras["charrule"]))
         for r in range(repetitions):
             Key(''.join(keystring))()
 
