@@ -177,7 +177,7 @@ if __name__ == "__main__":
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),
         ('rules.emacs.Belt', ['']),
-        ('rules.emacs.BufferSelector', ['']),
+        ('rules.emacs.BufferNames', ['']),
         ('rules.emacs.Dired', ['']),
         ('rules.emacs.Emacs', ['']),
         ('rules.emacs.Eww', ['']),

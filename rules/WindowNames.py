@@ -31,6 +31,7 @@ class WindowNameSelector(WordSelector):
         runCmd(cmd)
 
     def _noChoice(self):
+        # Implement toggling here! Use the focus history.
         pass
         
 _selector = WindowNameSelector()
