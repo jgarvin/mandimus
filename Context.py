@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 class Context(object):
     """A Context represents a set of requirements that
     activates its targets when those requirements are met
@@ -5,13 +8,23 @@ class Context(object):
 
     def __init__(self, targets):
         self.requirements = set()
-        self.metReqs = set()
         self.targets = targets
         self.lastState = False # unmet
-    
+
+    def __str__(self):
+        return ", ".join([str((type(r), r.satisfied)) for r in self.requirements])
+
+    @property
+    def satisfied(self):
+        return self.lastState
+
     def addTarget(self, target):
         self.targets.add(target)
-        self._maybeFire()
+        # bypass checking lastState
+        if self.satisfied:
+            target.activate()
+        else:
+            target.deactivate()
 
     def removeTarget(self, target):
         self.targets.remove(target)
@@ -30,19 +43,14 @@ class Context(object):
         
     def met(self, req):
         assert req in self.requirements
-        self.metReqs.add(req)
         self._maybeFire()
 
     def unmet(self, req):
         assert req in self.requirements
-        try:
-            self.metReqs.remove(req)
-        except KeyError:
-            pass
         self._maybeFire()
 
-    def _maybeFire(self):
-        if not (self.requirements - self.metReqs):
+    def _maybeFire(self, targetSet=None):
+        if all([r.satisfied for r in self.requirements]):
             if self.lastState == False:
                 for t in self.targets:
                     t.activate()

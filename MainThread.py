@@ -6,11 +6,9 @@ log.info("\n--------------------------------------------------------------------
 
 import os, sys
 from dfly_server import DragonflyThread
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, SelectWindow
 from WindowEventWatcher import WindowEventWatcher
-from Window import Window, getFocusedWindow
-from wordUtils import extractWords, buildSelectMapping, punc2Words
 import EventLoop
+from EventLoop import SubscriptionHandle
 import re
 import time
 import traceback
@@ -43,31 +41,6 @@ def filterWindows(w):
 
     return True
 
-spokenWindowRules = set()
-def spokenWindowRule(f):
-    global spokenWindowRules
-    spokenWindowRules.add(f)
-    return f
-
-@spokenWindowRule
-def weechat(w):
-    if "terminal" in w.wmclass.lower() and "weechat" in w.name:
-        return ["we", "chat"]
-    return []
-
-
-@spokenWindowRule
-def chromium(w):
-    "without this open tabs affect the name"
-    if "chromium" in w.wmclass.lower() and "chromium" in w.name.lower():
-        return ["chrome", "chromium"]
-    return []
-
-# so write rules for specific window types
-# and then fall back to generic word search
-# grammar only when the windows aren't special
-# cased?
-
 class TimerEntry(object):
     def __init__(self, nextExpiration, callback, seconds, priority):
         self.nextExpiration = nextExpiration
@@ -90,7 +63,6 @@ class MainThread(object):
         
         self.subscribeEvent(RestartEvent, self.restart)
         self.subscribeEvent(ExitEvent, self.stop)
-        #self.subscribeEvent(WindowListEvent, self.handleWindowList)
         
         mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
                     "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
@@ -102,10 +74,19 @@ class MainThread(object):
             self.eventSubscribers[eventType] = []
         self.eventSubscribers[eventType].append((priority, handler))
         self.eventSubscribers[eventType].sort(key=lambda x: x[0])
+        return SubscriptionHandle((eventType, priority, handler))
 
     def subscribeTimer(self, seconds, cb, priority=100,):
-        self.timers.append(TimerEntry(time.time() + seconds, cb, seconds, priority))
+        entry = TimerEntry(time.time() + seconds, cb, seconds, priority)
+        self.timers.append(entry)
         self.timers.sort(key=lambda x: x.priority)
+        return SubscriptionHandle(entry)
+
+    def unsubscribe(self, handleData):
+        if isinstance(handleData, TimerEntry):
+            self.timers.remove(handleData)
+        else:
+            self.eventSubscribers[handleData[0]].remove((handleData[1], handleData[2]))
 
     def timeout(self):
         if self.timers:
@@ -174,53 +155,6 @@ class MainThread(object):
             self.stop()
             sys.exit()
 
-    # def handleWindowList(self, ev):
-    #     # sometimes at startup list is empty
-    #     if not ev.windows:
-    #         return
-
-    #     spokenWindows = {}
-    #     for w in ev.windows:
-    #         global spokenWindowRules
-    #         spokenForms = []
-    #         for rule in spokenWindowRules:
-    #             spokenForms = rule(w)
-    #             if spokenForms != []:
-    #                 spokenForms = [set(spokenForms)]
-    #                 break
-
-    #         if spokenForms == []:
-    #             # thought about using name instead of wmclass,
-    #             # but the title tends to contain debris like
-    #             # the name of the currently opened document/page
-    #             nameset = extractWords(w.name, translate=punc2Words)
-    #             classset = extractWords(w.wmclass, translate=punc2Words)
-    #             spokenForms = [nameset, classset]
-
-    #         spokenWindows[w] = spokenForms
-
-    #     # remove empty sets
-    #     for w, spokenForms in spokenWindows.items():
-    #         try:
-    #             spokenForms.remove(set())
-    #         except ValueError:
-    #             pass # python is stupid
-    #         try:
-    #             spokenForms.remove(set(u''))
-    #         except ValueError:
-    #             pass # python is stupid
-    #     # remove windows that map to no forms
-    #     spokenWindows = dict((k, v) for k, v in spokenWindows.iteritems() if v)
-
-    #     omapping = buildSelectMapping('win', spokenWindows, SelectWindow)
-
-    #     class WindowRule(MappingRule):
-    #         mapping = omapping
-    #         def activeForWindow(self, w):
-    #             return True
-
-    #     registerRule(WindowRule)
-
     def stop(self, ev=None):
         self.run = False
         self.dfly.cleanup()
@@ -243,6 +177,7 @@ if __name__ == "__main__":
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),
         ('rules.emacs.Belt', ['']),
+        ('rules.emacs.BufferSelector', ['']),
         ('rules.emacs.Dired', ['']),
         ('rules.emacs.Emacs', ['']),
         ('rules.emacs.Eww', ['']),

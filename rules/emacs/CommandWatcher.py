@@ -2,16 +2,13 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 import grammar
-from rules.emacs.Base import EmacsBase
 import EventLoop  
 import EventList
 from EventList import FocusChangeEvent
 from rules.emacs.Cmd import runEmacsCmd 
 from Window import getFocusedWindow
 from listHelpers import deCamelize
-from rules.Rule import registerRule
-from rules.ruleUtil import buildRuleClass
-from rules.MappingRule import MappingRule
+from rules.ContextualRule import makeContextualRule
 
 class EmacsCommandWatcher(object):
     cmd = None
@@ -37,13 +34,12 @@ class EmacsCommandWatcher(object):
         name = type(self).__name__
         if not name in self.registeredLogPhrase:
             phrase = ' '.join(deCamelize(name))
-            mapping = {
+            _mapping = {
                 ("toggle logging %s" % phrase) : (lambda x: type(self).toggleLogging()), 
                 ("toggle %s" % phrase) : (lambda x: type(self).toggleEnabled()),
             }
-            logrule = buildRuleClass(name + "LogToggle", lambda x: True, mapping)
-            self.registeredLogPhrase.add(name)
-            registerRule(logrule)
+            rule = makeContextualRule(name + "ToggleRule", _mapping)
+            rule.activate()
 
     def _postProcess(self, output):
         lst = grammar.getStringList(output)
@@ -93,12 +89,11 @@ class EmacsCommandWatcher(object):
         cls.enabled = not cls.enabled
         log.info("Setting %s watcher to: %s" % (cls.__name__, cls.enabled))
         
-@registerRule
-class ToggleAllWatchers(MappingRule):
-    mapping = {
-        "toggle all watchers" : (lambda x: EmacsCommandWatcher.toggleAllWatchers()),
-        "toggle logging all watchers" : (lambda x: EmacsCommandWatcher.toggleAllWatchersLogging()),
-    }
+_mapping = {
+    "toggle all watchers" : (lambda x: EmacsCommandWatcher.toggleAllWatchers()),
+    "toggle logging all watchers" : (lambda x: EmacsCommandWatcher.toggleAllWatchersLogging()),
+}
 
-    def activeForWindow(self, w):
-        return True
+MasterWatcherToggleRule = makeContextualRule("MasterWatcherToggleRule", _mapping)
+MasterWatcherToggleRule.activate()
+

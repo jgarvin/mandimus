@@ -20,4 +20,7 @@ class WindowRequirement(Requirement):
             if (c in ev.window.wmclass) ^ self.negate:
                 matched = True
                 break
+        if matched:
+            log.info("Window req matched: [%s%s]" % ("^" if self.negate else "", self.wmclass))
         self._met(matched)
+

@@ -4,15 +4,17 @@ log = mdlog.getLogger(__name__)
 from rules.ContextualRule import makeContextualRule
 from wordUtils import extractWords
 from EventLoop import getLoop, pushEvent
-from EventList import RuleRegisterEvent, WordListEvent, ConnectedEvent
+from EventList import RuleRegisterEvent, WordListEvent, ConnectedEvent, MicrophoneEvent
 from protocol import makeHashedRule, RuleType, ListRef, Repetition, RuleRef
 from Actions import runCmd
 from functools import partial
+from Context import Context
 from copy import copy
 
 class WordSelector(object):
-    def __init__(self, name):
+    def __init__(self, name, cmdWord):
         self.name = name
+        self.cmdWord = cmdWord
         getLoop().subscribeEvent(ConnectedEvent, self._sendWords)
         self.rule = self._buildRule()
         # self.words is the list of all the words that should be in
@@ -22,6 +24,8 @@ class WordSelector(object):
         # is a list of words in order that map to the second element in
         # the tuple.
         self.selectionMap = []
+        self.activated = False
+        self.context = Context(set([self]))
 
     @property
     def _wordListRefName(self):
@@ -54,14 +58,13 @@ class WordSelector(object):
         pushEvent(RuleRegisterEvent(WordRule))
 
         mapping = {
-            ("win <%s>" % self._repetitionName) : self._onSelection
+            ("%s [<%s>]" % (self.cmdWord, self._repetitionName)) : self._onSelection
         }
 
         extras = [
             Repetition(WordRule, 1, 8, self._repetitionName),
         ]
         r = makeContextualRule(self._ruleName, mapping, extras, ruleType=RuleType.INDEPENDENT)
-        r.activate()
         return r
     
     def _onSelection(self, extras={}):
@@ -71,6 +74,9 @@ class WordSelector(object):
         # -Consecutive words score higher than separated ones
         # -If a candidate is already selected, we go for the
         # next highest score, cycling if necessary.
+        if not self._repetitionName in extras:
+            self._noChoice()
+            return
         words = extras[self._repetitionName]["words"]
         candidates = []
         for winWords, window in self.selectionMap:
@@ -124,6 +130,22 @@ class WordSelector(object):
     def _sendWords(self, ev=None):
         pushEvent(WordListEvent(self._wordListName, self.words))
 
+    def activate(self):
+        log.info("Activating selector [%s]" % type(self))
+        self.activated = True
+        self._activate()
+
+    def _activate(self):
+        pass
+
+    def deactivate(self):
+        log.info("Deactivating selector [%s]" % type(self))
+        self.activated = False
+        self._deactivate()
+
+    def _deactivate(self):
+        pass
+
     def _currentChoice(self):
         assert False
 
@@ -131,4 +153,7 @@ class WordSelector(object):
         assert False
 
     def _generateList(self, ev=None):
+        assert False
+
+    def _noChoice(self):
         assert False

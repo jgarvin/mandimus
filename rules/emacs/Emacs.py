@@ -23,7 +23,45 @@ import EventList
 from RefreshClient import toggleRefreshClientSources
 from requirements.Emacs import IsEmacs
 
+# class BufferWatcher(EmacsCommandWatcher):
+#     cmd = "(mapcar 'buffer-name (buffer-list))"
+#     inFrame = False
+#     eventType = EventList.BufferListEvent
+
+# class ProjectWatcher(EmacsCommandWatcher):
+#     cmd = "(projectile-relevant-known-projects)"
+#     allowError = True
+#     eventType = EventList.ProjectListEvent
+
+# class ProjectFileWatcher(EmacsCommandWatcher):
+#     #cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
+#     cmd = "md-projectile-files"
+#     allowError = True
+#     eventType = EventList.ProjectFileListEvent
+
+# class WordWatcher(EmacsCommandWatcher):
+#     cmd = "md-symbols-cache"
+#     eventType = EventList.EmacsWordEvent
+
+#     def filter(self, x):
+#         x = ''.join(c for c in x if c not in string.punctuation + string.digits)
+#         if len(x) <= 2:
+#             return False
+#         return True
+
+#     def _postProcess(self, output):
+#         lst = EmacsCommandWatcher._postProcess(self, output)
+#         # filter unicode
+#         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
+#         lst = [x for x in lst if self.filter(x)]
+#         return lst
+
 # watchers = []
+# watchers.append(BufferWatcher())
+# watchers.append(ProjectWatcher())
+# watchers.append(ProjectFileWatcher())
+# watchers.append(WordWatcher())
+
 # selectors = []
 
 # class EmacsOption(SelectOption.SelectOption):
@@ -34,12 +72,6 @@ from requirements.Emacs import IsEmacs
 #     buf = runEmacsCmd("(buffer-name (current-buffer))")
 #     return buf.strip().strip('"')
 
-# class BufferWatcher(EmacsCommandWatcher):
-#     cmd = "(mapcar 'buffer-name (buffer-list))"
-#     inFrame = False
-#     eventType = EventList.BufferListEvent
-
-# watchers.append(BufferWatcher())
 
 # class SelectBufferBase(EmacsOption):
 #     eventType = EventList.BufferListEvent
@@ -84,12 +116,6 @@ from requirements.Emacs import IsEmacs
 # selectors.append(SelectSpecial())
 # selectors.append(SelectTerminal())
 
-# class ProjectWatcher(EmacsCommandWatcher):
-#     cmd = "(projectile-relevant-known-projects)"
-#     allowError = True
-#     eventType = EventList.ProjectListEvent
-
-# watchers.append(ProjectWatcher())
 
 # class SelectProject(EmacsOption):
 #     leadingTerm = "project"
@@ -106,13 +132,6 @@ from requirements.Emacs import IsEmacs
 
 # selectors.append(SelectProject())
 
-# class ProjectFileWatcher(EmacsCommandWatcher):
-#     #cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
-#     cmd = "md-projectile-files"
-#     allowError = True
-#     eventType = EventList.ProjectFileListEvent
-
-# watchers.append(ProjectFileWatcher())
 
 # openProjetileFileEl = """
 # (find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))
@@ -134,24 +153,6 @@ from requirements.Emacs import IsEmacs
 
 # selectors.append(SelectProjectFile())
     
-# class WordWatcher(EmacsCommandWatcher):
-#     cmd = "md-symbols-cache"
-#     eventType = EventList.EmacsWordEvent
-
-#     def filter(self, x):
-#         x = ''.join(c for c in x if c not in string.punctuation + string.digits)
-#         if len(x) <= 2:
-#             return False
-#         return True
-
-#     def _postProcess(self, output):
-#         lst = EmacsCommandWatcher._postProcess(self, output)
-#         # filter unicode
-#         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
-#         lst = [x for x in lst if self.filter(x)]
-#         return lst
-
-# watchers.append(WordWatcher())
 
 # class SelectTypeClosest(EmacsOption):
 #     leadingTerm = "toke"
