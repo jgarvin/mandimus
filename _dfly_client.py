@@ -64,13 +64,28 @@ class FailureReportingGrammar(Grammar):
         self.client = client
 
     def _process_begin(self, executable, title, handle):
-        self.client.setRecognitionState('thinking')
+        try:
+            self.client.setRecognitionState('thinking')
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            #self.cleanup()
 
     def process_recognition_failure(self):
-        self.client.setRecognitionState('failure')
+        try:
+            self.client.setRecognitionState('failure')
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            #self.cleanup()
 
     def process_recognition_other(self, words):
-        self.client.setRecognitionState('success')
+        try:
+            self.client.setRecognitionState('success')
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+            #self.cleanup()
 
 class ReportingAction(ActionBase):
     """The client never actually executes actions, it just
@@ -341,11 +356,13 @@ class MasterGrammar(object):
     def activate(self):
         self.build()
         self.dflyGrammar.enable()
+        log.info("Grammar activated: [%s]" % self.hash)
 
     def deactivate(self):
         # it's possible we never built successfully
         if self.dflyGrammar:
             self.dflyGrammar.disable()
+            log.info("Grammar deactivated: [%s]" % self.hash)
 
     def unload(self):
         if self.dflyGrammar:
@@ -408,6 +425,7 @@ class MasterGrammar(object):
             r["extras"] = r["extras"].values()
 
         newExtras = []
+        # listNum = 0
         for e in r["extras"]:
             if isinstance(e, protocol.Integer):
                 newExtras.append(dfly.Integer(e.name, e.min, e.max))
@@ -432,8 +450,12 @@ class MasterGrammar(object):
                     log.info("Missing [%s]" % (e,))
                     return False
             elif isinstance(e, protocol.ListRef):
-                self.updateWordList(e.name, e.words)
-                newExtras.append(dfly.ListRef(e.list_name, self.concreteWordLists[e.name]))
+                log.info("Creating list with name [%s] and ref with name [%s] and storing by name [%s]" % (e.name + "ConcreteList", e.ref_name, e.name))
+                self.concreteWordLists[e.name] = List(e.name + "ConcreteList")
+                # self.concreteWordLists[e.name] = List(str(listNum))
+                # listNum += 1
+                self.concreteWordLists[e.name].set(e.words)
+                newExtras.append(dfly.ListRef(e.ref_name, self.concreteWordLists[e.name]))
             else:
                 raise Exception("Unknown extra type: [%s]" % e)
 
@@ -445,7 +467,9 @@ class MasterGrammar(object):
 
     def updateWordList(self, name, words):
         if name not in self.concreteWordLists:
-            self.concreteWordLists[name] = List(name + "ConcreteList")
+            log.info("Word list [%s] not in grammar [%s], ignoring" % (name, self.hash))
+            return
+        log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, words))
         self.concreteWordLists[name].set(words)
 
 class DragonflyClient(DragonflyNode):

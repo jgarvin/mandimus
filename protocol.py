@@ -88,7 +88,7 @@ RuleRef = _newDataType("RuleRef", "rule_ref name")
 # 'list_name' is the name expected to be used inside rule specs
 # we draw this distiction so we don't have to worry about patching
 # specs for dynamically generated rules
-ListRef = _newDataType("ListRef", "name list_name words")
+ListRef = _newDataType("ListRef", "name ref_name words")
 
 def makeJSONRepresentable(t):
     toEncode = t

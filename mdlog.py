@@ -14,7 +14,7 @@ def initLogging(name, loggingFolder="E:\\log\\", stdOut=False, level=20):
     rootLogger = logging.getLogger()
     #handler = logging.StreamHandler(logfile)
     handler = logging.FileHandler(filename, mode='w')
-    formatter = logging.Formatter(fmt="%(asctime)s @ %(module)s @ [%(message)s]")
+    formatter = logging.Formatter(fmt="%(asctime)s @ %(module)s @ %(levelname)s: [%(message)s]")
     handler.setFormatter(formatter)
     rootLogger.addHandler(handler)
     rootLogger.setLevel(level)
