@@ -162,7 +162,7 @@ class WordSelector(object):
         pass
 
     def _currentChoice(self):
-        assert False
+        return None
 
     def _select(self, choice):
         assert False

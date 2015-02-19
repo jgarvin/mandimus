@@ -36,9 +36,6 @@ class EmacsWordNames(WordSelector):
     def _onEmacsWord(self, ev):
         self._update(ev.choices)
 
-    def _currentChoice(self):
-        return None
-
     def _select(self, choice):
         EmacsText("%s" % choice, lower=False)()        
 
