@@ -25,8 +25,8 @@ class KeywordCmd(Cmd):
         Cmd.__init__(self, None, log)
 
     def _lisp(self, extras={}):
-        command = extras['mode_verb_rule']
-        spokenKeyword = extras['keyword']
+        command = " ".join(extras['mode_verb_rule']['words'])
+        spokenKeyword = " ".join(extras['keyword']['words'])
         writtenKeyword = self.writtenForms[spokenKeyword]
         if command == "key":
             EmacsText("%s" % writtenKeyword, lower=False)()

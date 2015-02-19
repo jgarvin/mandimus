@@ -59,7 +59,7 @@ class EmacsEventGenerator(object):
         if newOutput == self.lastOutput:
             return
         self.lastOutput = newOutput
-        log.info("New output!")
+        #log.info("New output!")
         pushEvent(self.eventType(newOutput))
 
     def _postProcess(self, output):

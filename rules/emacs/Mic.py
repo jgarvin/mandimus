@@ -29,7 +29,7 @@ class MicrophoneState(object):
         self.sendState()
 
     def sendState(self, ev=None):
-        log.info("connected [%s] loading [%s] state [%s]" % (self.connected, self.loading, self.state))
+        log.debug("connected [%s] loading [%s] state [%s]" % (self.connected, self.loading, self.state))
         self.tellEmacs(self.state if (self.connected and not self.loading) else "disconnected")
         
     def tellEmacs(self, state):

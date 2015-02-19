@@ -21,11 +21,11 @@ _mapping = {
 
 PythonRule = makeContextualRule("Python", _mapping, emacsExtras, emacsDefaults)
 PythonRule.context.addRequirement(IsEmacs)
-PythonRule.context.addRequirement(ModeRequirement(modes="python-mode"))
+PythonRule.context.addRequirement(ModeRequirement(modes=["python-mode", "inferior-python-mode"]))
 
 keywords = [
     "True", "False", "set", "list", "dict", "None", "self", "print", "object",
-    "len", "reversed", "enumerate", "range", ["__init__", "init"],
+    "len", "reversed", "enumerate", "range", ["__init__", "init"], "help"
 ] + keyword.kwlist
 
-PythonKeywordRule = makeKeywordRule("python-mode", keywords)
+PythonKeywordRule = makeKeywordRule(["python-mode", "inferior-python-mode"], keywords)

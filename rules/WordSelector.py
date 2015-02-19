@@ -12,9 +12,10 @@ from Context import Context
 from copy import copy
 
 class WordSelector(object):
-    def __init__(self, name, cmdWord):
+    def __init__(self, name, cmdWord, ruleType=RuleType.TERMINAL):
         self.name = name
         self.cmdWord = cmdWord
+        self.ruleType = ruleType
         getLoop().subscribeEvent(ConnectedEvent, self._sendWords)
         self.rule = self._buildRule()
         # self.words is the list of all the words that should be in
@@ -28,7 +29,9 @@ class WordSelector(object):
         self.context = Context(set([self]))
 
     def _extractWords(self, n):
-        return extractWords(n)
+        x = extractWords(n)
+        #log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
+        return x
 
     def _update(self, choices):
         self.words = set()
@@ -76,7 +79,7 @@ class WordSelector(object):
         extras = [
             Repetition(WordRule, 1, 8, self._repetitionName),
         ]
-        r = makeContextualRule(self._ruleName, mapping, extras, ruleType=RuleType.TERMINAL)
+        r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
         return r
     
     def _onSelection(self, extras={}):
@@ -128,6 +131,9 @@ class WordSelector(object):
         # remove hole sizes leaving just the windows
         candidates = [c[1] for c in candidates]
 
+        log.info("candidates: [%s]" % candidates)
+        log.info("selectionMap: [%s]" % self.selectionMap)
+
         # check if the current window is a candidate. if so
         # just cycle through to the next best scoring candidate.
         currentSelection = self._currentChoice()
@@ -166,9 +172,6 @@ class WordSelector(object):
     def _select(self, choice):
         assert False
 
-    def _generateList(self, ev=None):
-        assert False
-
     def _noChoice(self):
-        assert False
+        return None
 

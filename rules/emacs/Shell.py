@@ -1,87 +1,85 @@
-from Actions import Key 
-from rules.Rule import registerRule
-from rules.emacs.Base import EmacsBase
+from Actions import Key
+from rules.ContextualRule import makeContextualRule
+from requirements.Emacs import IsEmacs
+from requirements.ModeRequirement import ModeRequirement
+from rules.emacs.common import emacsExtras, emacsDefaults
+from rules.emacs.Cmd import Cmd
+from rules.emacs.Keywords import makeKeywordRule
 from rules.emacs.Text import EmacsText
 
-@registerRule
-class Shell(EmacsBase):
-    majorMode = ["shell-mode", "sh-mode"]
+_keywords = [
+    "cat",
+    ["cd", "C D"],
+    ["cp", "copy"],
+    "date",
+    ["/dev/null", "dev null"],
+    "disown",
+    "do",
+    "done",
+    "echo",
+    "else",
+    "env",
+    "exec",
+    "exit",
+    "export",
+    "false",
+    ["fi", "fee"],
+    "find",
+    "force",
+    ["g++", "G plus plus"],
+    ["gcc", "GCC"],
+    "git",
+    "grep",
+    ["--help", "help"],
+    "history",
+    ["~", "home"],
+    "if",
+    ["ip", "I P"],
+    "jobs",
+    "localhost",
+    ["ls", "list"],
+    "kill",
+    ["mkdir", "make dir"],
+    ["mv", "move"],
+    "ping",
+    ["pkill", "P kill"],
+    "python",
+    ["rm", "remove"],
+    ["rsync", "R sync"],
+    "search",
+    "set",
+    "setopt",
+    "sort",
+    ["ssh", "S S H"],
+    "then",
+    "true",
+    ["tsk", "tisk"],
+    "type",
+    ["uniq", "unique"],
+    "unfunction",
+    "unset",
+    "unsetopt",
+    "up",
+    ["wc", "word count"],
+    "which",
+    "while",
+    ["xargs", "X args"],
+    ["zsh", "zish"],
 
-    keywords = [
-        "cat",
-        ["cd", "C D"],
-        ["cp", "copy"],
-        "date",
-        ["/dev/null", "dev null"],
-        "disown",
-        "do",
-        "done",
-        "echo",
-        "else",
-        "env",
-        "exec",
-        "exit",
-        "export",
-        "false",
-        ["fi", "fee"],
-        "find",
-        "force",
-        ["g++", "G plus plus"],
-        ["gcc", "GCC"],
-        "git",
-        "grep",
-        ["--help", "help"],
-        "history",
-        ["~", "home"],
-        "if",
-        ["ip", "I P"],
-        "jobs",
-        "localhost",
-        ["ls", "list"],
-        "kill",
-        ["mkdir", "make dir"],
-        ["mv", "move"],
-        "ping",
-        ["pkill", "P kill"],
-        "python",
-        ["rm", "remove"],
-        ["rsync", "R sync"],
-        "search",
-        "set",
-        "setopt",
-        "sort",
-        ["ssh", "S S H"],
-        "then",
-        "true",
-        ["tsk", "tisk"],
-        "type",
-        ["uniq", "unique"],
-        "unfunction",
-        "unset",
-        "unsetopt",
-        "up",
-        ["wc", "word count"],
-        "which",
-        "while",
-        ["xargs", "X args"],
-        ["zsh", "zish"],
+    [">", "stood out"],
+    ["2>", "stood err"],
+    ["&>", "stood both"],
+    ["|", "pipe"],
+] 
 
-        [">", "stood out"],
-        ["2>", "stood err"],
-        ["&>", "stood both"],
-        ["|", "pipe"],
-    ] 
+ShellKeywordRule = makeKeywordRule(["shell-mode", "sh-mode"], _keywords)
+    
+_mapping = {
+    "back [<n>]"        : Key("b,enter:%(n)d"),
+    "forward [<n>]"     : Key("f,enter:%(n)d"),
+    "ascend [<n>]"      : EmacsText("up") + Key("enter:%(n)d"),
+}
 
-    mapping = {
-        "hiss"              : Key("a-p"),
-        "piss"              : Key("a-n"),
-        "history"           : Key("a-r"),
-        "back [<n>]"        : Key("b,enter:%(n)d"),
-        "forward [<n>]"     : Key("f,enter:%(n)d"),
-        "ascend [<n>]"      : EmacsText("up") + Key("enter:%(n)d"),
-        "interrupt"         : Key("c-c,c-c"),
-        "exit"              : Key("c-d"),
-        "prompt up [<n>]"   : Key("c-c,c-p:%(n)d"),
-        "prompt down [<n>]" : Key("c-c,c-n:%(n)d"),
-    }
-
+ShellRule = makeContextualRule("Shell", _mapping, emacsExtras, emacsDefaults)
+ShellRule.context.addRequirement(IsEmacs)
+ShellRule.context.addRequirement(ModeRequirement(modes=["shell-mode", "sh-mode"]))

@@ -10,6 +10,7 @@ from requirements.Emacs import IsEmacs
 from Actions import Key
 import string
 from rules.emacs.Text import EmacsText
+from protocol import RuleType
 
 class EmacsWordGen(EmacsEventGenerator):
     def _filter(self, x):
@@ -29,7 +30,7 @@ emacsWordGen = EmacsWordGen("EmacsWord", "md-symbols-cache", EmacsWordEvent)
 
 class EmacsWordNames(WordSelector):
     def __init__(self, name, cmdWord):
-        WordSelector.__init__(self, name, cmdWord)
+        WordSelector.__init__(self, name, cmdWord, RuleType.SERIES)
         self.rule.context.addRequirement(IsEmacs)
         getLoop().subscribeEvent(EmacsWordEvent, self._onEmacsWord)
 

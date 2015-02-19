@@ -39,18 +39,15 @@ class PressKey(object):
         if foundModifier:
             keystring.append('-')
 
-        keystring.append(BaseRules.lookup(extras["charrule"]))
+        keystring.append(BaseRules.lookup(extras["charrule"], keyNames=True))
         for r in range(repetitions):
             Key(''.join(keystring))()
-
-testAction = lambda y: log.info("letter triggered %(charrule)s" % y)
 
 _mapping = {
     'rep [<n>]'                                : RepeatPreviousAction(),
     "[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
     'scoot [<n>]'                              : Key("tab:%(n)d"),
     'cap scoot [<n>]'                          : Key("s-tab:%(n)d"),
-    "letter <alpharule>" : testAction, 
 }
 
 _extras = [

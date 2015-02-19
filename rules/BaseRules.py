@@ -142,9 +142,12 @@ _charExtras = [
 CharRule = makeHashedRule("CharRule", _mapping, _charExtras, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(CharRule))
 
-def lookup(charrule):
+def lookup(charrule, keyNames=False):
     for e in _charExtras:
         if e.name in charrule:
-            return e.rule_ref.rule.mapping[charrule[e.name]["words"][0]]
+            mapping = e.rule_ref.rule.mapping 
+            if e.name == "symrule" and not keyNames:
+                mapping = _literalMapping
+            return mapping[charrule[e.name]["words"][0]]
         
 

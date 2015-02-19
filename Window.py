@@ -2,6 +2,7 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 
+import shlex
 import subprocess
 from collections import defaultdict
 import string
@@ -77,7 +78,9 @@ class Window(object):
                 continue
             field, value = x[0].strip(), x[1].strip()
             if field == prop:
-                return value.strip(',').strip('"')
+                value = shlex.split(value)
+                value = [v.strip(',') for v in value]
+                return " ".join(value)
         return ""
 
     def __str__(self):

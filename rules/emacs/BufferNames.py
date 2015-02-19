@@ -38,7 +38,8 @@ class BufferNames(WordSelector):
 # can be used in real unix filenames...
 
 def filterBuffs(choices):
-    return [c for c in choices if not any(c.startswith(s) for s in string.punctuation + " ")]
+    punctuation = string.punctuation.replace("_", "") + " "
+    return [c for c in choices if not any(c.startswith(s) for s in punctuation)]
 
 def filterChannels(choices):
     return [c for c in choices if c.startswith("#")]

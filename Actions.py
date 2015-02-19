@@ -441,15 +441,16 @@ class FormatState(object):
                         if newWord not in string.digits:
                             newWord = self.numeralmap[newWord.lower()]
                         self.next_numeral = False
-
                     # dragonfly doesn't properly filter slashes when
                     # the written and spoken form of a word differ
                     # and the spoken form has spaces in it, e.g.
                     # xdotool -> "ex do tool"
                     # reported: https://github.com/t4ngo/dragonfly/issues/14
-                    if newWord.endswith("\\"):
-                        newWord = newWord.rstrip("\\")
-                        
+                    newWord = newWord.rstrip("\\")
+                    newWord = newWord.rsplit("\\pronoun", 1)[0]
+                    newWord = newWord.rsplit("\\determiner", 1)[0]
+                    newWord = newWord.rsplit("\\non", 1)[0]
+
                     new.append(newWord)
                     first = False
                 self.next_literal = False
@@ -502,7 +503,7 @@ class Text(Action):
         
     def __call__(self, extras={}):
         text = self._text(extras)
-        log.info(text)
+        log.info("Text: [%s]" % text)
         self._print(text)
 
     def _print(self, words):

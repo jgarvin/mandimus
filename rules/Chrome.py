@@ -3,7 +3,7 @@ from protocol import Integer, Dictation, RuleType
 from requirements.WindowRequirement import WindowRequirement
 from rules.ContextualRule import makeContextualRule
 
-IsChrome = WindowRequirement(wmclass=('chrome', 'chromium'))
+IsChrome = WindowRequirement(wmclass=('chrome', 'chromium', 'chromium-browser'))
 
 class WebSearch(Action):
     def __call__(self, extras={}):
