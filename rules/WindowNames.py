@@ -9,11 +9,11 @@ from rules.WordSelector import WordSelector
 
 class WindowNameSelector(WordSelector):
     def __init__(self):
-        getLoop().subscribeEvent(WindowListEvent, self.onWindowList)
+        getLoop().subscribeEvent(WindowListEvent, self._onWindowList)
         WordSelector.__init__(self, "WindowNames", "win")
         self.rule.activate() # always on
 
-    def onWindowList(self, ev):
+    def _onWindowList(self, ev):
         if isinstance(ev, WindowListEvent):
             self.words = set()
             self.selectionMap = []

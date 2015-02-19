@@ -68,15 +68,16 @@ class WordSelector(object):
         return r
     
     def _onSelection(self, extras={}):
+        if not self._repetitionName in extras:
+            self._noChoice()
+            return
+
         # Selection process works as follows
         # -Not all words are required to be given, only a subset
         # -But all candidates must include all given words in given order
         # -Consecutive words score higher than separated ones
         # -If a candidate is already selected, we go for the
         # next highest score, cycling if necessary.
-        if not self._repetitionName in extras:
-            self._noChoice()
-            return
         words = extras[self._repetitionName]["words"]
         candidates = []
         for winWords, window in self.selectionMap:
@@ -157,3 +158,4 @@ class WordSelector(object):
 
     def _noChoice(self):
         assert False
+

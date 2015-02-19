@@ -2,6 +2,10 @@ import mdlog
 mdlog.initLogging("client")
 
 log = mdlog.getLogger(__name__)
+
+import logging
+# logging.getLogger("grammar").setLevel(10)
+
 log.info("-----------load--------------")
 
 from hotCode import importOrReload, unloadCode, reloadCode, resetImportState
@@ -283,9 +287,7 @@ class MasterGrammar(object):
         allRules = uniqueRules
         self.fullName = ",".join(self.fullName)
         while allRules:
-            log.info("iteration, left: [%s]" % len(allRules))
             x = allRules.pop(0)
-            log.info("popped: %s" % x["name"])
             
             if not self.cleanupProtoRule(x):
                 allRules.append(x)
@@ -425,7 +427,6 @@ class MasterGrammar(object):
             r["extras"] = r["extras"].values()
 
         newExtras = []
-        # listNum = 0
         for e in r["extras"]:
             if isinstance(e, protocol.Integer):
                 newExtras.append(dfly.Integer(e.name, e.min, e.max))
@@ -450,10 +451,7 @@ class MasterGrammar(object):
                     log.info("Missing [%s]" % (e,))
                     return False
             elif isinstance(e, protocol.ListRef):
-                log.info("Creating list with name [%s] and ref with name [%s] and storing by name [%s]" % (e.name + "ConcreteList", e.ref_name, e.name))
                 self.concreteWordLists[e.name] = List(e.name + "ConcreteList")
-                # self.concreteWordLists[e.name] = List(str(listNum))
-                # listNum += 1
                 self.concreteWordLists[e.name].set(e.words)
                 newExtras.append(dfly.ListRef(e.ref_name, self.concreteWordLists[e.name]))
             else:
@@ -467,10 +465,16 @@ class MasterGrammar(object):
 
     def updateWordList(self, name, words):
         if name not in self.concreteWordLists:
-            log.info("Word list [%s] not in grammar [%s], ignoring" % (name, self.hash))
+            # log.info("Word list [%s] not in grammar [%s], ignoring" % (name, self.hash))
             return
-        log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, words))
-        self.concreteWordLists[name].set(words)
+        
+        # We want to check if the value has actually changed because List's
+        # set method will blindly tell Dragon to delete its old list and replace
+        # it with this one and we don't want to disturb Dragon unless we have to
+        # because Dragon is slow.
+        if sorted(words) != sorted(self.concreteWordLists[name]):
+            log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, words))
+            self.concreteWordLists[name].set(words)
 
 class DragonflyClient(DragonflyNode):
     def __init__(self):
