@@ -192,6 +192,8 @@ if __name__ == "__main__":
         ('rules.emacs.Magit', ['']),
         ('rules.emacs.Nav', ['']),
         ('rules.emacs.Org', ['']),
+        ('rules.emacs.ProjectFileNames', ['']),
+        ('rules.emacs.ProjectNames', ['']),
         ('rules.emacs.Term', ['']),
         ('rules.emacs.ModeLine', ['']),
         ('rules.emacs.Snippet', ['']),

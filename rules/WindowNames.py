@@ -14,14 +14,10 @@ class WindowNameSelector(WordSelector):
         self.rule.activate() # always on
 
     def _onWindowList(self, ev):
-        if isinstance(ev, WindowListEvent):
-            self.words = set()
-            self.selectionMap = []
-            for w in ev.windows:
-                winWords = extractWords(w.name)
-                self.words.update(winWords)
-                self.selectionMap.append((winWords, w))
-        self._sendWords()
+        self._update(ev.windows)
+
+    def _extractWords(self, n):
+        return extractWords(n.name)
 
     def _currentChoice(self):
         return getFocusedWindow()

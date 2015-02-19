@@ -33,3 +33,4 @@ _mapping = {
 DiredRule = makeContextualRule("Dired", _mapping, emacsExtras, emacsDefaults)
 DiredRule.context.addRequirement(IsEmacs)
 DiredRule.context.addRequirement(ModeRequirement(modes="dired-mode"))
+

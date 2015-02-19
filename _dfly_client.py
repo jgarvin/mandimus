@@ -816,6 +816,7 @@ class DragonflyClient(DragonflyNode):
         self.globalRuleGrammar.unload()
         for hash, grammar in self.hashedRules.items():
             if hasattr(grammar, "unload"):
+                log.info("Unloading: [%s]" % grammar.hash)
                 grammar.unload()
         self.timer.stop()
         try:

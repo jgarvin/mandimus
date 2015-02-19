@@ -12,23 +12,14 @@ from Window import Window, getFocusedWindow
 from EventLoop import getLoop
 from wordUtils import extractWords
 from rules.emacs.Cmd import Cmd, runEmacsCmd, toggleCommandLogging, Minibuf
-# from rules.emacs.CommandWatcher import EmacsCommandWatcher
 from rules.emacs.Text import EmacsText
-# from rules.emacs.Base import EmacsBase
 import rules.BaseRules as BaseRules
 from rules.ContextualRule import makeContextualRule
 import string
-# import SelectOption
 import EventList
 from RefreshClient import toggleRefreshClientSources
 from requirements.Emacs import IsEmacs
 
-# class BufferWatcher(EmacsCommandWatcher):
-#     cmd = "(mapcar 'buffer-name (buffer-list))"
-#     inFrame = False
-#     eventType = EventList.BufferListEvent
-
-# class ProjectWatcher(EmacsCommandWatcher):
 #     cmd = "(projectile-relevant-known-projects)"
 #     allowError = True
 #     eventType = EventList.ProjectListEvent
@@ -71,51 +62,6 @@ from requirements.Emacs import IsEmacs
 # def currentBuffer():
 #     buf = runEmacsCmd("(buffer-name (current-buffer))")
 #     return buf.strip().strip('"')
-
-
-# class SelectBufferBase(EmacsOption):
-#     eventType = EventList.BufferListEvent
-
-#     def _currentChoice(self):
-#         return currentBuffer()
-
-#     def _select(self, choice):
-#         runEmacsCmd("(switch-to-buffer \"%s\")" % choice)
-
-#     def _noChoice(self):
-#         runEmacsCmd("(switch-to-buffer nil)")
-
-# class SelectBuffer(SelectBufferBase):
-#     leadingTerm = "buff"
-    
-#     def _filterChoices(self, choices):
-#         return [k for k in choices if (not k.startswith("#")
-#                                        and not k.startswith("*")
-#                                        and not k.startswith(" *"))]
-
-# class SelectChannel(SelectBufferBase):
-#     leadingTerm = "channel"
-
-#     def _filterChoices(self, choices):
-#         return [k for k in choices if k.startswith("#")]
-
-# class SelectSpecial(SelectBufferBase):
-#     leadingTerm = "special"
-
-#     def _filterChoices(self, choices):
-#         return [k for k in choices if k.startswith("*") or k.startswith(" *")]
-
-# class SelectTerminal(SelectBufferBase):
-#     leadingTerm = "term"
-
-#     def _filterChoices(self, choices):
-#         return [k for k in choices if k.startswith("*@")]
-
-# selectors.append(SelectBuffer())
-# selectors.append(SelectChannel())
-# selectors.append(SelectSpecial())
-# selectors.append(SelectTerminal())
-
 
 # class SelectProject(EmacsOption):
 #     leadingTerm = "project"

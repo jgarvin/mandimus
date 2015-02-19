@@ -27,6 +27,18 @@ class WordSelector(object):
         self.activated = False
         self.context = Context(set([self]))
 
+    def _extractWords(self, n):
+        return extractWords(n)
+
+    def _update(self, choices):
+        self.words = set()
+        self.selectionMap = []
+        for n in choices:
+            w = self._extractWords(n)
+            self.words.update(w)
+            self.selectionMap.append((w, n))
+        self._sendWords()
+
     @property
     def _wordListRefName(self):
         return self.name + "Word"
@@ -64,7 +76,7 @@ class WordSelector(object):
         extras = [
             Repetition(WordRule, 1, 8, self._repetitionName),
         ]
-        r = makeContextualRule(self._ruleName, mapping, extras, ruleType=RuleType.INDEPENDENT)
+        r = makeContextualRule(self._ruleName, mapping, extras, ruleType=RuleType.TERMINAL)
         return r
     
     def _onSelection(self, extras={}):
@@ -119,6 +131,7 @@ class WordSelector(object):
         # just cycle through to the next best scoring candidate.
         currentSelection = self._currentChoice()
         try:
+            log.info("current selection: [%s] candidates: [%s]" % (currentSelection, candidates))
             idx = candidates.index(currentSelection)
             self._select(candidates[(idx+1) % len(candidates)])
             return
