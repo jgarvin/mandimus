@@ -132,7 +132,6 @@ class WordSelector(object):
         # just cycle through to the next best scoring candidate.
         currentSelection = self._currentChoice()
         try:
-            log.info("current selection: [%s] candidates: [%s]" % (currentSelection, candidates))
             idx = candidates.index(currentSelection)
             self._select(candidates[(idx+1) % len(candidates)])
             return

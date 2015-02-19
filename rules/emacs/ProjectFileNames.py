@@ -22,7 +22,6 @@ class ProjectFileNames(WordSelector):
         getLoop().subscribeEvent(ProjectFileListEvent, self._onProjectFileList)
 
     def _onProjectFileList(self, ev):
-        log.info("Got project file list: [%s]" % ev.choices)
         self._update(ev.choices)
 
     def _currentChoice(self):

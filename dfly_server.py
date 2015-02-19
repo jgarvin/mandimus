@@ -62,13 +62,14 @@ class DragonflyThread(DragonflyNode):
         # sending fails.
         if ev.name in self.lastWordList and self.lastWordList[ev.name] == ev.words:
             return
-        log.info("Sending updated word list [%s] -- [%s]" % (ev.name, ev.words))
+        #log.info("Sending updated word list [%s] -- [%s]" % (ev.name, ev.words))
+        log.info("Sending updated word list [%s]" % (ev.name,))
         self.sendMsg(makeJSON(WordListMsg(ev.name, ev.words)))
         self.lastWordList[ev.name] = copy(ev.words)
 
     def onRuleRegister(self, ev):
         if ev.rule.hash not in self.hashedRules:
-            log.info("Adding new hashed rule [%s]" % (ev.rule,))
+            log.info("Adding new hashed rule [%s]" % (ev.rule.rule.name,))
             self.hashedRules[ev.rule.hash] = ev.rule
 
     def onRuleActivate(self, ev):
@@ -78,7 +79,7 @@ class DragonflyThread(DragonflyNode):
             log.info("Requested to activate already activated rule [%s], ignoring." % (ev.rule,))
             return
         
-        log.info("Activating rule [%s]" % (ev.rule,))
+        log.info("Activating rule [%s]" % (ev.rule.rule.name,))
         self.activatedRules.add(ev.rule)
 
     def onRuleDeactivate(self, ev):
@@ -127,7 +128,7 @@ class DragonflyThread(DragonflyNode):
             log.error("Client requested rule we don't have! Hash: %s" % hash)
             return
         
-        log.info("Loading rule: %s" % (self.hashedRules[hash],))
+        log.info("Loading rule: %s" % (self.hashedRules[hash].rule.name,))
         self.sendMsg(makeJSON(LoadRuleMsg(self.stripActions(hash))))
 
     def commitRuleEnabledness(self, ev=None):

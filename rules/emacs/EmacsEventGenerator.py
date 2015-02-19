@@ -51,7 +51,6 @@ class EmacsEventGenerator(object):
 
     def update(self, ev=None):
         window = ev.window if ev else getFocusedWindow()
-        log.info("Generator going to run: [%s]" % self.cmd)
         newOutput = runEmacsCmd(self.cmd, inFrame=self.inFrame,
                                 allowError=self.allowError,
                                 dolog=(self.logging or self.clsLogging))
