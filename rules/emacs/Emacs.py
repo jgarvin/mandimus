@@ -20,16 +20,6 @@ import EventList
 from RefreshClient import toggleRefreshClientSources
 from requirements.Emacs import IsEmacs
 
-#     cmd = "(projectile-relevant-known-projects)"
-#     allowError = True
-#     eventType = EventList.ProjectListEvent
-
-# class ProjectFileWatcher(EmacsCommandWatcher):
-#     #cmd = "(if (or (equal major-mode 'dired-mode) buffer-file-name) (projectile-current-project-files) nil)"
-#     cmd = "md-projectile-files"
-#     allowError = True
-#     eventType = EventList.ProjectFileListEvent
-
 # class WordWatcher(EmacsCommandWatcher):
 #     cmd = "md-symbols-cache"
 #     eventType = EventList.EmacsWordEvent
@@ -48,57 +38,7 @@ from requirements.Emacs import IsEmacs
 #         return lst
 
 # watchers = []
-# watchers.append(BufferWatcher())
-# watchers.append(ProjectWatcher())
-# watchers.append(ProjectFileWatcher())
 # watchers.append(WordWatcher())
-
-# selectors = []
-
-# class EmacsOption(SelectOption.SelectOption):
-#     def _contextMatch(self, window):
-#         return window and Emacs.activeForWindow(window)
-    
-# def currentBuffer():
-#     buf = runEmacsCmd("(buffer-name (current-buffer))")
-#     return buf.strip().strip('"')
-
-# class SelectProject(EmacsOption):
-#     leadingTerm = "project"
-#     eventType = EventList.ProjectListEvent
-
-#     def _currentChoice(self):
-#         return runEmacsCmd("(projectile-project-name)").strip("\"")
-
-#     def _select(self, choice):
-#         runEmacsCmd("(projectile-switch-project-by-name \"%s\")" % choice)
-
-#     def _noChoice(self):
-#         Key("c-c,p,p,enter")()
-
-# selectors.append(SelectProject())
-
-
-# openProjetileFileEl = """
-# (find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))
-# """
-
-# class SelectProjectFile(EmacsOption):
-#     leadingTerm = "file"
-#     eventType = EventList.ProjectFileListEvent
-#     classLog = True
-    
-#     def _currentChoice(self):
-#         return runEmacsCmd("(when (md-current-path) (file-relative-name (md-current-path) (projectile-project-root))))").strip("\"")
-
-#     def _select(self, choice):
-#         runEmacsCmd(openProjetileFileEl % choice)
-
-#     def _noChoice(self):
-#         runEmacsCmd("(switch-to-buffer nil)")                
-
-# selectors.append(SelectProjectFile())
-    
 
 # class SelectTypeClosest(EmacsOption):
 #     leadingTerm = "toke"

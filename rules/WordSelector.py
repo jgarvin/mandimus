@@ -90,6 +90,7 @@ class WordSelector(object):
         # -Consecutive words score higher than separated ones
         # -If a candidate is already selected, we go for the
         # next highest score, cycling if necessary.
+        # TODO: need to handle exact matches, they should win
         words = extras[self._repetitionName]["words"]
         candidates = []
         for winWords, window in self.selectionMap:
@@ -110,7 +111,7 @@ class WordSelector(object):
                     if lastIdx is not None:
                         # we subract one because there should be no
                         # penalty if the words are adjacent.
-                        totalHoleSize += lastIdx - idx - 1
+                        totalHoleSize += (idx - lastIdx) - 1
                     lastIdx = idx
                 candidates.append((totalHoleSize, window))
             except ValueError:
@@ -123,7 +124,7 @@ class WordSelector(object):
             return
 
         # sort by total hole size
-        candidates.sort(key=lambda x: x[0], reverse=True)
+        candidates.sort(key=lambda x: x[0])
         # remove hole sizes leaving just the windows
         candidates = [c[1] for c in candidates]
 

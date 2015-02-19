@@ -198,6 +198,7 @@ if __name__ == "__main__":
         ('rules.emacs.ModeLine', ['']),
         ('rules.emacs.Snippet', ['']),
         ('rules.emacs.SymbolPicker', ['']),
+        ('rules.emacs.Words', ['']),
         ('rules.WindowNames', ['']),
         ('rules.XMonad', ['']),
         ('RefreshClient', ['']),
