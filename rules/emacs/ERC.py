@@ -20,6 +20,7 @@ _mapping = {
     "kick dragon"         : EmacsText("/me kicks Dragon"),
     "slash me [<text>]"   : EmacsText("/me %(text)s"),
     "slash message"       : EmacsText("/msg"),
+    "slash whois"         : EmacsText("/whois"),
 }
 
 ERCRule = makeContextualRule("ERC", _mapping, emacsExtras, emacsDefaults)

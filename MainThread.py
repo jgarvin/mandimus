@@ -18,6 +18,7 @@ from rules.ContextualRule import makeContextualRule
 import EventList
 import select
 from protocol import RuleType
+from copy import copy
 
 badWindows = {
     "Desktop",
@@ -117,7 +118,10 @@ class MainThread(object):
 
     def processEvent(self, ev):
         if type(ev) in self.eventSubscribers:
-            for h in self.eventSubscribers[type(ev)]:
+            log.info("processing %d subscribers for event [%s] : [%s]" % (len(self.eventSubscribers[type(ev)]), ev, self.eventSubscribers[type(ev)]))
+            subscribers = copy(self.eventSubscribers[type(ev)])
+            for i, h in enumerate(subscribers):
+                log.info("processing subscriber number %d" % i)
                 try:
                     h[1](ev)
                 except KeyboardInterrupt:

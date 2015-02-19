@@ -16,6 +16,7 @@ class WindowRequirement(Requirement):
         if type(self.wmclass) in (str, unicode):
             self.wmclass = [self.wmclass]
         matched = False
+        log.info("testing requirement for: [%s]" % (self.wmclass,))
         for c in self.wmclass:
             log.info("testing if [%s] in [%s]" % (c, ev.window.wmclass))
             if (c in ev.window.wmclass) ^ self.negate:

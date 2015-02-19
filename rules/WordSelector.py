@@ -116,7 +116,8 @@ class WordSelector(object):
                         # penalty if the words are adjacent.
                         totalHoleSize += (idx - lastIdx) - 1
                     lastIdx = idx
-                candidates.append((totalHoleSize, window))
+                lengthDifference = abs(len(winWords) - len(words))
+                candidates.append((totalHoleSize, lengthDifference, window))
             except ValueError:
                 # all words that were given must be present
                 continue
@@ -127,11 +128,13 @@ class WordSelector(object):
             return
 
         # sort by total hole size
-        candidates.sort(key=lambda x: x[0])
-        # remove hole sizes leaving just the windows
-        candidates = [c[1] for c in candidates]
-
+        #candidates.sort(key=lambda x: (x[0], x[1]))
+        candidates.sort()
         log.info("candidates: [%s]" % candidates)
+
+        # remove hole sizes leaving just the windows
+        candidates = [c[-1] for c in candidates]
+
         log.info("selectionMap: [%s]" % self.selectionMap)
 
         # check if the current window is a candidate. if so
