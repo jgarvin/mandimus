@@ -1,16 +1,17 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 from rules.emacs.Cmd import runEmacsCmd 
-from rules.WordSelector import WordSelector
+from rules.WordSelector import WordSelector, PhraseType
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
 from wordUtils import extractWords
 from EventLoop import getLoop
-from EventList import EmacsWordEvent
+from EventList import EmacsWordEvent, EmacsSymbolEvent
 from requirements.Emacs import IsEmacs
 from Actions import Key
 import string
 from rules.emacs.Text import EmacsText
 from protocol import RuleType
+from copy import copy
 
 class EmacsWordGen(EmacsEventGenerator):
     def _filter(self, x):
@@ -26,19 +27,46 @@ class EmacsWordGen(EmacsEventGenerator):
         lst = [x for x in lst if self._filter(x)]
         return lst
     
-emacsWordGen = EmacsWordGen("EmacsWord", "md-symbols-cache", EmacsWordEvent)
+emacsWordGen = EmacsWordGen("EmacsWord", "md-global-word-cache", EmacsWordEvent)
+emacsWordGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymbolEvent)
 
 class EmacsWordNames(WordSelector):
-    def __init__(self, name, cmdWord):
-        WordSelector.__init__(self, name, cmdWord, RuleType.SERIES)
+    def __init__(self, name, cmdWord, eventType):
+        WordSelector.__init__(self, name, cmdWord, allowNoChoice=False,
+                              phraseType=PhraseType.BOTH, ruleType=RuleType.SERIES)
         self.rule.context.addRequirement(IsEmacs)
-        getLoop().subscribeEvent(EmacsWordEvent, self._onEmacsWord)
+        getLoop().subscribeEvent(eventType, self._onEmacsWord)
 
     def _onEmacsWord(self, ev):
-        self._update(ev.choices)
+        self._update(self._filter(ev.choices))
 
     def _select(self, choice):
         EmacsText("%s" % choice, lower=False)()        
 
-_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", "toke")
+    # TODO: this filtering should really be done on the emacs side
+    def _filter(self, words):
+        newWords = copy(words)
+        for w in words:
+            if len(w) < 3:
+                newWords.remove(w)
+            
+            try:
+                int(w)
+                newWords.remove(w)
+            except ValueError:
+                pass
+
+            try:
+                int(w, 16)
+                newWords.remove(w)
+            except ValueError:
+                pass
+
+            log.info("Not filtering: [%s]" % w)
+        return newWords
+
+
+_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", "word", EmacsWordEvent)
+_emacsWordNameSelector = EmacsWordNames("EmacsSymbolNames", "toke", EmacsSymbolEvent)
+
 

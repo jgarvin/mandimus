@@ -10,12 +10,24 @@ from Actions import runCmd
 from functools import partial
 from Context import Context
 from copy import copy
+from util import enum
+
+# WORDS means that if an object is associated with "foo bar" that
+# "foo" and "bar" get added to the word list.
+# PHRASES means that if an object is associated with "foo bar" that
+# "foo bar" gets added to the word list.
+PhraseType = enum(WORDS=0, PHRASES=1, BOTH=2)
 
 class WordSelector(object):
-    def __init__(self, name, cmdWord, ruleType=RuleType.TERMINAL):
+    def __init__(self, name, cmdWord,
+                 allowNoChoice=True,
+                 phraseType=PhraseType.WORDS,
+                 ruleType=RuleType.TERMINAL):
         self.name = name
         self.cmdWord = cmdWord
         self.ruleType = ruleType
+        self.phraseType = phraseType
+        self.allowNoChoice = allowNoChoice
         getLoop().subscribeEvent(ConnectedEvent, self._sendWords)
         self.rule = self._buildRule()
         # self.words is the list of all the words that should be in
@@ -30,7 +42,7 @@ class WordSelector(object):
 
     def _extractWords(self, n):
         x = extractWords(n)
-        #log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
+        log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
         return x
 
     def _update(self, choices):
@@ -38,8 +50,14 @@ class WordSelector(object):
         self.selectionMap = []
         for n in choices:
             w = self._extractWords(n)
-            self.words.update(w)
+            if self.phraseType == PhraseType.WORDS or self.phraseType == PhraseType.BOTH:
+                log.info("Adding word: [%s]" % w)
+                self.words.update(w)
+            if self.phraseType == PhraseType.PHRASES or self.phraseType == PhraseType.BOTH:
+                log.info("Adding phrase: [%s]" % " ".join(w))
+                self.words.update([" ".join(w)])
             self.selectionMap.append((w, n))
+        log.info("New words [%d] for %s :: %s: [%s]" % (len(self.words), self.name, type(self), self.words))
         self._sendWords()
 
     @property
@@ -72,12 +90,16 @@ class WordSelector(object):
         WordRule = makeHashedRule(self._wordRuleName, mapping, extras, ruleType=RuleType.INDEPENDENT)
         pushEvent(RuleRegisterEvent(WordRule))
 
+        repetitionPart = ("[<%s>]" if self.allowNoChoice else "<%s>") % self._repetitionName
+        #repetitionPart = ("<%s>") % self._repetitionName
+        
         mapping = {
-            ("%s [<%s>]" % (self.cmdWord, self._repetitionName)) : self._onSelection
+            (("%s" % self.cmdWord) + " " + repetitionPart) : self._onSelection
         }
 
         extras = [
             Repetition(WordRule, 1, 8, self._repetitionName),
+            #Repetition(WordRule, 0, 8, self._repetitionName),
         ]
         r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
         return r
@@ -95,6 +117,11 @@ class WordSelector(object):
         # next highest score, cycling if necessary.
         # TODO: need to handle exact matches, they should win
         words = extras[self._repetitionName]["words"]
+        if self.phraseType == PhraseType.PHRASES or self.phraseType == PhraseType.BOTH:
+            flatWords = []
+            for w in words:
+                flatWords.extend(w.split())
+            words = flatWords
         candidates = []
         for winWords, window in self.selectionMap:
             totalHoleSize = 0

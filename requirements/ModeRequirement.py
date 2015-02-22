@@ -11,7 +11,7 @@ _majorMode = None
 _oldMajorMode = None
 def _updateMajorMode(ev):
     global _majorMode, _oldMajorMode
-    _majorMode = runEmacsCmd("(cons major-mode (loop as m = major-mode then p while m as p = (get m 'derived-mode-parent) collect p))")
+    _majorMode = runEmacsCmd("(md-get-all-modes)")
     _majorMode = _getEmacsList(_majorMode)
     if _majorMode != _oldMajorMode:
         pushEvent(MajorModeEvent(_majorMode))

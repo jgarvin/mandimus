@@ -238,7 +238,7 @@ _mapping  = {
     "slap [<n>]"                   : Key("enter:%(n)d"),
     "pals [<n>]"                   : Cmd("(md-new-line-anywhere)"),
     "open [<n>]"                   : Key("c-o:%(n)d"),
-    "nepo [<n>]"                   : Cmd("(md-open-line-anywhere)"),
+    "nepo [<n>]"                  : Cmd("(md-open-line-anywhere)"),
 
     # mark commands
     "mark [<n>]"                   : Key("c-space:%(n)d"),

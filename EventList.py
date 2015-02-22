@@ -19,6 +19,7 @@ ProjectListEvent = namedtuple("ProjectListEvent", "choices")
 ProjectFileListEvent = namedtuple("BufferListEvent", "choices") 
 NickEvent = namedtuple("NickEvent", "choices")
 EmacsWordEvent = namedtuple("EmacsWordEvent", "choices")
+EmacsSymbolEvent = namedtuple("EmacsSymbolEvent", "choices")
 
 class DisconnectedEvent(object): pass
 class ConnectedEvent(object): pass

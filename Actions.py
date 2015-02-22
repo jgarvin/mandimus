@@ -447,9 +447,14 @@ class FormatState(object):
                     # xdotool -> "ex do tool"
                     # reported: https://github.com/t4ngo/dragonfly/issues/14
                     newWord = newWord.rstrip("\\")
-                    newWord = newWord.rsplit("\\pronoun", 1)[0]
-                    newWord = newWord.rsplit("\\determiner", 1)[0]
-                    newWord = newWord.rsplit("\\non", 1)[0]
+
+                    prohibited = ["pronoun", "determiner", "non", "apostrophe-ess",
+                                  "apostrophe ess", "apostrophe"]
+
+                    for p in prohibited:
+                        log.info("before: [%s]", newWord)
+                        newWord = newWord.replace("\\" + p, "")
+                        log.info("after: [%s]", newWord)
 
                     new.append(newWord)
                     first = False

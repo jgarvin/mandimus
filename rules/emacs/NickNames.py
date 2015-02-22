@@ -32,7 +32,7 @@ class NickNames(WordSelector):
     def _extractWords(self, w):
         return extractWords(w, translate={},
                             useDict=True,
-                            detectBadConsonantPairs=True,
+                            #detectBadConsonantPairs=True,
                             removeLeetSpeak=True)
 
     def _noChoice(self):
