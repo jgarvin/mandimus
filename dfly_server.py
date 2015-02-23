@@ -91,7 +91,7 @@ class DragonflyThread(DragonflyNode):
             log.error("Asking to deactivate already deactivated rule [%s], ignoring." % (ev.rule,))
             return
 
-        log.info("Deactivating rule [%s]" % (ev.rule,))
+        log.info("Deactivating rule [%s]" % (ev.rule.rule.name,))
         self.activatedRules.remove(ev.rule)
 
     def __call__(self):

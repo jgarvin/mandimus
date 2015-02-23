@@ -10,6 +10,7 @@ from requirements.Emacs import IsEmacs
 from Actions import Key
 
 projectListGen = EmacsEventGenerator("Project", "(projectile-relevant-known-projects)", ProjectListEvent)
+#projectListGen.logging = True
 
 class ProjectNames(WordSelector):
     def __init__(self, name, cmdWord):

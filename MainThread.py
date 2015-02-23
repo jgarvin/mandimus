@@ -1,7 +1,7 @@
 import mdlog, os
 mdlog.initLogging("server", "/tmp", stdOut=True)
 log = mdlog.getLogger(__name__)
-log.setLevel(10)
+log.setLevel(20)
 log.info("\n--------------------------------------------------------------------------------\n")
 
 import os, sys
@@ -118,10 +118,10 @@ class MainThread(object):
 
     def processEvent(self, ev):
         if type(ev) in self.eventSubscribers:
-            log.info("processing %d subscribers for event [%s] : [%s]" % (len(self.eventSubscribers[type(ev)]), ev, self.eventSubscribers[type(ev)]))
+            log.debug("processing %d subscribers for event [%s] : [%s]" % (len(self.eventSubscribers[type(ev)]), ev, self.eventSubscribers[type(ev)]))
             subscribers = copy(self.eventSubscribers[type(ev)])
             for i, h in enumerate(subscribers):
-                log.info("processing subscriber number %d" % i)
+                log.debug("processing subscriber number %d" % i)
                 try:
                     h[1](ev)
                 except KeyboardInterrupt:

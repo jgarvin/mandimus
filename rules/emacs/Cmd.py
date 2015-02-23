@@ -88,10 +88,13 @@ class CommandClient(object):
         self.sock.settimeout(self.EMACS_TIMEOUT)
         out = ""
 
+        newData = None
         try:
             while "\n" not in out:
                 # print "in recv loop"
-                out += unicode(self.sock.recv(4096), 'utf-8')
+                newData = self.sock.recv(4096)
+                out += newData
+                # out += unicode(self.sock.recv(4096), 'utf-8')
         except socket.error as e:
             log.info("Socket error while receiving: %s" % e)
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
@@ -101,9 +104,11 @@ class CommandClient(object):
                 raise
         except Exception as e:
             log.info("Unknown error while receiving: %s" % e)
+            log.info("New data dump: [%s]" % newData)
             self.dumpOther()
             raise
             
+        out = out.decode('utf-8')
         return out
 
     def runCmd(self, command, inFrame=True, dolog=False, allowError=False):

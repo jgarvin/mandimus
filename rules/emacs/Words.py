@@ -28,17 +28,19 @@ class EmacsWordGen(EmacsEventGenerator):
         return lst
     
 emacsWordGen = EmacsWordGen("EmacsWord", "md-global-word-cache", EmacsWordEvent)
-emacsWordGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymbolEvent)
+emacsSymbolGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymbolEvent)
 
 class EmacsWordNames(WordSelector):
-    def __init__(self, name, cmdWord, eventType):
+    def __init__(self, name, cmdWord, eventType, phraseType):
         WordSelector.__init__(self, name, cmdWord, allowNoChoice=False,
-                              phraseType=PhraseType.BOTH, ruleType=RuleType.SERIES)
+                              phraseType=phraseType,
+                              ruleType=RuleType.SERIES)
         self.rule.context.addRequirement(IsEmacs)
         getLoop().subscribeEvent(eventType, self._onEmacsWord)
 
     def _onEmacsWord(self, ev):
         self._update(self._filter(ev.choices))
+        # self._update(ev.choices)
 
     def _select(self, choice):
         EmacsText("%s" % choice, lower=False)()        
@@ -62,11 +64,11 @@ class EmacsWordNames(WordSelector):
             except ValueError:
                 pass
 
-            log.info("Not filtering: [%s]" % w)
+            #log.info("Not filtering: [%s]" % w)
         return newWords
 
 
-_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", "word", EmacsWordEvent)
-_emacsWordNameSelector = EmacsWordNames("EmacsSymbolNames", "toke", EmacsSymbolEvent)
+_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", "word", EmacsWordEvent, phraseType=PhraseType.SINGLE_WORD)
+_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", "toke", EmacsSymbolEvent, phraseType=PhraseType.PHRASES)
 
 

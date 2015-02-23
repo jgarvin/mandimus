@@ -16,7 +16,7 @@ from util import enum
 # "foo" and "bar" get added to the word list.
 # PHRASES means that if an object is associated with "foo bar" that
 # "foo bar" gets added to the word list.
-PhraseType = enum(WORDS=0, PHRASES=1, BOTH=2)
+PhraseType = enum(SINGLE_WORD=0, WORDS=1, PHRASES=2, BOTH=3)
 
 class WordSelector(object):
     def __init__(self, name, cmdWord,
@@ -42,7 +42,7 @@ class WordSelector(object):
 
     def _extractWords(self, n):
         x = extractWords(n)
-        log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
+        # log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
         return x
 
     def _update(self, choices):
@@ -50,11 +50,11 @@ class WordSelector(object):
         self.selectionMap = []
         for n in choices:
             w = self._extractWords(n)
-            if self.phraseType == PhraseType.WORDS or self.phraseType == PhraseType.BOTH:
-                log.info("Adding word: [%s]" % w)
+            if self.phraseType == PhraseType.SINGLE_WORD or self.phraseType == PhraseType.WORDS or self.phraseType == PhraseType.BOTH:
+                # log.info("Adding word: [%s]" % w)
                 self.words.update(w)
             if self.phraseType == PhraseType.PHRASES or self.phraseType == PhraseType.BOTH:
-                log.info("Adding phrase: [%s]" % " ".join(w))
+                # log.info("Adding phrase: [%s]" % " ".join(w))
                 self.words.update([" ".join(w)])
             self.selectionMap.append((w, n))
         log.info("New words [%d] for %s :: %s: [%s]" % (len(self.words), self.name, type(self), self.words))
@@ -81,6 +81,41 @@ class WordSelector(object):
         return self.name + "Rule"
 
     def _buildRule(self):
+        if self.phraseType == PhraseType.SINGLE_WORD:
+            return self._buildSingleWordRule()
+        else:
+            return self._buildMultiWordRule()
+
+    def _getWords(self, extras):
+        if self.phraseType == PhraseType.SINGLE_WORD:
+            words = [extras[self._wordListRefName]] if self._wordListRefName in extras else None
+        else:
+            words = extras[self._repetitionName]["words"] if self._repetitionName in extras else None
+
+        if self.phraseType == PhraseType.PHRASES or self.phraseType == PhraseType.BOTH:
+            flatWords = []
+            for w in words:
+                flatWords.extend(w.split())
+            words = flatWords
+
+        return words
+
+    def _buildSingleWordRule(self):
+        wordPart = ("[<%s>]" if self.allowNoChoice else "<%s>") % self._wordListRefName
+        
+        mapping = {
+            (("%s" % self.cmdWord) + " " + wordPart) : self._onSelection
+        }
+
+        log.info("Single word rule: [%s]" % (("%s" % self.cmdWord) + " " + wordPart))
+
+        extras = [
+            ListRef(self._wordListName, self._wordListRefName, [])
+        ]
+        r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
+        return r
+
+    def _buildMultiWordRule(self):
         mapping = {
             "<" + self._wordListRefName + ">" : None
         }
@@ -91,21 +126,21 @@ class WordSelector(object):
         pushEvent(RuleRegisterEvent(WordRule))
 
         repetitionPart = ("[<%s>]" if self.allowNoChoice else "<%s>") % self._repetitionName
-        #repetitionPart = ("<%s>") % self._repetitionName
         
         mapping = {
             (("%s" % self.cmdWord) + " " + repetitionPart) : self._onSelection
         }
 
         extras = [
-            Repetition(WordRule, 1, 8, self._repetitionName),
+            Repetition(WordRule, 1, 5, self._repetitionName),
             #Repetition(WordRule, 0, 8, self._repetitionName),
         ]
         r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
         return r
     
     def _onSelection(self, extras={}):
-        if not self._repetitionName in extras:
+        words = self._getWords(extras)
+        if not words:
             self._noChoice()
             return
 
@@ -115,13 +150,6 @@ class WordSelector(object):
         # -Consecutive words score higher than separated ones
         # -If a candidate is already selected, we go for the
         # next highest score, cycling if necessary.
-        # TODO: need to handle exact matches, they should win
-        words = extras[self._repetitionName]["words"]
-        if self.phraseType == PhraseType.PHRASES or self.phraseType == PhraseType.BOTH:
-            flatWords = []
-            for w in words:
-                flatWords.extend(w.split())
-            words = flatWords
         candidates = []
         for winWords, window in self.selectionMap:
             totalHoleSize = 0
@@ -151,6 +179,7 @@ class WordSelector(object):
 
         if not candidates:
             log.error("No choice with name containing words in order: [%s]" % words)
+            log.error("selectionMap: [%s]" % self.selectionMap)
             pushEvent(MicrophoneEvent("failure"))
             return
 
