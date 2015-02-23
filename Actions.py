@@ -155,122 +155,6 @@ class Noop(Action):
     def __call__(self, extras={}):
         pass
 
-class SelectChoice(Action):
-    hist = {}
-    
-    def __init__(self, data, leadingTerm):
-        Action.__init__(self, data)
-        self.leadingTerm = leadingTerm
-
-    @classmethod
-    def history(cls):
-        if cls not in cls.hist:
-            cls.hist[cls] = []
-        return cls.hist[cls]
-
-    def __eq__(self, other):
-        return type(self) == type(other) and self.data == other.data
-        
-    def __call__(self, extras={}):
-        words = extras["words"].split()
-
-        if len(words) == 1 and words[0] == self.leadingTerm:
-            self._noChoice()
-            return
-
-        scores = {}
-        for k, v in self.data.items():
-            scores[k] = -1
-            for form in v:
-                # We need a copy because we're going to remove
-                # words as we find them, so that we can match
-                # better when the same word occurs twice, e.g.
-                # foo/foo.py should get matched if you say
-                # "foo foo py" instead of rules/foo.py
-                f = copy(form)
-                matches = 0.0
-                for word in words:
-                    # this still ignores relative ordering
-                    # of different words
-                    if word in f:
-                        matches += 1
-                        f.remove(word)
-                    else:
-                        matches = min(matches - 1, 0.0) 
-                score = matches / len(form)
-                scores[k] = max(score, scores[k])
-
-        counter = scores.items()
-        counter.sort(key=lambda x: x[1], reverse=True)
-
-        first = counter[0]
-        ties = []
-        for c in counter:
-            if c[1] == first[1]:
-                ties.append(c)
-            else:
-                break
-
-        bestpick = None
-        
-        # if there are mulitple equally suitable choices,
-        # and one of them is already chosen,
-        # pick the one with the next highest ID
-        # modulo the number of ties, effectively
-        # cycling the choices
-        ties.sort(key=self._tieSorter())
-        currentChoice = self._currentChoice()
-        for i, t in enumerate(ties):
-            if t[0] == currentChoice:
-                bestpick = ties[(i+1) % len(ties)][0]
-                break
-
-        # if none is selected, then rely on history
-        if bestpick is None:
-            for h in reversed(self.history()):
-                for t in ties:
-                    #log.info(h,t[0])
-                    if h == t[0]:
-                        bestpick = h
-                        break
-                if bestpick is not None:
-                    break
-
-        # if all else fails then just pick the first
-        if bestpick is None:
-            bestpick = ties[0][0]
-
-        self.history().append(bestpick)
-        self._select(bestpick)
-
-    def _tieSorter(self):
-        return lambda x: x[0]   
-
-    def _currentChoice(self):
-        return None
-
-    def _select(self, choice):
-        pass
-
-    def _noChoice(self):
-        search_max = 10
-        curChoice = self._currentChoice()
-        for h in list(reversed(self.history()))[:search_max]:
-            if h != curChoice:
-                self._select(h)
-                break
-
-class SelectWindow(SelectChoice):
-    def _tieSorter(self):
-        return lambda x: x[0].winId
-
-    def _currentChoice(self):
-        return getFocusedWindow()
-
-    def _select(self, choice):
-        cmd = "xdotool windowactivate %d" % (choice.winId)
-        runCmd(cmd)
-
 class Speak(Action):
     def __call__(self, extras={}):
         cmd = "echo '" + (self.data % extras) + "' | festival --tts"
@@ -397,22 +281,32 @@ class FormatState(object):
         new = []
         first = True
         for word in s:
-            #log.info('word ' + word)
-            if word == ur"\cap" and self.do_formatting:
+            # startswith is used so much because at some point in development
+            # all of the control words started being sent twice by Dragon,
+            # so originally you would get \cap but now for some reason you get \cap\cap
+            doFormatting = self.do_formatting and not self.next_literal and len(s) > 1
+            if word.startswith(ur"\cap") and doFormatting:
                 self.cap_once = True
-            elif word == ur"\caps-on" and self.do_formatting:
+            elif word.startswith(ur"\caps-on") and doFormatting:
                 self.caps = True
-            elif word == ur"\caps-off" and self.do_formatting:
+            elif word.startswith(ur"\caps-off") and doFormatting:
                 self.caps = False
-            elif word == ur"\no-space" and self.do_formatting:
+            elif word.startswith(ur"\no-space") and doFormatting:
                 self.no_space_once = True
-            elif word == ur"\numeral" and self.do_formatting:
+            elif word.startswith(ur"\numeral") and doFormatting:
                 self.next_numeral = True
-            elif word == ur"literal" and self.do_formatting and not self.next_literal and len(s) > 1:
+            elif word.startswith(ur"literal") and doFormatting:
                 self.next_literal = True
             else:
-                isCode = word in self.formatting.keys()
-                #log.info('isCode: ' + str(isCode))
+                # see explanation of startswith above
+                isCode = False
+                lookupValue = None
+                for f in (self.formatting.keys() + self.noformatting.keys()):
+                    if word.startswith(f):
+                        isCode = True
+                        lookupValue = f
+                        break
+
                 newWord = word
                 if isCode:
                     if self.do_formatting and not self.next_literal:
@@ -420,8 +314,8 @@ class FormatState(object):
                     else:
                         replacements = self.noformatting
 
-                    for key, val in replacements.items():
-                        newWord = newWord.replace(key, val)
+                    newWord = replacements[lookupValue]
+                    log.info("Word before : [%s]" % newWord)
                     new.append(newWord)
                     #log.info('newWord: ' + newWord)
                     self.no_space_once = True
@@ -449,11 +343,11 @@ class FormatState(object):
                     newWord = newWord.rstrip("\\")
 
                     prohibited = ["pronoun", "determiner", "non", "apostrophe-ess",
-                                  "apostrophe ess", "apostrophe"]
+                                  "apostrophe ess", "apostrophe", "number", "letter"]
 
                     for p in prohibited:
                         newWord = newWord.replace("\\" + p, "")
-
+                    log.info("Word: [%s]" % newWord)
                     new.append(newWord)
                     first = False
                 self.next_literal = False
@@ -505,16 +399,25 @@ class Text(Action):
         self.lower = lower
         
     def __call__(self, extras={}):
+        log.info("extras: [%s]" % extras)
+        for k, v in extras.items():
+            # TODO: this really should be applied deep not shallow
+            if type(v) == list and len(v) > 0 and type(v[0]) in (str, unicode):
+                log.info("madeitin")
+                extras[k] = "".join(self._format(v))
         text = self._text(extras)
         log.info("Text: [%s]" % text)
         self._print(text)
+
+    def _format(self, words):
+        return FormatState().format(words)
 
     def _print(self, words):
         typeKeys(words)
 
     def _text(self, extras):
-        words = (self.data % extras).split(' ')
-        words = FormatState().format(words)
+        words = (self.data % extras)
+        
         if self.lower:
             words = [w.lower() for w in words]
         return ''.join(words)
@@ -524,9 +427,12 @@ class Camel(Text):
         Text.__init__(self, fmt)
         self.caps = capitalize if caps else lower
 
+    def _format(self, words):
+        return FormatState(formatting=False, spaces=False).format(words)
+
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
-        words = FormatState(formatting=False, spaces=False).format(words)
+        #words = FormatState(formatting=False, spaces=False).format(words)
         words = [w.lower() for w in words]
         words = [self.caps(words[0])] + [w.capitalize() for w in words[1:]]
         return ''.join(words)
@@ -536,9 +442,12 @@ class Underscore(Text):
         Text.__init__(self, fmt)
         self.caps = capitalize if caps else lower
 
+    def _format(self, words):
+        return FormatState(formatting=False, spaces=False).format(words)
+
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
-        words = FormatState(formatting=False, spaces=False).format(words)
+        #words = FormatState(formatting=False, spaces=False).format(words)
         words = [self.caps(w) for w in words]
         return '_'.join(words)        
 
@@ -547,9 +456,12 @@ class Hyphen(Text):
         Text.__init__(self, fmt)
         self.caps = capitalize if caps else lower
 
+    def _format(self, words):
+        return FormatState(formatting=False, spaces=False).format(words)
+
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
-        words = FormatState(formatting=False, spaces=False).format(words)
+        #words = FormatState(formatting=False, spaces=False).format(words)
         words = [self.caps(w) for w in words]
         return '-'.join(words)        
 

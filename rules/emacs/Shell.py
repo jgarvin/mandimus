@@ -52,6 +52,7 @@ _keywords = [
     "sort",
     ["ssh", "S S H"],
     "then",
+    "touch",
     "true",
     ["tsk", "tisk"],
     "type",

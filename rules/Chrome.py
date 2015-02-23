@@ -13,9 +13,9 @@ class WebSearch(Action):
         # go to address bar, deleting existing text
         (Key("c-l, c-a, backspace")
          # enter the text
-         + Text(text + (" %(text)s" % extras))
+         + Text(text + (" %(text)s"))
          # delete any autocomplete results off the end and enter
-         + Key("delete, enter"))()
+         + Key("delete, enter"))(extras)
 
 _mapping = {
     "wikipedia [<text>]"            : WebSearch("wk"),

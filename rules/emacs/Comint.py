@@ -7,8 +7,8 @@ from rules.emacs.Cmd import Cmd
 from rules.emacs.Text import EmacsText
 
 _mapping = {
-    "hiss"              : Key("a-p"),
-    "piss"              : Key("a-n"),
+    "hiss [<n>]"        : Key("a-p:%(n)d"),
+    "piss [<n>]"        : Key("a-n:%(n)d"),
     "history"           : Key("a-r"),
     "interrupt"         : Key("c-c,c-c"),
     "exit"              : Key("c-d"),

@@ -3,7 +3,6 @@ log = mdlog.getLogger(__name__)
 
 from Actions import (
     Key, Text, Action, runCmd, Repeat,
-    # SelectChoice,
 )
 
 from protocol import RuleType
@@ -19,44 +18,6 @@ import string
 import EventList
 from RefreshClient import toggleRefreshClientSources
 from requirements.Emacs import IsEmacs
-
-# class WordWatcher(EmacsCommandWatcher):
-#     cmd = "md-symbols-cache"
-#     eventType = EventList.EmacsWordEvent
-
-#     def filter(self, x):
-#         x = ''.join(c for c in x if c not in string.punctuation + string.digits)
-#         if len(x) <= 2:
-#             return False
-#         return True
-
-#     def _postProcess(self, output):
-#         lst = EmacsCommandWatcher._postProcess(self, output)
-#         # filter unicode
-#         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
-#         lst = [x for x in lst if self.filter(x)]
-#         return lst
-
-# watchers = []
-# watchers.append(WordWatcher())
-
-# class SelectTypeClosest(EmacsOption):
-#     leadingTerm = "toke"
-#     eventType = EventList.EmacsWordEvent
-
-#     def _currentChoice(self):
-#         return None
-
-#     def _select(self, choice):
-#         EmacsText("%s" % choice, lower=False)()        
-
-#     def _noChoice(self):
-#         pass
-    
-#     def _extractWords(self, choice):
-#         return extractWords(choice, translate={}, useDict=False)
-
-# selectors.append(SelectTypeClosest())
 
 class AlignRegexp(Cmd):
     """Emacs inserts a special whitespace regex when called
@@ -133,10 +94,8 @@ _mapping = {
 
     # projectile commands
     "switch project"                 : Key("c-c,p,p"),
-    "open file"                      : Key("c-c,p,f"),
-    "open folder"                    : Key("c-c,p,d"),
+    "root folder"                    : Key("c-c,p,d"),
     "ack"                            : Key("c-c,p,s,a"),
-    "open project"                   : Key("c-c,p,b"),
     "occur"                          : Key("c-c,p,o"),
     "project replace"                : Key("c-c,p,r"),
     "kill project"                   : Key("c-c,p,k"),

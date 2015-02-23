@@ -722,7 +722,7 @@ class DragonflyClient(DragonflyNode):
 
         if node.name and isinstance(node.actor, ElementBase) and not isRefType:
             v = node.value()
-            w = ' '.join(node.words())
+            w = node.words()
             if isinstance(v, get_engine().DictationContainer):
                 # The value vs. words distinction is to help with things
                 # like numbers where the value is 3 but the words are "three".
@@ -733,7 +733,7 @@ class DragonflyClient(DragonflyNode):
             #     # being the looked up action, which is not what we want. We want to
             #     # know which phrse was triggered.
             #     v = v._action.grammarString
-            log.info("extra [%s] value [%s] words [%s]" % (node.name, v, w))
+            log.info("extra [%s] value [%s] words [%s] realWords [%s]" % (node.name, v, w, node.words()))
             self.addValue(values, node.name, v)
 
         if node.name and isRefType:
