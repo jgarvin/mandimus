@@ -428,11 +428,10 @@ class Camel(Text):
         self.caps = capitalize if caps else lower
 
     def _format(self, words):
-        return FormatState(formatting=False, spaces=False).format(words)
+        return FormatState(formatting=False).format(words)
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
-        #words = FormatState(formatting=False, spaces=False).format(words)
         words = [w.lower() for w in words]
         words = [self.caps(words[0])] + [w.capitalize() for w in words[1:]]
         return ''.join(words)
@@ -443,11 +442,10 @@ class Underscore(Text):
         self.caps = capitalize if caps else lower
 
     def _format(self, words):
-        return FormatState(formatting=False, spaces=False).format(words)
+        return FormatState(formatting=False).format(words)
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
-        #words = FormatState(formatting=False, spaces=False).format(words)
         words = [self.caps(w) for w in words]
         return '_'.join(words)        
 
@@ -457,11 +455,10 @@ class Hyphen(Text):
         self.caps = capitalize if caps else lower
 
     def _format(self, words):
-        return FormatState(formatting=False, spaces=False).format(words)
+        return FormatState(formatting=False).format(words)
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
-        #words = FormatState(formatting=False, spaces=False).format(words)
         words = [self.caps(w) for w in words]
         return '-'.join(words)        
 
