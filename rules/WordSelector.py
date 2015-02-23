@@ -107,8 +107,6 @@ class WordSelector(object):
             (("%s" % self.cmdWord) + " " + wordPart) : self._onSelection
         }
 
-        log.info("Single word rule: [%s]" % (("%s" % self.cmdWord) + " " + wordPart))
-
         extras = [
             ListRef(self._wordListName, self._wordListRefName, [])
         ]
@@ -133,7 +131,6 @@ class WordSelector(object):
 
         extras = [
             Repetition(WordRule, 1, 5, self._repetitionName),
-            #Repetition(WordRule, 0, 8, self._repetitionName),
         ]
         r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
         return r

@@ -452,9 +452,7 @@ class FormatState(object):
                                   "apostrophe ess", "apostrophe"]
 
                     for p in prohibited:
-                        log.info("before: [%s]", newWord)
                         newWord = newWord.replace("\\" + p, "")
-                        log.info("after: [%s]", newWord)
 
                     new.append(newWord)
                     first = False

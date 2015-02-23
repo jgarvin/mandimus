@@ -69,6 +69,6 @@ class EmacsWordNames(WordSelector):
 
 
 _emacsWordNameSelector = EmacsWordNames("EmacsWordNames", "word", EmacsWordEvent, phraseType=PhraseType.SINGLE_WORD)
-_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", "toke", EmacsSymbolEvent, phraseType=PhraseType.PHRASES)
+_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", "toke", EmacsSymbolEvent, phraseType=PhraseType.BOTH)
 
 
