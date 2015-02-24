@@ -1,8 +1,7 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 from rules.emacs.Cmd import runEmacsCmd, Cmd
-#from rules.WordSelector import WordSelector, PhraseType
-from rules.WordSelectorRedux import WordSelectorRedux, PhraseType
+from rules.WordSelector import WordSelector
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
 from wordUtils import extractWords
 from EventLoop import getLoop
@@ -31,11 +30,10 @@ class EmacsWordGen(EmacsEventGenerator):
 emacsWordGen = EmacsWordGen("EmacsWord", "md-global-word-cache", EmacsWordEvent)
 emacsSymbolGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymbolEvent)
 
-class EmacsWordNames(WordSelectorRedux):
-    def __init__(self, name, cmdWords, eventType, phraseType):
-        WordSelectorRedux.__init__(self, name, cmdWords, allowNoChoice=False,
-                                   phraseType=phraseType,
-                                   ruleType=RuleType.SERIES)
+class EmacsWordNames(WordSelector):
+    def __init__(self, name, cmdWords, eventType):
+        WordSelector.__init__(self, name, cmdWords, allowNoChoice=False,
+                              ruleType=RuleType.SERIES)
         self.rule.context.addRequirement(IsEmacs)
         getLoop().subscribeEvent(eventType, self._onEmacsWord)
 
@@ -82,7 +80,7 @@ _actions = [
 _wordActions = ["word"] + [w + " word" for w in _actions]
 _symbolActions = ["toke"] + [w + " toke" for w in _actions]
     
-_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", _wordActions, EmacsWordEvent, phraseType=PhraseType.SINGLE_WORD)
-_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", _symbolActions, EmacsSymbolEvent, phraseType=PhraseType.BOTH)
+_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", _wordActions, EmacsWordEvent)
+_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", _symbolActions, EmacsSymbolEvent)
 
 
