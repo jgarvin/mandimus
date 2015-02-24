@@ -1,7 +1,8 @@
 import mdlog
 log = mdlog.getLogger(__name__)
-from rules.emacs.Cmd import runEmacsCmd 
-from rules.WordSelector import WordSelector, PhraseType
+from rules.emacs.Cmd import runEmacsCmd, Cmd
+#from rules.WordSelector import WordSelector, PhraseType
+from rules.WordSelectorRedux import WordSelectorRedux, PhraseType
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
 from wordUtils import extractWords
 from EventLoop import getLoop
@@ -30,11 +31,11 @@ class EmacsWordGen(EmacsEventGenerator):
 emacsWordGen = EmacsWordGen("EmacsWord", "md-global-word-cache", EmacsWordEvent)
 emacsSymbolGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymbolEvent)
 
-class EmacsWordNames(WordSelector):
-    def __init__(self, name, cmdWord, eventType, phraseType):
-        WordSelector.__init__(self, name, cmdWord, allowNoChoice=False,
-                              phraseType=phraseType,
-                              ruleType=RuleType.SERIES)
+class EmacsWordNames(WordSelectorRedux):
+    def __init__(self, name, cmdWords, eventType, phraseType):
+        WordSelectorRedux.__init__(self, name, cmdWords, allowNoChoice=False,
+                                   phraseType=phraseType,
+                                   ruleType=RuleType.SERIES)
         self.rule.context.addRequirement(IsEmacs)
         getLoop().subscribeEvent(eventType, self._onEmacsWord)
 
@@ -42,8 +43,13 @@ class EmacsWordNames(WordSelector):
         self._update(self._filter(ev.choices))
         # self._update(ev.choices)
 
-    def _select(self, choice):
-        EmacsText("%s" % choice, lower=False)()        
+    def _select(self, action, choice):
+        if "go" in action["words"]:
+            Cmd("(md-go-to-next \"%s\")" % choice)()
+        elif "come" in action["words"]:
+            Cmd("(md-go-to-previous \"%s\")" % choice)()
+        else:
+            EmacsText("%s" % choice, lower=False)()        
 
     # TODO: this filtering should really be done on the emacs side
     def _filter(self, words):
@@ -68,7 +74,15 @@ class EmacsWordNames(WordSelector):
         return newWords
 
 
-_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", "word", EmacsWordEvent, phraseType=PhraseType.SINGLE_WORD)
-_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", "toke", EmacsSymbolEvent, phraseType=PhraseType.BOTH)
+_actions = [
+    "go",
+    "come",
+]
+
+_wordActions = ["word"] + [w + " word" for w in _actions]
+_symbolActions = ["toke"] + [w + " toke" for w in _actions]
+    
+_emacsWordNameSelector = EmacsWordNames("EmacsWordNames", _wordActions, EmacsWordEvent, phraseType=PhraseType.SINGLE_WORD)
+_emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", _symbolActions, EmacsSymbolEvent, phraseType=PhraseType.BOTH)
 
 
