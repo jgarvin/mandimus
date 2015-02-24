@@ -27,7 +27,7 @@ class ProjectFileNames(WordSelector):
     def _currentChoice(self):
         return runEmacsCmd("(when (md-current-path) (file-relative-name (md-current-path) (projectile-project-root))))").strip("\"")
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         runEmacsCmd(_openProjetileFileEl % choice)
 
     def _noChoice(self):

@@ -22,7 +22,7 @@ class WindowNameSelector(WordSelector):
     def _currentChoice(self):
         return getFocusedWindow()
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         cmd = "xdotool windowactivate %d" % (choice.winId)
         runCmd(cmd)
 

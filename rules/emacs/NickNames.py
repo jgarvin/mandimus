@@ -21,7 +21,7 @@ class NickNames(WordSelector):
     def _onNickList(self, ev):
         self._update(ev.choices)
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         if runEmacsCmd("(md-at-start-of-erc-input-line)") == 't':
             # we're addressing them, include the colon
             EmacsText("%s: " % choice, lower=False, capitalCheck=False)()

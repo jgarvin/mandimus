@@ -24,7 +24,7 @@ class ProjectNames(WordSelector):
     def _currentChoice(self):
         return runEmacsCmd("(projectile-project-name)").strip("\"")
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         runEmacsCmd("(projectile-switch-project-by-name \"%s\")" % choice)
 
     def _noChoice(self):

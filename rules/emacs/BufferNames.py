@@ -27,7 +27,7 @@ class BufferNames(WordSelector):
         buf = runEmacsCmd("(buffer-name (current-buffer))")
         return buf.strip().strip('"')
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         runEmacsCmd("(switch-to-buffer \"%s\")" % choice)
 
     def _noChoice(self):

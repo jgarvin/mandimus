@@ -26,8 +26,12 @@ class WordSelectorRedux(object):
                  allowNoChoice=True,
                  phraseType=PhraseType.WORDS,
                  ruleType=RuleType.TERMINAL):
+        if type(cmdWords) in (unicode, str):
+            self.cmdWords = [cmdWords]
+        else:
+            self.cmdWords = cmdWords
+
         self.name = name
-        self.cmdWords = cmdWords
         self.ruleType = ruleType
         self.phraseType = phraseType
         self.allowNoChoice = allowNoChoice
@@ -248,7 +252,7 @@ class WordSelectorRedux(object):
     def _currentChoice(self):
         return None
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         assert False
 
     def _noChoice(self):

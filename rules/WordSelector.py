@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import mdlog
 log = mdlog.getLogger(__name__)
 
@@ -19,16 +22,21 @@ from util import enum
 PhraseType = enum(SINGLE_WORD=0, WORDS=1, PHRASES=2, BOTH=3)
 
 class WordSelector(object):
-    def __init__(self, name, cmdWord,
+    def __init__(self, name, cmdWords,
                  allowNoChoice=True,
                  phraseType=PhraseType.WORDS,
                  ruleType=RuleType.TERMINAL):
+        if type(cmdWords) in (unicode, str):
+            self.cmdWords = [cmdWords]
+        else:
+            self.cmdWords = cmdWords
+
         self.name = name
-        self.cmdWord = cmdWord
         self.ruleType = ruleType
         self.phraseType = phraseType
         self.allowNoChoice = allowNoChoice
         getLoop().subscribeEvent(ConnectedEvent, self._sendWords)
+        self.actionRule = None
         self.rule = self._buildRule()
         # self.words is the list of all the words that should be in
         # the word list sent to dragon
@@ -73,6 +81,14 @@ class WordSelector(object):
         return self.name + "WordRule"
 
     @property
+    def _actionRuleName(self):
+        return self.name + "ActionRule"
+
+    @property
+    def _actionRuleRefName(self):
+        return self.name + "ActionRuleRef"
+
+    @property
     def _repetitionName(self):
         return self._wordListRefName + "s"
 
@@ -81,6 +97,7 @@ class WordSelector(object):
         return self.name + "Rule"
 
     def _buildRule(self):
+        self.actionRule = self._buildActionRule()
         if self.phraseType == PhraseType.SINGLE_WORD:
             return self._buildSingleWordRule()
         else:
@@ -100,15 +117,24 @@ class WordSelector(object):
 
         return words
 
+    def _buildActionRule(self):
+        mapping = {}
+        for command in self.cmdWords:
+            mapping[command] = None
+        ActionRule = makeHashedRule(self._actionRuleName, mapping, ruleType=RuleType.INDEPENDENT)
+        pushEvent(RuleRegisterEvent(ActionRule))
+        return ActionRule
+    
     def _buildSingleWordRule(self):
         wordPart = ("[<%s>]" if self.allowNoChoice else "<%s>") % self._wordListRefName
         
         mapping = {
-            (("%s" % self.cmdWord) + " " + wordPart) : self._onSelection
+            (("<%s>" % self._actionRuleRefName) + " " + wordPart) : self._onSelection
         }
 
         extras = [
-            ListRef(self._wordListName, self._wordListRefName, [])
+            RuleRef(self.actionRule, self._actionRuleRefName),
+            ListRef(self._wordListName, self._wordListRefName, []),
         ]
         r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
         return r
@@ -126,10 +152,11 @@ class WordSelector(object):
         repetitionPart = ("[<%s>]" if self.allowNoChoice else "<%s>") % self._repetitionName
         
         mapping = {
-            (("%s" % self.cmdWord) + " " + repetitionPart) : self._onSelection
+            (("<%s>" % self._actionRuleRefName) + " " + repetitionPart) : self._onSelection
         }
 
         extras = [
+            RuleRef(self.actionRule, self._actionRuleRefName),
             Repetition(WordRule, 1, 5, self._repetitionName),
         ]
         r = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
@@ -201,7 +228,7 @@ class WordSelector(object):
             pass
 
         # otherwise go with the best
-        self._select(candidates[0])
+        self._select(extras[self._actionRuleRefName], candidates[0])
 
     def _sendWords(self, ev=None):
         pushEvent(WordListEvent(self._wordListName, self.words))
@@ -225,9 +252,10 @@ class WordSelector(object):
     def _currentChoice(self):
         return None
 
-    def _select(self, choice):
+    def _select(self, cmd, choice):
         assert False
 
     def _noChoice(self):
         return None
+
 
