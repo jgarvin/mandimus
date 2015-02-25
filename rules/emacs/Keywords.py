@@ -10,8 +10,8 @@ from EventList import RuleRegisterEvent
 _mapping = {
     "key" : None,
     "new" : None,
-    "prior" : None,
-    "future" : None,
+    "come key" : None,
+    "go key" : None,
 }
 
 VerbRule = makeHashedRule("VerbRule", _mapping, ruleType=RuleType.INDEPENDENT)
@@ -32,9 +32,9 @@ class KeywordCmd(Cmd):
             EmacsText("%s" % writtenKeyword, lower=False)()
         elif command == "new":
             return "(md-insert-snippet \"%s\")" % writtenKeyword
-        elif command == "prior":
+        elif command == "come key":
             return "(md-go-to-previous \"%s\")" % writtenKeyword
-        elif command == "future":
+        elif command == "go key":
             return "(md-go-to-next \"%s\")" % writtenKeyword
         else:
             assert False

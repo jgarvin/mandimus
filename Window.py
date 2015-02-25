@@ -78,7 +78,12 @@ class Window(object):
                 continue
             field, value = x[0].strip(), x[1].strip()
             if field == prop:
-                value = shlex.split(value)
+                try:
+                    value = shlex.split(value)
+                except ValueError:
+                    # shlex can fail because of unescaped quotes
+                    # fallback to dumb split
+                    value = value.split()
                 value = [v.strip(',') for v in value]
                 return " ".join(value)
         return ""

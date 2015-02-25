@@ -80,6 +80,7 @@ class DragonflyNode(object):
 
     def cleanup(self):
         if self.other is not None:
+            self.other.shutdown(socket.SHUT_RDWR)
             self.other.close()
         self.other = None
 
