@@ -40,7 +40,7 @@ _defaults = {
     'n' : 1,
 }
 
-ChromeSearchRule = makeContextualRule("ChromeSearch", _mapping, _extras, _defaults, ruleType=RuleType.INDEPENDENT)
+ChromeSearchRule = makeContextualRule("ChromeSearch", _mapping, _extras, _defaults, ruleType=RuleType.TERMINAL)
 ChromeSearchRule.context.addRequirement(IsChrome)
 
 _mapping  = {
@@ -54,8 +54,6 @@ _mapping  = {
     "forward [<n>]"                 : Key("a-right:%(n)d"),
     "refresh"                       : Key("F5"),
     "reopen tab"                    : Key("cs-t"),
-    "reload"                        : Key("c-r"),
-    "refresh"                       : Key("c-r"),
     "zoom in [<n>]"                 : Key("c-plus:%(n)d"),
     "zoom out [<n>]"                : Key("c-minus:%(n)d"),
     # these are provided by the 'tabloid' extension

@@ -1,7 +1,19 @@
 from Actions import Key, Text
-from protocol import Integer, Dictation
+from protocol import Integer, Dictation, RuleType
 from requirements.Emacs import NotEmacs
 from rules.ContextualRule import makeContextualRule
+
+_mapping = {
+    "find [<search_terms>]" : Key("c-f") + Text("%(search_terms)s"),
+}
+
+_extras = [
+    Dictation("search_terms"),
+]
+
+CUAFindRule = makeContextualRule("CUAFind", _mapping, _extras, {},
+                                 ruleType=RuleType.TERMINAL)
+CUAFindRule.context.addRequirement(NotEmacs)
 
 _mapping = {
     "copy"                  : Key("c-c"),
@@ -14,7 +26,6 @@ _mapping = {
     "next form"             : Key("tab"),
     "previous form"         : Key("s-tab"),
     "axe"                   : Key("escape"),
-    "find [<search_terms>]" : Key("c-f") + Text("%(search_terms)s"),
     "find next [<n>]"       : Key("F3:%(n)d"),
     "find previous [<n>]"   : Key("s-F3:%(n)d"),
     "leaf [<n>]"            : Key("pgdown:%(n)d"),
@@ -33,7 +44,6 @@ _mapping = {
 
 _extras = [
     Dictation("text"),
-    Dictation("search_terms"),
     Integer("n", 2, 20),
     Integer("big", 0, 2**14),
 ]
