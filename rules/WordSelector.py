@@ -233,7 +233,7 @@ class WordSelector(object):
         currentSelection = self._currentChoice()
         try:
             idx = candidates.index(currentSelection)
-            self._select(candidates[(idx+1) % len(candidates)])
+            self._select(extras[self._actionRuleRefName], candidates[(idx+1) % len(candidates)])
             return
         except ValueError:
             pass
