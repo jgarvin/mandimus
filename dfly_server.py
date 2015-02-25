@@ -58,7 +58,7 @@ class DragonflyThread(DragonflyNode):
 
     def onWordList(self, ev):
         # We track whether word lists have changed in the server class because
-        # the classes generateing the WordListEvents are not able to detect if
+        # the classes generating the WordListEvents are not able to detect if
         # sending fails.
         if ev.name in self.lastWordList and self.lastWordList[ev.name] == ev.words:
             return

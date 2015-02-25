@@ -83,4 +83,3 @@ _symbolActions = ["toke"] + [w + " toke" for w in _actions]
 _emacsWordNameSelector = EmacsWordNames("EmacsWordNames", _wordActions, EmacsWordEvent)
 _emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", _symbolActions, EmacsSymbolEvent)
 
-

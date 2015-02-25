@@ -30,12 +30,14 @@ class WordSelector(object):
         self.ruleType = ruleType
         self.allowNoChoice = allowNoChoice
         getLoop().subscribeEvent(ConnectedEvent, self._sendWords)
-        self.rule = None
         self.actionRule = None
-        # self.words is a list of sets, where each index means there
-        # is a word that occurs in that place in a symbol, so if "fooBar"
-        # is a symbol, then words[0] will contain "foo", and words[1]
-        # will contain "bar".
+        self.wordRule = None
+        self.rule = None
+        # self.words is a list of lists of sets where:
+        # self.words[phraseLength][wordIndex] = set() of words
+        # So if "foo bar" is a valid phrase, then it contains:
+        # self.words[2][0] == "foo"
+        # self.words[2][1] == "bar"
         self.words = []
         # self.selectionMap is a list of tuples where the first element
         # is a list of words in order that map to the second element in
@@ -54,27 +56,50 @@ class WordSelector(object):
     def _update(self, choices):
         self.words = []
         self.selectionMap = []
+        count = 0
         for n in choices:
             choiceWords = self._extractWords(n)
+
+            # If a phrase is too long, we split up the parts we can
+            # and dump the rest in the last list ref. So if the limit
+            # is 3 and "FooBarBuzzKillTon" comes in, we get the word
+            # list -> ["Foo", "Bar", "Buzz Kill Ton"]
+            if len(choiceWords) > self.MAX_SUBWORDS:
+                individualWords = choiceWords[:self.MAX_SUBWORDS]
+                rest = " ".join(choiceWords[self.MAX_SUBWORDS:])
+                choiceWords = individualWords + [rest]
+            
+            count += len(choiceWords)
             while len(choiceWords) > len(self.words):
-                self.words.append(set())
+                self.words.append([])
+            while len(choiceWords) > len(self.words[len(choiceWords)-1]):
+                self.words[len(choiceWords)-1].append(set())
+
             for i, w in enumerate(choiceWords):
-                self.words[i].add(w)
+                self.words[len(choiceWords)-1][i].add(w)
             self.selectionMap.append((choiceWords, n))
-        log.info("New words [%d] for %s :: %s: [%s]" % (len(self.words), self.name, type(self), self.words))
+
+        for i in range(len(self.words)):
+            for j in range(len(self.words[i])):
+                if self.words[i][j]:
+                    log.info("%s New words %dx%d len: [%d] set: [%s]" % (self.name, i, j, len(self.words[i][j]), self.words[i][j]))
+        log.info("%s word count: [%d]" % (self.name, count))
+        # log.info("New words [%d] for %s :: %s: [%s]" % (count, self.name, type(self), self.words))
         self._sendWords()
 
-    @property
-    def _wordListRefName(self):
-        return self.name + "Word"
+    def _wordListRefName(self, x, y):
+        return self.name + "Word" + ("%dx%d" % (x, y))
 
-    @property
-    def _wordListName(self):
-        return "Master" + self.name + "List"
+    def _wordListName(self, x, y):
+        return "Master" + self.name + "List" + ("%dx%d" % (x, y))
 
     @property
     def _wordRuleName(self):
         return self.name + "WordRule"
+
+    @property
+    def _wordRuleRefName(self):
+        return self.name + "WordRuleRef"
 
     @property
     def _actionRuleName(self):
@@ -91,33 +116,53 @@ class WordSelector(object):
     @property
     def _ruleName(self):
         return self.name + "Rule"
-
+    
     def _getWords(self, extras):
         words = []
-        for i in range(self.MAX_SUBWORDS):
-            if self._wordListRefName + str(i) in extras:
-                words.append(extras[self._wordListRefName + str(i)])
-
+        log.info("Getting words from: [%s]" % extras)
+        for i in range(len(self.words)):
+            for j in range(len(self.words[i])):
+                if not self._wordRuleRefName in extras:
+                    log.info("%s not in dict" % self._wordRuleRefName)
+                    break
+                wordDict = extras[self._wordRuleRefName]
+                log.info("Checking %d %d %s" % (i, j, self._wordListRefName(i, j)))
+                if self._wordListRefName(i, j) in wordDict:
+                    words.append(wordDict[self._wordListRefName(i, j)])
         return words
-
-    def _buildRule(self):
+    
+    def _buildRule(self):                
         mapping = {}
         for command in self.cmdWords:
             mapping[command] = None
         self.actionRule = makeHashedRule(self._actionRuleName, mapping, ruleType=RuleType.INDEPENDENT)
         pushEvent(RuleRegisterEvent(self.actionRule))
 
-        extras = [RuleRef(self.actionRule, self._actionRuleRefName)]
+        mapping = {}
+        extras = []
         for i in range(self.MAX_SUBWORDS):
-            extras.append(ListRef(self._wordListName + str(i), self._wordListRefName + str(i), []))
+            phrase = []
+            for j in range(i+1):
+                phrase.append("[<" + self._wordListRefName(i, j) + ">]")
+                extras.append(ListRef(self._wordListName(i, j), self._wordListRefName(i, j), []))
+            phrase = " ".join(phrase)
+            mapping[phrase] = None
 
-        phrase = ["<%s>" % self._actionRuleRefName]
-        for i in range(self.MAX_SUBWORDS):
-            phrase.append("[<" + self._wordListRefName + str(i) + ">]")
-            
+        self.wordRule = makeHashedRule(self._wordRuleName, mapping, extras, ruleType=RuleType.INDEPENDENT)
+        pushEvent(RuleRegisterEvent(self.wordRule))
+
+        wordRulePart = "<%s>" % self._wordRuleRefName
+        if self.allowNoChoice:
+           wordRulePart = "[%s]" % wordRulePart 
+
+        phrase = ("<%s>" % self._actionRuleRefName) + " " + wordRulePart
         mapping = {
-            " ".join(phrase) : self._onSelection
+            phrase : self._onSelection
         }
+        extras = [
+            RuleRef(self.actionRule, self._actionRuleRefName),
+            RuleRef(self.wordRule, self._wordRuleRefName),
+        ]
 
         self.rule = makeContextualRule(self._ruleName, mapping, extras, ruleType=self.ruleType)
 
@@ -197,8 +242,9 @@ class WordSelector(object):
         self._select(extras[self._actionRuleRefName], candidates[0])
 
     def _sendWords(self, ev=None):
-        for i, wordSet in enumerate(self.words):
-            pushEvent(WordListEvent(self._wordListName + str(i), wordSet))
+        for i in range(len(self.words)):
+            for j in range(len(self.words[i])):
+                pushEvent(WordListEvent(self._wordListName(i, j), self.words[i][j]))
 
     def activate(self):
         log.info("Activating selector [%s]" % type(self))
