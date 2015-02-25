@@ -43,7 +43,6 @@ _mapping = {
 }
 
 _extras = [
-    Dictation("text"),
     Integer("n", 2, 20),
     Integer("big", 0, 2**14),
 ]

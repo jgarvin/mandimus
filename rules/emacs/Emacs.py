@@ -71,7 +71,6 @@ class Mark(Cmd):
 
 _mapping = {
     "command"                        : Key("c-x,c-m"),
-    #"command <text>"                : Key("c-x,c-m") + Text("%(text)s") + Key("enter"),
     "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
     "exit debug"                     : Key("c-rbracket"),
     "debug function"                 : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
@@ -88,8 +87,6 @@ _mapping = {
     "new frame [<n>]"                : Cmd("(make-frame-command)"),
     "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
 
-    "search [<text>]"                : Key('c-s') + Text("%(text)s"),
-    "lurch [<text>]"                 : Key('c-r') + Text("%(text)s"),
     "list buffs"                     : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
 
     # projectile commands
@@ -123,9 +120,6 @@ _mapping = {
     "destroy buff"                   : Key("c-x,k,enter"),
     "folder"                         : Key("c-x,c-j"),
 
-    "replace"                        : Key('as-percent'),
-    "replace <match> with <replace>" : Key('as-percent') + Text("%(match)s") + Key('enter') + Text("%(replace)s"),
-
     "open client log"                : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
     "open server log"                : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
@@ -148,6 +142,14 @@ _mapping = {
 
 EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.INDEPENDENT)
 EmacsIsolatedRule.context.addRequirement(IsEmacs)
+
+_mapping = {
+    "search [<text>]"                : Key('c-s') + Text("%(text)s"),
+    "lurch [<text>]"                 : Key('c-r') + Text("%(text)s"),
+}
+
+EmacsSearchRule = makeContextualRule("EmacsSearch", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.TERMINAL)
+EmacsSearchRule.context.addRequirement(IsEmacs)
 
 _mapping  = {
     # general commands
@@ -173,6 +175,8 @@ _mapping  = {
     "ace"                          : Key("c-c,space"),
     "ace care"                     : Key("c-u,c-c,space"),
 
+    "replace"                      : Key('as-percent'),
+
     "home"                         : Key("c-a"),
     "edge"                         : Cmd("(end-of-line)"),
     "cliff"                        : Cmd("(md-go-to-cliff)"),
@@ -197,7 +201,7 @@ _mapping  = {
     "slap [<n>]"                   : Key("enter:%(n)d"),
     "pals [<n>]"                   : Cmd("(md-new-line-anywhere)"),
     "open [<n>]"                   : Key("c-o:%(n)d"),
-    "nepo [<n>]"                  : Cmd("(md-open-line-anywhere)"),
+    "nepo [<n>]"                   : Cmd("(md-open-line-anywhere)"),
 
     # mark commands
     "mark [<n>]"                   : Key("c-space:%(n)d"),
