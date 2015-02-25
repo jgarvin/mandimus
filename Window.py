@@ -130,12 +130,15 @@ class Job(object):
     def __init__(self, cmd):
         # async launch command
         self.s = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.out = None
+        self.err = None
 
     @property
     def result(self):
         # force command to finish, return result
-        (out, err) = self.s.communicate()
-        return self._postprocess(out)
+        if self.out is None:
+            (self.out, self.err) = self.s.communicate()
+        return self._postprocess(self.out)
 
     def _postprocess(self, data):
         return data
