@@ -10,7 +10,7 @@ from rules.WordSelector import WordSelector
 class WindowNameSelector(WordSelector):
     def __init__(self):
         getLoop().subscribeEvent(WindowListEvent, self._onWindowList)
-        WordSelector.__init__(self, "WindowNames", "win")
+        WordSelector.__init__(self, "WindowNames", "win", allowNoChoice=False)
         self.rule.activate() # always on
 
     def _onWindowList(self, ev):

@@ -16,7 +16,7 @@ from copy import copy
 from util import enum
 
 class WordSelector(object):
-    MAX_SUBWORDS = 5
+    MAX_SUBWORDS = 6
 
     def __init__(self, name, cmdWords,
                  allowNoChoice=True,
@@ -65,8 +65,8 @@ class WordSelector(object):
             # is 3 and "FooBarBuzzKillTon" comes in, we get the word
             # list -> ["Foo", "Bar", "Buzz Kill Ton"]
             if len(choiceWords) > self.MAX_SUBWORDS:
-                individualWords = choiceWords[:self.MAX_SUBWORDS]
-                rest = " ".join(choiceWords[self.MAX_SUBWORDS:])
+                individualWords = choiceWords[:self.MAX_SUBWORDS-1]
+                rest = " ".join(choiceWords[self.MAX_SUBWORDS-1:])
                 choiceWords = individualWords + [rest]
             
             count += len(choiceWords)
@@ -120,16 +120,11 @@ class WordSelector(object):
     def _getWords(self, extras):
         words = []
         log.info("Getting words from: [%s]" % extras)
-        for i in range(len(self.words)):
-            for j in range(len(self.words[i])):
-                if not self._wordRuleRefName in extras:
-                    log.info("%s not in dict" % self._wordRuleRefName)
-                    break
-                wordDict = extras[self._wordRuleRefName]
-                log.info("Checking %d %d %s" % (i, j, self._wordListRefName(i, j)))
-                if self._wordListRefName(i, j) in wordDict:
-                    words.append(wordDict[self._wordListRefName(i, j)])
-        return words
+        if self._wordRuleRefName in extras:
+            return extras[self._wordRuleRefName]["words"]
+        else:
+            log.info("returning none")
+            return None
     
     def _buildRule(self):                
         mapping = {}
@@ -178,6 +173,8 @@ class WordSelector(object):
                 log.error("Command [%s] must be used with a choice." % extras[self._actionRuleRefName]["words"])
                 pushEvent(MicrophoneEvent("failure"))
             return
+
+        log.info("Got inside selecton with words: [%s]" % words)
 
         # Selection process works as follows
         # -Not all words are required to be given, only a subset
