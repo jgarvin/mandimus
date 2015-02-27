@@ -28,10 +28,10 @@ class BufferNames(WordSelector):
         return buf.strip().strip('"')
 
     def _select(self, cmd, choice):
-        runEmacsCmd("(switch-to-buffer \"%s\")" % choice)
+        runEmacsCmd("(switch-to-buffer \"%s\")" % choice, queryOnly=False)
 
     def _noChoice(self):
-        runEmacsCmd("(switch-to-buffer nil)")
+        runEmacsCmd("(switch-to-buffer nil)", queryOnly=False)
 
 # TODO: In the future should probably just have buffers sent with derived-mode info
 # so that we can filter more accurately based on that. Technically this punctuation

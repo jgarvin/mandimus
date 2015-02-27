@@ -111,7 +111,7 @@ class CommandClient(object):
         out = out.decode('utf-8')
         return out
 
-    def runCmd(self, command, inFrame=True, dolog=False, allowError=False):
+    def runCmd(self, command, inFrame=True, dolog=False, allowError=False, queryOnly=True):
         """Run command optionally in particular frame,
         set True for active frame."""
 
@@ -130,6 +130,10 @@ class CommandClient(object):
 
         if inFrame:
             wrapper += ['(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) {})']
+
+        # See elisp function's documentation
+        # if not queryOnly:
+        #     wrapper += ['(let ((result {})) (md-generate-noop-input-event) result)']
 
         for w in reversed(wrapper):
             command = w.format(command)
@@ -153,9 +157,9 @@ class CommandClient(object):
 
 clientInst = CommandClient()
 
-def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False):
+def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False, queryOnly=True):
     global clientInst
-    return clientInst.runCmd(command, inFrame, dolog, allowError)
+    return clientInst.runCmd(command, inFrame, dolog, allowError, queryOnly)
 
 class Minibuf(Action):
     def __call__(self, extras={}):
@@ -166,9 +170,10 @@ class Minibuf(Action):
 class Cmd(Action):
     classLog = False
     
-    def __init__(self, data=None, log=False):
+    def __init__(self, data=None, log=False, queryOnly=False):
         Action.__init__(self, data)
         self.log = log
+        self.queryOnly = queryOnly
         # self.log = True
     
     def _fillData(self, extras):
@@ -199,7 +204,7 @@ class Cmd(Action):
             log.info("%s lisp code: [%s]" % (type(self).__name__, code))
             
         for i in range(self._repetitions(extras)):
-            runEmacsCmd(code, dolog=(self.log or self.classLog))
+            runEmacsCmd(code, dolog=(self.log or self.classLog), queryOnly=self.queryOnly)
 
 class CharCmd(Cmd):
     classLog = False

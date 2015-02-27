@@ -137,7 +137,7 @@ class WordSelector(object):
             for j in range(i+1):
                 phrase = []
                 for k in range(j, self.MAX_SUBWORDS):
-                    optional = (k != j) or self.allowNoChoice
+                    optional = (k != j)
                     refString = "<" + self._wordListRefName(i, k) + ">"
                     if optional:
                         refString = "[%s]" % refString

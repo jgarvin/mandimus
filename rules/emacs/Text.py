@@ -24,8 +24,7 @@ class EmacsText(Text):
         if inSearchMode or inMiniBuffer:
             Text._print(self, words)
         else:
-            #runEmacsCmd("(undo-boundary)")
             runEmacsCmd("(md-insert-text \"%s\" %s %s)" % (words, emacsBool(self.spaceCheck),
-                                                           emacsBool(self.capitalCheck)), dolog=True)
-            #runEmacsCmd("(undo-boundary)")
- 
+                        emacsBool(self.capitalCheck)), dolog=True,
+                        queryOnly=False)
+            

@@ -31,6 +31,6 @@ class ProjectFileNames(WordSelector):
         runEmacsCmd(_openProjetileFileEl % choice)
 
     def _noChoice(self):
-        runEmacsCmd("(switch-to-buffer nil)")                
+        runEmacsCmd("(switch-to-buffer nil)", queryOnly=False)                
 
 _projectFileNameSelector = ProjectFileNames("ProjectFileNames", "file")
