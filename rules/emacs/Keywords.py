@@ -1,7 +1,7 @@
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
-from rules.emacs.Cmd import Cmd
+from rules.emacs.Cmd import Cmd, runEmacsCmd
 from rules.emacs.Text import EmacsText
 from protocol import makeHashedRule, RuleType, RuleRef
 from EventLoop import pushEvent
@@ -9,7 +9,6 @@ from EventList import RuleRegisterEvent
 
 _mapping = {
     "key" : None,
-    "new" : None,
     "come key" : None,
     "go key" : None,
 }
@@ -30,8 +29,6 @@ class KeywordCmd(Cmd):
         writtenKeyword = self.writtenForms[spokenKeyword]
         if command == "key":
             EmacsText("%s" % writtenKeyword, lower=False)()
-        elif command == "new":
-            return "(md-insert-snippet \"%s\")" % writtenKeyword
         elif command == "come key":
             return "(md-go-to-previous \"%s\")" % writtenKeyword
         elif command == "go key":
@@ -40,47 +37,47 @@ class KeywordCmd(Cmd):
             assert False
 
 def normalizeKeywords(keywords):
-    return [x if type(x) != str else (x, x) for x in keywords]
+    return [x if type(x) not in (str, unicode) else (x, x) for x in keywords]
 
-def makeKeywordListRule(modeName, keywords, includeDefaultOps):
-    if includeDefaultOps:
-        defaultOperators = [
-            ["+", "plus"],
-            ["-", "minus"],
-            ["*", "times"],
-            ["/", "divide"],
-            ["%", "mod"],
-        ]
-        keywords.extend([x for x in defaultOperators if x not in keywords]) 
-
+def makeKeywordListRule(modeName, keywords):
     keywords = normalizeKeywords(keywords)
     _mapping = { k[1] : k[0] for k in keywords }
     return makeHashedRule(modeName + "-keyword-list", _mapping, ruleType=RuleType.INDEPENDENT)
 
-def makeKeywordRule(modes, keywords, includeDefaultOps=True):
-    if type(modes) in (list, set, tuple):
+class KeywordRule(object):
+    def __init__(self, modes, keywords):
+        if type(modes) in (str, unicode):
+            modes = [modes]
+        self.modes = modes
+        self.keywords = normalizeKeywords(keywords)
+
+        self.rule = self._buildRule(self.modes, self.keywords)
+        self.tellEmacs()
+
+    def _buildRule(self, modes, keywords):
         # choice is arbitrary, just for naming
         modeName = modes[0]
-    else:
-        modeName = modes
 
-    keywords = normalizeKeywords(keywords)
+        listRule = makeKeywordListRule(modeName, keywords)
+        pushEvent(RuleRegisterEvent(listRule))
 
-    listRule = makeKeywordListRule(modeName, keywords, includeDefaultOps)
-    pushEvent(RuleRegisterEvent(listRule))
+        mapping = {
+            "<mode_verb_rule> <keyword>" : KeywordCmd(keywords),
+        }
 
-    mapping = {
-        "<mode_verb_rule> <keyword>" : KeywordCmd(keywords),
-    }
+        extras = [
+            RuleRef(VerbRule, "mode_verb_rule"),
+            RuleRef(listRule, "keyword"),
+        ]
 
-    extras = [
-        RuleRef(VerbRule, "mode_verb_rule"),
-        RuleRef(listRule, "keyword"),
-    ]
+        KeywordRule = makeContextualRule(modeName + "-keyword-rule", mapping, extras)
+        KeywordRule.context.addRequirement(IsEmacs)
+        KeywordRule.context.addRequirement(ModeRequirement(modes=modes))
+        return KeywordRule
 
-    KeywordRule = makeContextualRule(modeName + "-keyword-rule", mapping, extras)
-    KeywordRule.context.addRequirement(IsEmacs)
-    KeywordRule.context.addRequirement(ModeRequirement(modes=modes))
-    return KeywordRule
+    def tellEmacs(self):
+        for m in self.modes:
+            keywordString = "'(" + " ".join([("\"%s\"" % x[0]) for x in self.keywords]) + ")"
+            runEmacsCmd("(md-register-mode-keywords '%s %s)" % (m, keywordString))
 
 # something else will handle the pushing and activating...

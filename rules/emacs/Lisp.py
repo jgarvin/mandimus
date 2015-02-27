@@ -4,7 +4,7 @@ from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
 from rules.emacs.Cmd import Cmd
-from rules.emacs.Keywords import makeKeywordRule
+from rules.emacs.Keywords import KeywordRule
     
 keywords = [
     ["1-", "one minus"],
@@ -143,4 +143,4 @@ keywords = [
     "while",
 ]
 
-LispKeywordRule = makeKeywordRule("emacs-lisp-mode", keywords)
+LispKeywordRule = KeywordRule("emacs-lisp-mode", keywords)

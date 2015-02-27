@@ -1,5 +1,6 @@
 import mdlog
 log = mdlog.getLogger(__name__)
+from rules.ContextualRule import makeContextualRule
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from rules.WordSelector import WordSelector
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
@@ -83,3 +84,10 @@ _symbolActions = ["toke"] + [w + " toke" for w in _actions]
 _emacsWordNameSelector = EmacsWordNames("EmacsWordNames", _wordActions, EmacsWordEvent)
 _emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", _symbolActions, EmacsSymbolEvent)
 
+_mapping = {
+    "again word" : Cmd("(md-cycle-token 'word)"),
+    "again toke" : Cmd("(md-cycle-token 'symbol)"),
+}
+
+ControlWordsRule = makeContextualRule("ControlWordsRule", _mapping)
+ControlWordsRule.context.addRequirement(IsEmacs)

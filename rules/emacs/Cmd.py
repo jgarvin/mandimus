@@ -171,9 +171,17 @@ class Cmd(Action):
         self.log = log
         # self.log = True
     
+    def _fillData(self, extras):
+        """Normally extras contains the full structure of the tree,
+        but to make it so you can write self.data more succintly
+        we substitute in the \"words\" for each entry in the
+        extras dictionary that has one."""
+        e = {k : (" ".join(v["words"])
+                  if type(v) == dict and "words" in v else v) for k, v in extras.items()}
+        return self.data % e
+
     def _lisp(self, extras):
-        fulldata = (self.data % extras)
-        return fulldata    
+        return self._fillData(extras)
 
     def _repetitions(self, extras={}):
         repeat = 1

@@ -4,7 +4,7 @@ from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
 from rules.emacs.Cmd import Cmd
-from rules.emacs.Keywords import makeKeywordRule
+from rules.emacs.Keywords import KeywordRule
 from rules.emacs.Text import EmacsText
 
 _keywords = [
@@ -73,7 +73,7 @@ _keywords = [
     ["|", "pipe"],
 ] 
 
-ShellKeywordRule = makeKeywordRule(["shell-mode", "sh-mode"], _keywords)
+ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
     
 _mapping = {
     "back [<n>]"        : Key("b,enter:%(n)d"),

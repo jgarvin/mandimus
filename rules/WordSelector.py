@@ -119,11 +119,9 @@ class WordSelector(object):
     
     def _getWords(self, extras):
         words = []
-        log.info("Getting words from: [%s]" % extras)
         if self._wordRuleRefName in extras:
             return extras[self._wordRuleRefName]["words"]
         else:
-            log.info("returning none")
             return None
     
     def _buildRule(self):                
@@ -136,13 +134,18 @@ class WordSelector(object):
         mapping = {}
         extras = []
         for i in range(self.MAX_SUBWORDS):
-            phrase = []
             for j in range(i+1):
-                phrase.append("[<" + self._wordListRefName(i, j) + ">]")
-                extras.append(ListRef(self._wordListName(i, j), self._wordListRefName(i, j), []))
-            phrase = " ".join(phrase)
-            mapping[phrase] = None
-
+                phrase = []
+                for k in range(j, self.MAX_SUBWORDS):
+                    optional = (k != j) or self.allowNoChoice
+                    refString = "<" + self._wordListRefName(i, k) + ">"
+                    if optional:
+                        refString = "[%s]" % refString
+                    phrase.append(refString)
+                    extras.append(ListRef(self._wordListName(i, k), self._wordListRefName(i, k), []))
+                phrase = " ".join(phrase)
+                mapping[phrase] = None                
+        
         self.wordRule = makeHashedRule(self._wordRuleName, mapping, extras, ruleType=RuleType.INDEPENDENT)
         pushEvent(RuleRegisterEvent(self.wordRule))
 
@@ -174,8 +177,6 @@ class WordSelector(object):
                 pushEvent(MicrophoneEvent("failure"))
             return
 
-        log.info("Got inside selecton with words: [%s]" % words)
-
         # Selection process works as follows
         # -Not all words are required to be given, only a subset
         # -But all candidates must include all given words in given order
@@ -197,7 +198,12 @@ class WordSelector(object):
             revWinWords = list(reversed(winWords))
             try:
                 for w in reversed(words):
-                    idx = revWinWords.index(w)
+                    if lastIdx:
+                        # start at index we last left off at so we can
+                        # enforce word order
+                        idx = revWinWords.index(w, lastIdx)
+                    else:
+                        idx = revWinWords.index(w)
                     if lastIdx is not None:
                         # we subract one because there should be no
                         # penalty if the words are adjacent.
@@ -218,12 +224,12 @@ class WordSelector(object):
         # sort by total hole size
         #candidates.sort(key=lambda x: (x[0], x[1]))
         candidates.sort()
-        log.info("candidates: [%s]" % candidates)
+        log.debug("candidates: [%s]" % candidates)
 
         # remove hole sizes leaving just the windows
         candidates = [c[-1] for c in candidates]
 
-        log.info("selectionMap: [%s]" % self.selectionMap)
+        log.debug("selectionMap: [%s]" % self.selectionMap)
 
         # check if the current window is a candidate. if so
         # just cycle through to the next best scoring candidate.
@@ -267,5 +273,6 @@ class WordSelector(object):
 
     def _noChoice(self):
         return None
+
 
 

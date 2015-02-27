@@ -4,7 +4,7 @@ from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
 from rules.emacs.Cmd import Cmd
-from rules.emacs.Keywords import makeKeywordRule
+from rules.emacs.Keywords import KeywordRule
 
 import keyword
 
@@ -29,4 +29,4 @@ keywords = [
     ["__name__", "name"], ["str", "string"], "unicode",
 ] + keyword.kwlist
 
-PythonKeywordRule = makeKeywordRule(["python-mode", "inferior-python-mode"], keywords)
+PythonKeywordRule = KeywordRule(["python-mode", "inferior-python-mode"], keywords)

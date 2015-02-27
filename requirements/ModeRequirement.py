@@ -1,4 +1,4 @@
-from EventList import FocusChangeEvent, MajorModeEvent
+from EventList import FocusChangeEvent, MajorModeEvent, EmacsConnectedEvent
 from EventLoop import getLoop, pushEvent
 from rules.emacs.Cmd import runEmacsCmd, Cmd
 from requirements.Requirement import Requirement
@@ -18,8 +18,14 @@ def _updateMajorMode(ev):
     _oldMajorMode = _majorMode
     
 def _getMajorMode():
+    global _majorMode
     return _majorMode
 
+def _clearMajorMode(ev):
+    global _oldMajorMode
+    _oldMajorMode = None
+
+getLoop().subscribeEvent(EmacsConnectedEvent, _clearMajorMode, priority=0)
 getLoop().subscribeEvent(FocusChangeEvent, _updateMajorMode, priority=0)
 
 class ModeRequirement(Requirement):
