@@ -20,6 +20,8 @@ import select
 from protocol import RuleType
 from copy import copy
 
+FAIL_ON_ERROR = True
+
 badWindows = {
     "Desktop",
     ".*Edge Panel.*",
@@ -111,6 +113,8 @@ class MainThread(object):
                 except Exception:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+                    if FAIL_ON_ERROR:
+                        raise
                     continue
                     
     def put(self, p):
@@ -129,6 +133,8 @@ class MainThread(object):
                 except Exception as e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
+                    if FAIL_ON_ERROR:
+                        raise
                     continue
 
     def drainEvents(self):
@@ -220,7 +226,8 @@ if __name__ == "__main__":
             log.info("Couldn't import %s" % module)
             exc_type, exc_value, exc_traceback = sys.exc_info()
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
-            # raise
+            if FAIL_ON_ERROR:
+                raise
 
 
     main()

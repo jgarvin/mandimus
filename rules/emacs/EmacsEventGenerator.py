@@ -60,7 +60,10 @@ class EmacsEventGenerator(object):
             return
         self.lastOutput = newOutput
         #log.info("New output!")
-        pushEvent(self.eventType(newOutput))
+        pushEvent(self._makeEvent(newOutput))
+
+    def _makeEvent(self, newOutput):
+        return self.eventType(newOutput)
 
     def _postProcess(self, output):
         lst = grammar.getStringList(output)

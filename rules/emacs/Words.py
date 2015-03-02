@@ -34,7 +34,7 @@ emacsSymbolGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymb
 class EmacsWordNames(WordSelector):
     def __init__(self, name, cmdWords, eventType):
         WordSelector.__init__(self, name, cmdWords, allowNoChoice=False,
-                              ruleType=RuleType.SERIES)
+                              ruleType=RuleType.TERMINAL)
         self.rule.context.addRequirement(IsEmacs)
         getLoop().subscribeEvent(eventType, self._onEmacsWord)
 

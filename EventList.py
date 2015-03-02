@@ -12,7 +12,7 @@ WordEvent = namedtuple("WordEvent", "words")
 WordListEvent = namedtuple("WordListEvent", "name words")
 
 # emacs events
-BufferListEvent = namedtuple("BufferListEvent", "choices") 
+BufferListEvent = namedtuple("BufferListEvent", "query choices") 
 EmacsConnectedEvent = namedtuple("EmacsConnectedEvent", [])
 EmacsSymbolEvent = namedtuple("EmacsSymbolEvent", "choices")
 EmacsWordEvent = namedtuple("EmacsWordEvent", "choices")

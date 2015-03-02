@@ -510,8 +510,6 @@ class DragonflyClient(DragonflyNode):
         self.wordLists = {}
 
     def dumpOther(self):
-        # on disconnect unload all the rules
-        self.pendingRules = {}
         self.lastMicState = None
         DragonflyNode.dumpOther(self)
 

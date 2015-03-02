@@ -56,7 +56,7 @@ class WordSelector(object):
     def _update(self, choices):
         self.words = []
         self.selectionMap = []
-        count = 0
+        allWords = set()
         for n in choices:
             choiceWords = self._extractWords(n)
 
@@ -69,7 +69,7 @@ class WordSelector(object):
                 rest = " ".join(choiceWords[self.MAX_SUBWORDS-1:])
                 choiceWords = individualWords + [rest]
             
-            count += len(choiceWords)
+            allWords.update(set(choiceWords))
             while len(choiceWords) > len(self.words):
                 self.words.append([])
             while len(choiceWords) > len(self.words[len(choiceWords)-1]):
@@ -83,7 +83,7 @@ class WordSelector(object):
             for j in range(len(self.words[i])):
                 if self.words[i][j]:
                     log.info("%s New words %dx%d len: [%d] set: [%s]" % (self.name, i, j, len(self.words[i][j]), self.words[i][j]))
-        log.info("%s word count: [%d]" % (self.name, count))
+        log.info("%s word count: [%d]" % (self.name, len(allWords)))
         # log.info("New words [%d] for %s :: %s: [%s]" % (count, self.name, type(self), self.words))
         self._sendWords()
 

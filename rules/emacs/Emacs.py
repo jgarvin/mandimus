@@ -153,7 +153,7 @@ EmacsSearchRule.context.addRequirement(IsEmacs)
 
 _mapping  = {
     # general commands
-    "axe [<n>]"                    : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))"),
+    "axe [<n>]"                    : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
     "super axe [<n>]"              : Key("c-g:%(n)d"),
     "eval"                         : Key("c-x,c-e"),
     "start macro"                  : Key("F3"),
@@ -163,7 +163,9 @@ _mapping  = {
     "other [<n>] collapse"         : (Key("c-x, o") * Repeat(extra="n")) + Key("c-x, 1"),
 
     "help function"                : Key("c-h,f"),
+    "help function slap"           : Key("c-h,f,enter"),
     "help variable"                : Key("c-h,v"),
+    "help variable slap"           : Key("c-h,v,enter"),
     "help key"                     : Key("c-h,k"),
     "help mode"                    : Key("c-h,m"),
     "help docks"                   : Key("c-h,d"),
@@ -177,7 +179,7 @@ _mapping  = {
 
     "replace"                      : Key('as-percent'),
 
-    "home"                         : Key("c-a"),
+    "home [<n>]"                   : Key("c-a:%(n)d"),
     "edge"                         : Cmd("(end-of-line)"),
     "cliff"                        : Cmd("(md-go-to-cliff)"),
     "top side"                     : Key("a-langle"),

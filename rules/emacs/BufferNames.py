@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import mdlog
 log = mdlog.getLogger(__name__)
 from rules.emacs.Cmd import runEmacsCmd 
@@ -11,17 +14,39 @@ from EventList import BufferListEvent
 from requirements.Emacs import IsEmacs
 import string
 
-bufferListGen = EmacsEventGenerator("Buffer", "(mapcar 'buffer-name (buffer-list))", BufferListEvent)
+_bufferQueryTable = [
+    ("(md-get-buffers-in-modes 'dired-mode)", "folder"),
+    ("(md-get-buffers-in-modes 'comint-mode)", "shell"),
+    ("(md-get-buffers-in-modes 'erc-mode)", "channel"),
+    ("(md-get-special-buffers)", "special"),
+]
+
+_appendCmd = "(append %s)" % " ".join([e[0] for e in _bufferQueryTable])
+_allBuffQuery = "(md-all-buffers-except %s)" % _appendCmd
+
+_bufferQueryTable.append((_allBuffQuery, "buff"))
+
+class BufferEventGenerator(EmacsEventGenerator):
+    def __init__(self, name, query):
+        self.query = query
+        cmd = "(md-get-buffer-names %s)" % self.query
+        EmacsEventGenerator.__init__(self, name, cmd, BufferListEvent)
+
+    def _makeEvent(self, newOutput):
+        return self.eventType(self.query, newOutput)
 
 class BufferNames(WordSelector):
-    def __init__(self, name, cmdWord, filterFunc):
+    def __init__(self, name, cmdWord, query):
         WordSelector.__init__(self, name, cmdWord)
         self.rule.context.addRequirement(IsEmacs)
-        self.filterFunc = filterFunc
+        self.query = query
         getLoop().subscribeEvent(BufferListEvent, self._onBufferList)
 
     def _onBufferList(self, ev):
-        self._update(self.filterFunc(ev.choices))
+        log.info("Ev: [%s]" % (ev,))
+        if ev.query == self.query:
+            log.info("Name: [%s] query: [%s] buffers: [%s]" % (self.name, ev.query, ev.choices))
+            self._update(ev.choices)
 
     def _currentChoice(self):
         buf = runEmacsCmd("(buffer-name (current-buffer))")
@@ -33,25 +58,11 @@ class BufferNames(WordSelector):
     def _noChoice(self):
         runEmacsCmd("(switch-to-buffer nil)", queryOnly=False)
 
-# TODO: In the future should probably just have buffers sent with derived-mode info
-# so that we can filter more accurately based on that. Technically this punctuation
-# can be used in real unix filenames...
-
-def filterBuffs(choices):
-    punctuation = string.punctuation.replace("_", "") + " "
-    return [c for c in choices if not any(c.startswith(s) for s in punctuation)]
-
-def filterChannels(choices):
-    return [c for c in choices if c.startswith("#")]
-
-def filterShells(choices):
-    return [c for c in choices if c.startswith("$")]
-
-def filterSpecial(choices):
-    return [c for c in choices if c.startswith(("*", " *"))]
-
-def filterFolder(choices):
-    return [c for c in choices if c.startswith("!")]
+_generators = []
+_selectors = []
+for e in _bufferQueryTable:
+    _generators.append(BufferEventGenerator(e[1], e[0]))
+    _selectors.append(BufferNames(e[1] + "Names", e[1], e[0]))
 
 # Because uniquify buffer code will start naming things $shell<2>, $shell<3>,
 # but leaves the first shell as just $shell, we add this for voice command
@@ -61,9 +72,3 @@ _mapping = {
 }
 ShellOneRule = makeContextualRule("ShellOneRule", _mapping)
 ShellOneRule.context.addRequirement(IsEmacs)
-
-_bufferNameSelector = BufferNames("BufferNames", "buff", filterBuffs)
-_channelNameSelector = BufferNames("ChannelNames", "channel", filterChannels)
-_shellNameSelector = BufferNames("ShellNames", "shell", filterShells)
-_specialNameSelector = BufferNames("SpecialNames", "special", filterSpecial)
-_folderNameSelector = BufferNames("FolderNames", "folder", filterFolder)

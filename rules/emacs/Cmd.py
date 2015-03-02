@@ -132,8 +132,8 @@ class CommandClient(object):
             wrapper += ['(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) {})']
 
         # See elisp function's documentation
-        # if not queryOnly:
-        #     wrapper += ['(let ((result {})) (md-generate-noop-input-event) result)']
+        if not queryOnly:
+            wrapper += ['(let ((result {})) (md-generate-noop-input-event) result)']
 
         for w in reversed(wrapper):
             command = w.format(command)
