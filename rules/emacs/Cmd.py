@@ -213,6 +213,11 @@ class CharCmd(Cmd):
         char = emacsChar(char)
         return self.data % char
 
+class InsertString(Cmd):
+    def __init__(self, stringReturningElisp):
+        data = "(md-insert-text %s nil nil)" % stringReturningElisp
+        Cmd.__init__(self, data)
+
 def emacsChar(char):
     c = ["?"]
     # most characters don't need escaping, but some do
