@@ -3,6 +3,7 @@ log = mdlog.getLogger(__name__)
 from rules.emacs.Cmd import runEmacsCmd 
 from rules.WordSelector import WordSelector
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
+from requirements.ModeRequirement import ModeRequirement
 from wordUtils import extractWords
 from EventLoop import getLoop
 from EventList import NickEvent
@@ -14,8 +15,9 @@ nickListGen = EmacsEventGenerator("Nick", "md-active-erc-nicknames", NickEvent)
 
 class NickNames(WordSelector):
     def __init__(self, name, cmdWord):
-        WordSelector.__init__(self, name, cmdWord)
+        WordSelector.__init__(self, name, cmdWord, allowNoChoice=False)
         self.rule.context.addRequirement(IsEmacs)
+        self.rule.context.addRequirement(ModeRequirement(modes="erc-mode"))
         getLoop().subscribeEvent(NickEvent, self._onNickList)
 
     def _onNickList(self, ev):
@@ -36,7 +38,5 @@ class NickNames(WordSelector):
         #                     #detectBadConsonantPairs=True,
         #                     removeLeetSpeak=True)
 
-    def _noChoice(self):
-        Key("c-c,p,p,enter")()
 
 _nickNameSelector = NickNames("NickNames", "nick")

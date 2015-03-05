@@ -216,6 +216,7 @@ class FormatState(object):
         ur"{\left-curly-bracket" : ur"left curly bracket",
         ur"}\right-curly-bracket" : ur"right curly bracket",
         ur"&\ampersand" : ur"ampersand",
+        ur"\cap" : ur"cap",
         }
     
     formatting = {

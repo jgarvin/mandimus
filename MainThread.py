@@ -20,7 +20,7 @@ import select
 from protocol import RuleType
 from copy import copy
 
-FAIL_ON_ERROR = True
+FAIL_ON_ERROR = False
 
 badWindows = {
     "Desktop",
