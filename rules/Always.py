@@ -25,7 +25,7 @@ class PressKey(object):
         if self.force_shift and "cap" not in words:
             words = ["cap"] + words
         
-        repetitions = extras['n']
+        repetitions = extras['i']
         if "control" in words:
             keystring.append('c')
             foundModifier = True
@@ -45,12 +45,13 @@ class PressKey(object):
 
 _mapping = {
     'rep [<n>]'                                : RepeatPreviousAction(),
-    "[control] [alt] [cap] <charrule> [<n>]"   : PressKey(),
-    'scoot [<n>]'                              : Key("tab:%(n)d"),
-    'cap scoot [<n>]'                          : Key("s-tab:%(n)d"),
+    "[control] [alt] [cap] <charrule> [<i>]"   : PressKey(),
+    'scoot [<i>]'                              : Key("tab:%(i)d"),
+    'cap scoot [<i>]'                          : Key("s-tab:%(i)d"),
 }
 
 _extras = [
+    Integer("i", 2, 5),
     Integer("n", 2, 20),
     Integer("digit", 0, 10),
     Dictation("text"),

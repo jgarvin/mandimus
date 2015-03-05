@@ -30,10 +30,11 @@ class NickNames(WordSelector):
             EmacsText("%s" % choice, lower=False, capitalCheck=False)()
 
     def _extractWords(self, w):
-        return extractWords(w, translate={},
-                            useDict=True,
-                            #detectBadConsonantPairs=True,
-                            removeLeetSpeak=True)
+        return extractWords(w)
+        # return extractWords(w, translate={},
+        #                     useDict=True,
+        #                     #detectBadConsonantPairs=True,
+        #                     removeLeetSpeak=True)
 
     def _noChoice(self):
         Key("c-c,p,p,enter")()

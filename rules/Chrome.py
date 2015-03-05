@@ -54,8 +54,8 @@ _mapping  = {
     "forward [<n>]"                 : Key("a-right:%(n)d"),
     "refresh"                       : Key("F5"),
     "reopen tab"                    : Key("cs-t"),
-    "zoom in [<n>]"                 : Key("c-plus:%(n)d"),
-    "zoom out [<n>]"                : Key("c-minus:%(n)d"),
+    "magnify [<n>]"                 : Key("c-plus:%(n)d"),
+    "demagnify [<n>]"               : Key("c-minus:%(n)d"),
     # these are provided by the 'tabloid' extension
     # TODO                          : not necessary, cs-pgdown/pgup
     "move right [<n>]"              : Key("as-l:%(n)d"),
