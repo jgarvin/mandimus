@@ -45,17 +45,19 @@ ChromeSearchRule.context.addRequirement(IsChrome)
 
 _mapping  = {
     "new"                           : Key("c-t"),
+    "new window"                    : Key("c-n"),
+    "new incognito window"          : Key("cs-n"),
     "close [<n>]"                   : Key("c-w:%(n)d"),
     "address"                       : Key("c-l"),
     "pro [<n>]"                     : Key("c-tab:%(n)d"),
     "per [<n>]"                     : Key("cs-tab:%(n)d"),
     "(reopen tab | undo close tab)" : Key("cs-t"),
-    "back [<n>]"                    : Key("a-left:%(n)d"),
-    "forward [<n>]"                 : Key("a-right:%(n)d"),
+    "back [<i>]"                    : Key("a-left:%(n)d"),
+    "forward [<i>]"                 : Key("a-right:%(n)d"),
     "refresh"                       : Key("F5"),
     "reopen tab"                    : Key("cs-t"),
-    "magnify [<n>]"                 : Key("c-plus:%(n)d"),
-    "demagnify [<n>]"               : Key("c-minus:%(n)d"),
+    "magnify [<i>]"                 : Key("c-plus:%(n)d"),
+    "demagnify [<i>]"               : Key("c-minus:%(n)d"),
     # these are provided by the 'tabloid' extension
     # TODO                          : not necessary, cs-pgdown/pgup
     "move right [<n>]"              : Key("as-l:%(n)d"),
@@ -77,10 +79,12 @@ _mapping  = {
 _extras = [
     Dictation("text"),
     Integer("n", 2, 20),
+    Integer("i", 2, 8),
     ]
 
 _defaults = {
     'n' : 1,
+    'i' : 1,
     }
 
 ChromeRule = makeContextualRule("Chrome", _mapping, _extras, _defaults)

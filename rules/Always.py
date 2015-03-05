@@ -42,7 +42,7 @@ class PressKey(object):
         keystring.append(BaseRules.lookup(extras["charrule"], keyNames=True))
         for r in range(repetitions):
             Key(''.join(keystring))()
-
+  
 _mapping = {
     'rep [<n>]'                                : RepeatPreviousAction(),
     "[control] [alt] [cap] <charrule> [<i>]"   : PressKey(),
@@ -51,7 +51,7 @@ _mapping = {
 }
 
 _extras = [
-    Integer("i", 2, 5),
+    Integer("i", 2, 8),
     Integer("n", 2, 20),
     Integer("digit", 0, 10),
     Dictation("text"),
@@ -61,6 +61,7 @@ _extras = [
 
 _defaults = {
     "n": 1,
+    "i": 1,
 }
 
 AlwaysRule = makeContextualRule("Always", _mapping, _extras, _defaults)

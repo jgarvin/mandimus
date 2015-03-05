@@ -111,6 +111,10 @@ class ActionList(object):
             self.lst.append(other)
         return self
 
+    def __mul__(self, other):
+        assert isinstance(other, Repeat)
+        return RepeatAction(self, other.count, other.extra)
+
     def __call__(self, extras={}):
         for f in self.lst:
             f(extras)

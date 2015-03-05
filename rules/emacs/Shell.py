@@ -1,4 +1,4 @@
-from Actions import Key
+from Actions import Key, Repeat
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
@@ -9,7 +9,8 @@ from rules.emacs.Text import EmacsText
 
 _keywords = [
     "cat",
-    ["cd", "C D"],
+    ["cd", "CD"],
+    #["cd", "see D"],
     ["cp", "copy"],
     "date",
     ["/dev/null", "dev null"],
@@ -33,6 +34,7 @@ _keywords = [
     ["--help", "help"],
     "history",
     ["~", "home"],
+    "hostname",
     "if",
     ["ip", "I P"],
     "jobs",
@@ -60,12 +62,13 @@ _keywords = [
     "unfunction",
     "unset",
     "unsetopt",
+    ["/usr/bin/", "user bin"],
     "up",
     ["wc", "word count"],
     "which",
     "while",
     ["xargs", "X args"],
-    ["zsh", "zish"],
+    ["zsh", "Z shell"],
 
     [">", "stood out"],
     ["2>", "stood err"],
@@ -76,9 +79,9 @@ _keywords = [
 ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
     
 _mapping = {
-    "back [<n>]"        : Key("b,enter:%(n)d"),
-    "forward [<n>]"     : Key("f,enter:%(n)d"),
-    "ascend [<n>]"      : EmacsText("up") + Key("enter:%(n)d"),
+    "back [<i>]"        : Key("b,enter") * Repeat(extra="n"),
+    "forward [<i>]"     : Key("f,enter") * Repeat(extra="n"),
+    "ascend [<i>]"      : (EmacsText("up") + Key("enter")) * Repeat(extra="n"),
 }
 
 ShellRule = makeContextualRule("Shell", _mapping, emacsExtras, emacsDefaults)

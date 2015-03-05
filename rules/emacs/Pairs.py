@@ -67,7 +67,7 @@ class PairCmd(Cmd):
         return "(call-interactively '%s)" % func
 
 _mapping  = {
-    "<sexpFunction> [<sexpPair>] [<n>]" : PairCmd(),
+    "<sexpFunction> [<sexpPair>] [<i>]" : PairCmd(),
     "rewrap" : Cmd("(sp-rewrap-sexp)"),
 }
 

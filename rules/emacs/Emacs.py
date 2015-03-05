@@ -84,7 +84,7 @@ _mapping = {
     # window commands
     "destroy emacs window"           : Cmd("(delete-window)"),
 
-    "new frame [<n>]"                : Cmd("(make-frame-command)"),
+    "new frame [<i>]"                : Cmd("(make-frame-command)"),
     "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
 
     "list buffs"                     : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
@@ -153,14 +153,14 @@ EmacsSearchRule.context.addRequirement(IsEmacs)
 
 _mapping  = {
     # general commands
-    "axe [<n>]"                     : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
-    "super axe [<n>]"               : Key("c-g:%(n)d"),
+    "axe [<i>]"                     : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
+    "super axe [<i>]"               : Key("c-g:%(n)d"),
     "eval"                          : Key("c-x,c-e"),
     "start macro"                   : Key("F3"),
     "mack"                          : Key("F4"),
-    "other [<n>]"                   : Key("c-x,o") * Repeat(extra="n"),
+    "other [<i>]"                   : Key("c-x,o") * Repeat(extra="n"),
     "collapse"                      : Key("c-x, 1"),
-    "other [<n>] collapse"          : (Key("c-x, o") * Repeat(extra="n")) + Key("c-x, 1"),
+    "other [<i>] collapse"          : (Key("c-x, o") * Repeat(extra="n")) + Key("c-x, 1"),
 
     "help function"                 : Key("c-h,f"),
     "help function slap"            : Key("c-h,f,enter"),
@@ -179,7 +179,7 @@ _mapping  = {
 
     "replace"                       : Key('as-percent'),
 
-    "home [<n>]"                    : Key("c-a:%(n)d"),
+    "home [<i>]"                    : Key("c-a:%(n)d"),
     "edge"                          : Cmd("(end-of-line)"),
     "cliff"                         : Cmd("(md-go-to-cliff)"),
     "top side"                      : Key("a-langle"),
@@ -200,15 +200,15 @@ _mapping  = {
     "up [<n>]"                      : Key("up:%(n)d"),
     "down [<n>]"                    : Key("down:%(n)d"),
 
-    "slap [<n>]"                    : Key("enter:%(n)d"),
-    "pals [<n>]"                    : Cmd("(md-new-line-anywhere)"),
-    "open [<n>]"                    : Key("c-o:%(n)d"),
-    "nepo [<n>]"                    : Cmd("(md-open-line-anywhere)"),
+    "slap [<i>]"                    : Key("enter:%(n)d"),
+    "pals [<i>]"                    : Cmd("(md-new-line-anywhere)"),
+    "open [<i>]"                    : Key("c-o:%(n)d"),
+    "nepo [<i>]"                    : Cmd("(md-open-line-anywhere)"),
 
     # mark commands
-    "mark [<n>]"                    : Key("c-space:%(n)d"),
+    "mark [<i>]"                    : Key("c-space:%(n)d"),
     "exchange"                      : Cmd("(exchange-point-and-mark)"),
-    "select [<n>]"                  : Key("c-equal:%(n)d"),
+    "select [<i>]"                  : Key("c-equal:%(n)d"),
     "contract"                      : Key("a-equal"),
 
     # text manip commands
@@ -223,13 +223,13 @@ _mapping  = {
     "squeeze"                       : Cmd('(cycle-spacing)'),
 
     "yank"                          : Key("c-y"),
-    "yank pop [<n>]"                : Key("a-y:%(n)d"),
+    "yank pop [<i>]"                : Key("a-y:%(n)d"),
     "term (yank | paste)"           : Key("s-insert"),
 
     "select all"                    : Key("c-a"),
     "fish"                          : Key("a-space"),
-    "undo [<n>]"                    : Key("cs-underscore:%(n)d"),
-    "redo [<n>]"                    : Key("as-underscore:%(n)d"),
+    "undo [<i>]"                    : Key("cs-underscore:%(n)d"),
+    "redo [<i>]"                    : Key("as-underscore:%(n)d"),
 
     "shift right"                   : Cmd("(call-interactively 'python-indent-shift-right)"),
     "shift left"                    : Cmd("(call-interactively 'python-indent-shift-left)"),
@@ -247,8 +247,8 @@ _mapping  = {
     # save mark, almost never use, need to get used to
     #"push"                         : Key("c-space,c-space"),
 
-    "snap [<n>]"                    : Key("c-u,c-space:%(n)d"),
-    "big snap [<n>]"                : Key("c-x,c-space:%(n)d"),
+    "snap [<i>]"                    : Key("c-u,c-space:%(n)d"),
+    "big snap [<i>]"                : Key("c-x,c-space:%(n)d"),
 
     "num <big>"                     : EmacsText("%(big)d"),
     "inspect character"             : Key("c-u,c-x,equal"),

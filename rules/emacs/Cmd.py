@@ -192,6 +192,8 @@ class Cmd(Action):
         repeat = 1
         if 'n' in extras and isinstance(extras['n'], int):
             repeat = extras['n']
+        elif 'i' in extras and isinstance(extras['i'], int):
+            repeat = extras['i']
         return repeat
 
     def __call__(self, extras={}):

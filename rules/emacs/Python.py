@@ -16,7 +16,7 @@ _mapping = {
     "send funk"   : Key("ca-x"),
     "send buff"   : Key("c-c,c-c"),
     "send region" : Key("c-c,c-r"),
-    "shell"       : Key("c-c,c-z"),
+    "interpreter" : Key("c-c,c-z"),
 }
 
 PythonRule = makeContextualRule("Python", _mapping, emacsExtras, emacsDefaults)

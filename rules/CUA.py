@@ -44,12 +44,14 @@ _mapping = {
 
 _extras = [
     Integer("n", 2, 20),
+    Integer("i", 2, 8),
     Integer("big", 0, 2**14),
 ]
 
 _defaults = {
     "search_terms" : "",
     "n": 1,
+    "i": 1,
 }
 
 CUARule = makeContextualRule("CUA", _mapping, _extras, _defaults)
