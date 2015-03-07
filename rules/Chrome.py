@@ -52,12 +52,12 @@ _mapping  = {
     "pro [<n>]"                     : Key("c-tab:%(n)d"),
     "per [<n>]"                     : Key("cs-tab:%(n)d"),
     "(reopen tab | undo close tab)" : Key("cs-t"),
-    "back [<i>]"                    : Key("a-left:%(n)d"),
-    "forward [<i>]"                 : Key("a-right:%(n)d"),
+    "back [<i>]"                    : Key("a-left:%(i)d"),
+    "forward [<i>]"                 : Key("a-right:%(i)d"),
     "refresh"                       : Key("F5"),
     "reopen tab"                    : Key("cs-t"),
-    "magnify [<i>]"                 : Key("c-plus:%(n)d"),
-    "demagnify [<i>]"               : Key("c-minus:%(n)d"),
+    "magnify [<i>]"                 : Key("c-plus:%(i)d"),
+    "demagnify [<i>]"               : Key("c-minus:%(i)d"),
     # these are provided by the 'tabloid' extension
     # TODO                          : not necessary, cs-pgdown/pgup
     "move right [<n>]"              : Key("as-l:%(n)d"),

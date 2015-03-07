@@ -79,9 +79,9 @@ _keywords = [
 ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
     
 _mapping = {
-    "back [<i>]"        : Key("b,enter") * Repeat(extra="n"),
-    "forward [<i>]"     : Key("f,enter") * Repeat(extra="n"),
-    "ascend [<i>]"      : (EmacsText("up") + Key("enter")) * Repeat(extra="n"),
+    "back [<i>]"        : Key("b,enter") * Repeat(extra="i"),
+    "forward [<i>]"     : Key("f,enter") * Repeat(extra="i"),
+    "ascend [<i>]"      : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
 }
 
 ShellRule = makeContextualRule("Shell", _mapping, emacsExtras, emacsDefaults)
