@@ -192,7 +192,7 @@ class Cmd(Action):
         repeat = 1
         if 'n' in extras and isinstance(extras['n'], int):
             repeat = extras['n']
-        elif 'i' in extras and isinstance(extras['i'], int):
+        if 'i' in extras and isinstance(extras['i'], int):
             repeat = extras['i']
         return repeat
 

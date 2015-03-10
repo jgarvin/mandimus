@@ -50,7 +50,7 @@ class WordSelector(object):
 
     def _extractWords(self, n):
         x = extractWords(n)
-        # log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
+         #log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
         return x
 
     def _update(self, choices):
@@ -245,9 +245,16 @@ class WordSelector(object):
         self._select(extras[self._actionRuleRefName], candidates[0])
 
     def _sendWords(self, ev=None):
-        for i in range(len(self.words)):
-            for j in range(len(self.words[i])):
-                pushEvent(WordListEvent(self._wordListName(i, j), self.words[i][j]))
+        # We want to iterate the whole possible space, not just what's present,
+        # because we want to initialize empty word lists to empty in case there
+        # are left over values from previous runs of the server.
+        for i in range(self.MAX_SUBWORDS):
+            for j in range(i+1):
+                try:
+                    words = self.words[i][j]
+                except IndexError:
+                    words = []
+                pushEvent(WordListEvent(self._wordListName(i, j), words))
 
     def activate(self):
         log.info("Activating selector [%s]" % type(self))

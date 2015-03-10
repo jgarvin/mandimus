@@ -70,73 +70,75 @@ class Mark(Cmd):
             return ""
 
 _mapping = {
-    "command"                        : Key("c-x,c-m"),
-    "toggle debug"                   : Cmd("(toggle-debug-on-error)"),
-    "exit debug"                     : Key("c-rbracket"),
-    "debug function"                 : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
-    "cancel debug function"          : Key("c-x,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
+    "command"                     : Key("c-x,c-m"),
+    "toggle debug"                : Cmd("(toggle-debug-on-error)"),
+    "exit debug"                  : Key("c-rbracket"),
+    "debug function"              : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
+    "cancel debug function"       : Key("c-x,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
 
-    "ace line"                       : Key("c-u,c-u,c-c,space"),
+    "ace line"                    : Key("c-u,c-u,c-c,space"),
 
-    "go to line"                     : Key("a-g,a-g"),
-    "go to line <line>"              : Key("a-g,a-g") + Text("%(line)d") + Key("enter"),
+    "go to line"                  : Key("a-g,a-g"),
+    "go to line <line>"           : Key("a-g,a-g") + Text("%(line)d") + Key("enter"),
 
     # window commands
-    "destroy emacs window"           : Cmd("(delete-window)"),
+    "destroy emacs window"        : Cmd("(delete-window)"),
 
-    "new frame [<i>]"                : Cmd("(make-frame-command)"),
-    "mini buffer"                    : Cmd("(md-select-minibuffer)"),        
+    "new frame [<i>]"             : Cmd("(make-frame-command)"),
+    "mini buffer"                 : Cmd("(md-select-minibuffer)"),        
 
-    "list buffs"                     : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
+    "list buffs"                  : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
 
     # projectile commands
-    "switch project"                 : Key("c-c,p,p"),
-    "root folder"                    : Key("c-c,p,d"),
-    "ack"                            : Key("c-c,p,s,a"),
-    "occur"                          : Key("c-c,p,o"),
-    "project replace"                : Key("c-c,p,r"),
-    "kill project"                   : Key("c-c,p,k"),
-    "project root"                   : Key("c-c,p,D"),
-    "build"                          : Key("c-c,p,c"),
-    "invalidate projectile cache"    : Key("c-c,p,i"),
+    "switch project"              : Key("c-c,p,p"),
+    "root folder"                 : Key("c-c,p,d"),
+    "ack"                         : Key("c-c,p,s,a"),
+    "occur"                       : Key("c-c,p,o"),
+    "project replace"             : Key("c-c,p,r"),
+    "kill project"                : Key("c-c,p,k"),
+    "project root"                : Key("c-c,p,D"),
+    "build"                       : Key("c-c,p,c"),
+    "invalidate projectile cache" : Key("c-c,p,i"),
 
     # compilation mode commands
     # don't think I can make these mode specific...
-    "oops"                           : Key("a-g,n"),
-    "spoo"                           : Key("a-g,p"),
-    "file oops"                      : Key("a-rbrace"),
-    "file spoo"                      : Key("a-lbrace"),
-    "toggle oops trace"              : Key("c-c,c-f"),
+    "oops"                        : Key("a-g,n"),
+    "spoo"                        : Key("a-g,p"),
+    "file oops"                   : Key("a-rbrace"),
+    "file spoo"                   : Key("a-lbrace"),
+    "toggle oops trace"           : Key("c-c,c-f"),
 
     # file commands
-    "plain open file"                : Key("c-x,c-f"),
-    "alternate file"                 : Key("c-x,c-v"),
-    "recent files"                   : Key("c-c,c-e"),
-    "man page"                       : Key("a-x") + Text("man") + Key("enter"),
-    "find file"                      : Minibuf("find-name-dired"), 
+    "plain open file"             : Key("c-x,c-f"),
+    "alternate file"              : Key("c-x,c-v"),
+    "recent files"                : Key("c-c,c-e"),
+    "man page"                    : Key("a-x") + Text("man") + Key("enter"),
+    "find file"                   : Minibuf("find-name-dired"), 
 
     # buffer commands
-    "switch (buff | buffer)"         : Key("c-x, b"),
-    "destroy buff"                   : Key("c-x,k,enter"),
-    "folder"                         : Key("c-x,c-j"),
+    "switch (buff | buffer)"      : Key("c-x, b"),
+    "destroy buff"                : Key("c-x,k,enter"),
+    "folder"                      : Key("c-x,c-j"),
 
-    "open client log"                : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
+    "open client log"             : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
-    "open server log"                : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
+    "open server log"             : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
 
     # misc
-    "start irc"                      : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
-    "stop irc"                       : Key("c-x,c-m") + Text("stop-irc") + Key("enter"),
-    "toggle tail mode"               : Cmd("(auto-revert-tail-mode)"),
-    "list packages"                  : Key("a-x") + Text("list-packages") + Key("enter"),
-    "get status"                     : Key("a-x") + Text("magit-status") + Key("enter"),
-    "submit"                         : Key("c-x,hash"),
-    "open terminal"                  : Cmd("(etc-start-or-open-terminal)"),
-    "create shell"                   : Cmd("(etc-open-shell)"),
-    "show top"                       : Cmd("(etc-start-or-open-top)"),
-    "open temp"                      : Cmd("(md-create-temp-file \"temp\")"),
-    "toggle command logging"         : toggleCommandLogging,
-    "toggle refresh client"          : toggleRefreshClientSources,
+    "start irc"                   : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
+    "stop irc"                    : Key("c-x,c-m") + Text("stop-irc") + Key("enter"),
+    "toggle tail mode"            : Cmd("(auto-revert-tail-mode)"),
+    "list packages"               : Key("a-x") + Text("list-packages") + Key("enter"),
+    "get status"                  : Key("a-x") + Text("magit-status") + Key("enter"),
+    "submit"                      : Key("c-x,hash"),
+    "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
+    "create shell"                : Cmd("(etc-open-shell)"),
+    "show top"                    : Cmd("(etc-start-or-open-top)"),
+    "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
+    "toggle command logging"      : toggleCommandLogging,
+    "toggle refresh client"       : toggleRefreshClientSources,
+    "magnify [<i>]"               : Key("c-x,c-plus:%(i)d"),
+    "demagnify [<i>]"             : Key("c-x,c-minus:%(i)d"),
 }
 
 
@@ -226,7 +228,7 @@ _mapping  = {
     "yank pop [<i>]"                : Key("a-y:%(i)d"),
     "term (yank | paste)"           : Key("s-insert"),
 
-    "select all"                    : Key("c-a"),
+    "select all"                    : Key("c-home,c-space,c-end"),
     "fish"                          : Key("a-space"),
     "undo [<i>]"                    : Key("cs-underscore:%(i)d"),
     "redo [<i>]"                    : Key("as-underscore:%(i)d"),
@@ -261,7 +263,7 @@ _mapping  = {
     "insert buffer name"            : InsertString("(buffer-name)"),
     "insert name without extension" : InsertString("(file-name-sans-extension (buffer-file-name))"),
     "insert directory"              : InsertString("(file-name-directory (buffer-file-name))"),
-    "insert extension"              : InsertString("(file-name-extension (buffer-file-name))"),
+    "insert extension"              : InsertString("(file-name-extension (buffer-file-name))"),    
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

@@ -31,12 +31,17 @@ class NickNames(WordSelector):
             # we're referring to them, omit the colon
             EmacsText("%s" % choice, lower=False, capitalCheck=False)()
 
-    def _extractWords(self, w):
-        return extractWords(w)
-        # return extractWords(w, translate={},
-        #                     useDict=True,
-        #                     #detectBadConsonantPairs=True,
-        #                     removeLeetSpeak=True)
+    def _extractWords(self, n):
+        x = extractWords(n)
+        log.info("[%s] extracted words [%s] [%s]" % (type(self).__name__, n, x))
+        return x
+
+    # def _extractWords(self, w):
+    #     return extractWords(w)
+    #     # return extractWords(w, translate={},
+    #     #                     useDict=True,
+    #     #                     #detectBadConsonantPairs=True,
+    #     #                     removeLeetSpeak=True)
 
 
 _nickNameSelector = NickNames("NickNames", "nick")
