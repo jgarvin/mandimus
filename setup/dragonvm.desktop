@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=dragonvm
+Exec=/home/prophet/work/mandimus/setup/setupvm.sh

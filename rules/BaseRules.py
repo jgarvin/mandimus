@@ -30,7 +30,7 @@ _mapping = {
     "yes"   : "y",
     "zulu"  : "z",
 }
-
+                    
 AlphaRule = makeHashedRule("AlphaRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(AlphaRule))
     
@@ -62,7 +62,7 @@ _mapping = {
     "cash"       : "dollar",
     "frak"       : "percent", # short for fraction
     "caret"      : "caret",
-    "ampersand"  : "ampersand",
+    "ref"        : "ampersand",
     "glob"       : "asterisk",
     "cool"       : "colon",
     "cusp"       : "semicolon",
@@ -98,7 +98,7 @@ _literalMapping = {
     "cash"       : "$",
     "frak"       : "%",
     "caret"      : "^",
-    "ampersand"  : "&",
+    "ref"        : "&",
     "glob"       : "*",
     "cool"       : ":",
     "cusp"       : ";",

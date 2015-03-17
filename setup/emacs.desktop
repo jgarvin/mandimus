@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=emacs
+# We use an interactive zsh to ensure emacs is running with the
+# desired environment
+Exec=zsh -i -c 'emacs --daemon'

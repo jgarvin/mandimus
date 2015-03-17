@@ -1,0 +1,9 @@
+# put these into crontab since long running VMs mysteriously lose the ability to
+# listen to the mic
+# note on ubuntu you need to install postfix to get proper logging of this
+00 04 * * * /usr/bin/VBoxManage controlvm Dragon\ Resized acpipowerbutton  
+05 04 * * * DISPLAY=:0 /usr/bin/kill -15 $(xdotool search --name VirtualBox\ Manager getwindowpid)
+10 04 * * * /usr/bin/VirtualBox
+11 04 * * * /usr/bin/VBoxManage startvm Dragon\ Resized
+12 04 * * * DISPLAY=:0 /usr/bin/xdotool search --name 'Oracle VM VirtualBox Manager' set_desktop_for_window 8
+13 04 * * * DISPLAY=:0 /usr/bin/xdotool search --name 'Dragon Resized' set_desktop_for_window 8

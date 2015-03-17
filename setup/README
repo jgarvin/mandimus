@@ -1,0 +1,3 @@
+dragon.cron contains crontab entries that can be used to restart the VM on a regular basis and move it to 9th desktop (the last one in my setup).
+
+The *.desktop files can be put in ~/.config/autostart in order to cause mandimus, the VM, and emacs to start on login so that you don't have to fiddle with the keyboard to get things going.

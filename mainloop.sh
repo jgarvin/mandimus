@@ -1,10 +1,9 @@
 #!/bin/zsh
 
-
 while true; do
     sleep 1
     kill -9 $(jobs -p)
-    rm **/*.pyc
+    rm --force --one-file-system **/*.pyc
     
     # rm ~/dragonshare/NatLink/NatLink/MacroSystem/*.pyc
     #touch ~/dragonshare/NatLink/NatLink/MacroSystem/*.py
@@ -13,7 +12,7 @@ while true; do
     # to trigger restarts
     TRAPINT() {}
     
-    python MainThread.py
+    python $(dirname $0)/MainThread.py
 
     # but only when python is running, this way if we
     # hold control-c we still quit the whole loop

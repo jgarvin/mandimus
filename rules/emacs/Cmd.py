@@ -189,11 +189,9 @@ class Cmd(Action):
         return self._fillData(extras)
 
     def _repetitions(self, extras={}):
-        repeat = 1
-        if 'n' in extras and isinstance(extras['n'], int):
-            repeat = extras['n']
-        if 'i' in extras and isinstance(extras['i'], int):
-            repeat = extras['i']
+        repeat = max(extras['n'] if 'n' in extras else 0,
+                     extras['i'] if 'i' in extras else 0,
+                     1)
         return repeat
 
     def __call__(self, extras={}):

@@ -3,21 +3,21 @@ from protocol import Integer
 from rules.ContextualRule import makeContextualRule
 
 _mapping  = {
-    "mon (one | left)"            : Key("ca-p"),
-    "mon (two | middle | center)" : Key("ca-f"),
-    "mon (three | right)"         : Key("ca-u"),
-    "move mon one [<i>]"          : Key("csa-p:%(i)d"),
-    "move mon two [<i>]"          : Key("csa-f:%(i)d"),
-    "move mon three [<i>]"        : Key("csa-u:%(i)d"),
+    "mon (one | left)"            : Key("ca-up"),
+    "mon (two | middle | center)" : Key("ca-left"),
+    "mon (three | right)"         : Key("ca-right"),
+    "move mon one [<i>]"          : Key("csa-up:%(i)d"),
+    "move mon two [<i>]"          : Key("csa-left:%(i)d"),
+    "move mon three [<i>]"        : Key("csa-right:%(i)d"),
     "desk <d>"                    : Key("ca-%(d)d"),
     "move desk <d>"               : Key("csa-%(d)d"),
     "clock [<i>]"                 : Key("ca-e:%(i)d"),
-    "wise [<i>]"                  : Key("ca-o:%(i)d"),
+    "wise [<i>]"                  : Key("ca-h:%(i)d"),
     "move clock [<i>]"            : Key("cas-e:%(i)d"),
-    "move wise [<i>]"             : Key("cas-o:%(i)d"),
+    "move wise [<i>]"             : Key("cas-h:%(i)d"),
     "expand [<n>]"                : Key("ca-i:%(n)d"),
     "shrink [<n>]"                : Key("ca-n:%(n)d"),
-    "cycle [<i>]"                 : Key("ca-y:%(i)d"),
+    "cycle [<i>]"                 : Key("ca-rbracket:%(i)d"),
     "destroy window"              : Key("ca-x"),
     "master"                      : Key("ca-enter"),
     "add master [<i>]"            : Key("ca-comma:%(i)d"),
@@ -25,7 +25,7 @@ _mapping  = {
     "editor"                      : Key("csa-w"),
     "browser"                     : Key("csa-b"),
     "new terminal"                : Key("csa-t"),
-    "restart window manager"      : Key("ca-q"),
+    "restart window manager"      : Key("csa-q"),
 }
 
 _extras = [

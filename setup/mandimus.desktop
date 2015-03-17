@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=mandimus
+Terminal=false
+Exec=xterm -e '(sleep 5; /usr/bin/xdotool search --name mainloop.sh set_desktop_for_window 8) &; /home/prophet/work/mandimus/mainloop.sh'
