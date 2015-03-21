@@ -7,11 +7,18 @@ from rules.emacs.common import emacsExtras, emacsDefaults
 # a jump that considers vertical to cost 0 and horizontal to cost normal,
 # so you could say whatever mike to go from the closing brace to mapping.
 
+# TODO: maybe different commands for letters vs. symbols? help break up
+# possibilities?
+
 _mapping = {
-    "north <charrule> [<i>]" : CharCmd("(md-move-up-to-char-after-line -1 %s)"),
-    "south <charrule> [<i>]" : CharCmd("(md-move-up-to-char-after-line 1 %s)"),
-    "east <charrule> [<i>]"  : CharCmd("(md-move-up-to-char-same-line 1 %s)"),
-    "west <charrule> [<i>]"  : CharCmd("(md-move-up-to-char-same-line -1 %s)"),
+    "go <charrule> [<i>]" : CharCmd("(md-move-up-to-char 1 %s)"),
+    "come <charrule> [<i>]" : CharCmd("(md-move-up-to-char -1 %s)"),
+    # these weren't as useful as I thought because you can't switch the context
+    # mid-utterance so that dragon knows what chars are eligible
+    # "north <charrule> [<i>]" : CharCmd("(md-move-up-to-char-after-line -1 %s)"),
+    # "south <charrule> [<i>]" : CharCmd("(md-move-up-to-char-after-line 1 %s)"),
+    # "east <charrule> [<i>]"  : CharCmd("(md-move-up-to-char-same-line 1 %s)"),
+    # "west <charrule> [<i>]"  : CharCmd("(md-move-up-to-char-same-line -1 %s)"),
     "snug [<i>]"             : Cmd("(md-find-indentation-change 1 '>)"),
     "guns [<i>]"             : Cmd("(md-find-indentation-change -1 '>)"),
     "loosen [<i>]"           : Cmd("(md-find-indentation-change 1 '<)"),

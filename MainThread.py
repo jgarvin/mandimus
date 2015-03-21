@@ -189,6 +189,7 @@ if __name__ == "__main__":
         ('rules.emacs.Belt', ['']),
         ('rules.emacs.BufferNames', ['']),
         ('rules.emacs.Comint', ['']),
+        ('rules.emacs.Cpp', ['']),
         ('rules.emacs.Dired', ['']),
         ('rules.emacs.Emacs', ['']),
         ('rules.emacs.Eww', ['']),

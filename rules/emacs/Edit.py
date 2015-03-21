@@ -33,11 +33,11 @@ _mapping = {
     #"fizz <charrule> [<i>]" : CharCmd("(md-copy-up-to-char 1 %s)"),
     #"buzz <charrule> [<i>]" : CharCmd("(md-copy-up-to-char -1 %s)"),
     "trans [<i>]"            : Cmd("(transpose-sexps 1)"),
-    "snart [<i>]"            : Cmd("(transpose-sexps -1)"),
+    "pose [<i>]"             : Cmd("(transpose-sexps -1)"),
     "rise [<n>]"             : Key("a-up:%(n)d"),
     "drop [<n>]"             : Key("a-down:%(n)d"),
-    #"var <charrule> [<n>]"   : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
-    "phone [<i>]"              : Cmd("(md-cycle-homophones-at-point)"),
+    #"var <charrule> [<n>]"  : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
+    "phone [<i>]"            : Cmd("(md-cycle-homophones-at-point)"),
 }
 
 EditRule = makeContextualRule("Edit", _mapping, emacsExtras, emacsDefaults)

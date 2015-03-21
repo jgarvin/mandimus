@@ -174,6 +174,7 @@ _mapping  = {
     "help news"                     : Key("c-h,n"),
     "help info"                     : Key("c-h,i"),
     "help syntax"                   : Key("c-h,s"),
+    "help bindings"                 : Key("c-h,b"),
 
     # navigation commands
     "ace"                           : Key("c-c,space"),
