@@ -14,18 +14,6 @@ from EventList import BufferListEvent
 from requirements.Emacs import IsEmacs
 import string
 
-_bufferQueryTable = [
-    ("(md-get-buffers-in-modes 'dired-mode)", "folder"),
-    ("(md-get-buffers-in-modes 'comint-mode)", "shell"),
-    ("(md-get-buffers-in-modes 'erc-mode)", "channel"),
-    ("(md-get-special-buffers)", "special"),
-]
-
-_appendCmd = "(append %s)" % " ".join([e[0] for e in _bufferQueryTable])
-_allBuffQuery = "(md-all-buffers-except %s)" % _appendCmd
-
-_bufferQueryTable.append((_allBuffQuery, "buff"))
-
 class BufferEventGenerator(EmacsEventGenerator):
     def __init__(self, name, query):
         self.query = query
@@ -56,13 +44,48 @@ class BufferNames(WordSelector):
         runEmacsCmd("(switch-to-buffer \"%s\")" % choice, queryOnly=False)
 
     def _noChoice(self):
-        runEmacsCmd("(switch-to-buffer nil)", queryOnly=False)
+        runEmacsCmd("(md-switch-to-next-buffer-in-list %s)" % self.query, queryOnly=False)
+
+class FolderNames(BufferNames):
+    phrase = "folder"
+    query = "(md-get-buffers-in-modes 'dired-mode)" 
+
+    def _noChoice(self):
+        runEmacsCmd("(md-folder-switch)", queryOnly=False)
+
+class ShellNames(BufferNames):
+    phrase = "shell"
+    query = "(md-get-buffers-in-modes 'comint-mode)" 
+
+class ChannelNames(BufferNames):
+    phrase = "channel"
+    query = "(md-get-buffers-in-modes 'erc-mode)" 
+
+class SpecialNames(BufferNames):
+    phrase = "special"
+    query = "(md-get-special-buffers)" 
+
+_bufferQueryTable = [
+    FolderNames,
+    ShellNames,
+    ChannelNames,
+    SpecialNames,
+]
+
+_appendCmd = "(append %s)" % " ".join([e.query for e in _bufferQueryTable])
+_allBuffQuery = "(md-all-buffers-except %s)" % _appendCmd
+
+class GeneralBufferNames(BufferNames):
+    phrase = "buff"
+    query = "(md-all-buffers-except %s)" % _appendCmd
+
+_bufferQueryTable.append(GeneralBufferNames)
 
 _generators = []
 _selectors = []
 for e in _bufferQueryTable:
-    _generators.append(BufferEventGenerator(e[1], e[0]))
-    _selectors.append(BufferNames(e[1] + "Names", e[1], e[0]))
+    _generators.append(BufferEventGenerator(e.phrase, e.query))
+    _selectors.append(e(e.phrase + "Names", e.phrase, e.query))
 
 # Because uniquify buffer code will start naming things $shell<2>, $shell<3>,
 # but leaves the first shell as just $shell, we add this for voice command

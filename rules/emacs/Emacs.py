@@ -118,7 +118,8 @@ _mapping = {
     # buffer commands
     "switch (buff | buffer)"      : Key("c-x, b"),
     "destroy buff"                : Key("c-x,k,enter"),
-    "folder"                      : Key("c-x,c-j"),
+# supplanted by more general FolderNames rule
+#    "folder"                      : Key("c-x,c-j"),
 
     "open client log"             : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
