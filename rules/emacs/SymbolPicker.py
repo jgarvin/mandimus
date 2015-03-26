@@ -5,6 +5,7 @@ import rules.BaseRules as BaseRules
 from rules.emacs.Cmd import CharCmd, Cmd
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
+from requirements.VarRequirement import VarRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
 
 _mapping = {
@@ -44,7 +45,6 @@ class PickSymbol(Cmd):
 _mapping = {
     "<colorrule> <alpharule> [<accentrule>]"      : PickSymbol("md-hl-insert-symbol", 0),
     "jump <colorrule> <alpharule> [<accentrule>]" : PickSymbol("md-hl-jump-symbol"),
-    "toggle picker"                               : Cmd("(md-toggle-symbol-picker-mode)"),
 }
 
 _extras = emacsExtras + [
@@ -54,4 +54,10 @@ _extras = emacsExtras + [
 
 SymbolPickerRule = makeContextualRule("SymbolPicker", _mapping, _extras, emacsDefaults)
 SymbolPickerRule.context.addRequirement(IsEmacs)
+SymbolPickerRule.context.addRequirement(VarRequirement("md-symbol-picker-mode", "t"))
 
+_mapping = {
+    "toggle picker"                               : Cmd("(md-toggle-symbol-picker-mode)"),
+}
+SymbolPickerToggleRule = makeContextualRule("SymbolPickerToggle", _mapping, _extras, emacsDefaults)
+SymbolPickerToggleRule.context.addRequirement(IsEmacs)
