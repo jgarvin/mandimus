@@ -1,3 +1,5 @@
+import mdlog
+log = mdlog.getLogger(__name__)
 from protocol import RuleType, RuleRef, makeHashedRule
 from EventLoop import pushEvent
 from EventList import RuleRegisterEvent
@@ -34,8 +36,9 @@ _mapping = {
     "close"           : "sp-end-of-sexp",
     #"after close"    : "sp-end-of-next-sexp",
     #"before close"   : "sp-end-of-previous-sexp",
-    "select next"     : "sp-select-next-thing",
-    "select previous" : "sp-select-previous-thing",
+    # building on this is needed for selecting current sexp
+    # "select next"     : "sp-select-next-thing",
+    # "select previous" : "sp-select-previous-thing",
     "slurp"           : "sp-forward-slurp-sexp",
     "gulp"            : "sp-backward-slurp-sexp",
     "barf"            : "sp-forward-barf-sexp",
@@ -49,22 +52,14 @@ pushEvent(RuleRegisterEvent(PairOpsRule))
 
 class PairCmd(Cmd):
     def _lisp(self, extras={}):
-        words = extras['words']
-        pair = None
+        op = PairOpsRule.rule.mapping[" ".join(extras['sexpFunction']['words'])]
 
-        for p, k in PairsRule.rule.mapping.items():
-            if p in words:
-                pair = k
-
-        func = ""
-        for p, k in PairOpsRule.rule.mapping.items():
-            if p in words and len(p) > len(func):
-                func = k
-        assert func
+        pair = " ".join(extras['sexpPair']['words']) if 'sexpPair' in extras else None
+        pair = PairsRule.rule.mapping[pair] if pair else None 
 
         if pair:
-            return "(single-pair-only-sexp \"%s\" '%s)" % (pair, func)
-        return "(call-interactively '%s)" % func
+            return "(single-pair-only-sexp \"%s\" '%s)" % (pair, op)
+        return "(call-interactively '%s)" % op
 
 _mapping  = {
     "<sexpFunction> [<sexpPair>] [<i>]" : PairCmd(),
