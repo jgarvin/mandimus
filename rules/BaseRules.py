@@ -4,7 +4,7 @@ from EventLoop import pushEvent
 
 _mapping = {
     "abe"   : "a",
-    "brov"  : "b",
+    "braid" : "b",
     "coup"  : "c",
     "dealt" : "d",
     "echo"  : "e",
@@ -64,7 +64,7 @@ _mapping = {
     "caret"      : "caret",
     "ref"        : "ampersand",
     "glob"       : "asterisk",
-    "cool"       : "colon",
+    "dots"       : "colon",
     "cusp"       : "semicolon",
     "point"      : "period",
     "arg"        : "comma",
@@ -100,7 +100,7 @@ _literalMapping = {
     "caret"      : "^",
     "ref"        : "&",
     "glob"       : "*",
-    "cool"       : ":",
+    "dots"       : ":",
     "cusp"       : ";",
     "point"      : ".",
     "arg"        : ",",

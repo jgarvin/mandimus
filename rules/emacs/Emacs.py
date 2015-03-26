@@ -162,7 +162,7 @@ _mapping  = {
     "start macro"                   : Key("F3"),
     "mack"                          : Key("F4"),
     "other [<i>]"                   : Key("c-x,o") * Repeat(extra="i"),
-    "collapse"                      : Key("c-x, 1"),
+    "collapse"                      : Key("ca-rbracket"),
     "other [<i>] collapse"          : (Key("c-x, o") * Repeat(extra="i")) + Key("c-x, 1"),
 
     "help function"                 : Key("c-h,f"),
