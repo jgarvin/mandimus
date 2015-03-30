@@ -2,7 +2,7 @@ import mdlog
 log = mdlog.getLogger(__name__)
 from rules.WordSelector import WordSelector
 from EventLoop import getLoop, pushEvent
-from EventList import FocusChangeEvent
+from EventList import FocusChangeEvent, EmacsConnectedEvent
 from requirements.Emacs import IsEmacs
 from requirements.Toggle import Toggle
 from Window import getFocusedWindow
@@ -44,6 +44,7 @@ class EmacsEventGenerator(object):
         self.subHandles = []
         self.subHandles.append(getLoop().subscribeTimer(self.interval, self.update, priority=0))
         self.subHandles.append(getLoop().subscribeEvent(FocusChangeEvent, self.update, priority=0))
+        self.subHandles.append(getLoop().subscribeEvent(EmacsConnectedEvent, self.update, priority=0))
 
     def deactivate(self):
         for h in self.subHandles:

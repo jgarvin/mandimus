@@ -354,7 +354,14 @@ class MasterGrammar(object):
         notEnabledRules = self.dependencyRuleSet - self.baseRuleSet
         for r in notEnabledRules:
             self.concreteRules[r].disable()
+
+        # they're enabled by default, don't activate until explicitly made to
+        self.dflyGrammar.disable()
         
+    def active(self):
+        log.info("active check [%s %s %s]" % (self.dflyGrammar is None, self.dflyGrammar and self.dflyGrammar.loaded, self.dflyGrammar and self.dflyGrammar.enabled))
+        return self.dflyGrammar and self.dflyGrammar.loaded and self.dflyGrammar.enabled
+
     def activate(self):
         self.build()
         self.dflyGrammar.enable()
@@ -474,6 +481,8 @@ class MasterGrammar(object):
         # because Dragon is slow.
         if sorted(words) != sorted(self.concreteWordLists[name]):
             log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, words))
+            # TODO: need to check existing load state, then send a loading message here, then restore
+            # old state. This way we can see when word lists are taking a long time to load...
             self.concreteWordLists[name].set(words)
 
 class DragonflyClient(DragonflyNode):
@@ -551,6 +560,7 @@ class DragonflyClient(DragonflyNode):
             
     def setRecognitionState(self, state):
         self.recognitionState = state
+        log.info("Recognition state: [%s]" % state)
 
         micOn = (natlink.getMicState() == "on")
         if self.recognitionState == "thinking" and micOn:
@@ -629,15 +639,20 @@ class DragonflyClient(DragonflyNode):
         for k in mapping:
             mapping[k] = ReportingAction(k, self, msg.rule.hash)
         
+        noneMissing = True
         for grammarHash in inNeed:
             grammar = self.hashedRules[grammarHash]
             try:
                 grammar.satisfyDependency(msg.rule.hash)
             except MissingDependency as e:
                 log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
+                noneMissing = False
                 self.sendLoadRequest(e.hashes)
-            if self.activeMasterGrammar == grammar.hash:
-                self.tryActivatingMaster()
+
+        # try activating again if not already active, may not be
+        # if we had missing deps before but don't now
+        if noneMissing:
+            self.switchMasterGrammar(self.activeMasterGrammar)
 
     def onEnableRulesMsg(self, msg):
         log.info("Called onEnableRulesMsg")
@@ -646,10 +661,8 @@ class DragonflyClient(DragonflyNode):
         x.update("".join(sorted([r for r in msg.hashes])))
         hash = x.hexdigest()
 
-        grammar = None
         if hash in self.hashedRules:
             assert isinstance(self.hashedRules[hash], MasterGrammar)
-            grammar = self.hashedRules[hash]
         else:
             grammar = MasterGrammar(msg.hashes, self, self.hashedRules)
             self.hashedRules[hash] = grammar
@@ -657,32 +670,37 @@ class DragonflyClient(DragonflyNode):
         self.switchMasterGrammar(hash)
 
     def switchMasterGrammar(self, newHash):
-        if self.activeMasterGrammar:
-            self.hashedRules[self.activeMasterGrammar].deactivate()
-            self.activeMasterGrammar = None
+        log.info("told to switch")
+        if self.activeMasterGrammar != newHash:
+            if self.activeMasterGrammar:
+                log.info("deactivating old")
+                self.hashedRules[self.activeMasterGrammar].deactivate()
+                self.activeMasterGrammar = None
 
-        assert newHash in self.hashedRules
-        self.activeMasterGrammar = newHash
+            assert newHash in self.hashedRules
+            self.activeMasterGrammar = newHash
 
-        self.tryActivatingMaster()
-
-    def tryActivatingMaster(self):
         grammar = self.hashedRules[self.activeMasterGrammar]
-        try:
-            # TODO: test why this doesn't work. Would be nice for
-            # seeing true amount of loading...
-            #self.sendMsg(makeJSON(LoadStateMsg('loading')))
-            grammar.activate()
-            # Word lists may have changed since the last time the
-            # grammar was activated, and the lists have to be
-            # separately stored on a per grammar basis because
-            # dfly/natlink link them that way.
-            for name, words in self.wordLists.items():
-                grammar.updateWordList(name, words)
-            self.sendMsg(makeJSON(LoadStateMsg('done')))
-        except MissingDependency as e:
-            log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
-            self.sendLoadRequest(e.hashes)
+        log.info("checking if active")
+        if not grammar.active():
+            try:
+                # TODO: test why this doesn't work. Would be nice for
+                # seeing true amount of loading...
+                self.sendMsg(makeJSON(LoadStateMsg('loading')))
+                log.info("Activating grammar...")
+                grammar.activate()
+                # Word lists may have changed since the last time the
+                # grammar was activated, and the lists have to be
+                # separately stored on a per grammar basis because
+                # dfly/natlink link them that way.
+                log.info("Updating word lists...")
+                for name, words in self.wordLists.items():
+                    grammar.updateWordList(name, words)
+                log.info("Sending load state message...")
+                self.sendMsg(makeJSON(LoadStateMsg('done')))
+            except MissingDependency as e:
+                log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
+                self.sendLoadRequest(e.hashes)
 
     def getChildrenByActorType(self, node, actorType):
         """Get all nodes below this node with the given name."""

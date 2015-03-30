@@ -10,7 +10,8 @@ def emacsBool(b):
     return "nil"
 
 class EmacsText(Text):
-    def __init__(self, data, lower=True, capitalCheck=True, spaceCheck=True):
+    def __init__(self, data, lower=True, capitalCheck=True, spaceCheck=True,
+                 allCaps=False):
         Text.__init__(self, data, lower=lower)
         self.capitalCheck = capitalCheck
         self.spaceCheck = spaceCheck 

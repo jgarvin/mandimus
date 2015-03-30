@@ -133,7 +133,7 @@ _mapping = {
     "get status"                  : Key("a-x") + Text("magit-status") + Key("enter"),
     "submit"                      : Key("c-x,hash"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
-    "create shell"                : Cmd("(etc-open-shell)"),
+    #"create shell"                : Cmd("(etc-open-shell nil)"),
     "show top"                    : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
     "toggle command logging"      : toggleCommandLogging,

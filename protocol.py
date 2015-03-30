@@ -36,7 +36,10 @@ import struct
 # by commands in series occurring after.
 # INDEPENDENT means to not merge this rule into the terminator or
 # terminal master rules. Typically this means you will only be
-# using the rule by reference.
+# using the rule by reference. You may also want to put infrequent
+# commands in this category to improve recognition since it avoids
+# the recognizer from needing to discern when these rules are used
+# in combination with others, since they can only be used alone.
 RuleType = enum(SERIES=0, TERMINAL=1, INDEPENDENT=2)
 
 dataTypes = set()

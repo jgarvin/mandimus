@@ -57,6 +57,9 @@ class ShellNames(BufferNames):
     phrase = "shell"
     query = "(md-get-buffers-in-modes 'comint-mode)" 
 
+    def _noChoice(self):
+        runEmacsCmd("(etc-open-shell nil)", queryOnly=False)
+    
 class ChannelNames(BufferNames):
     phrase = "channel"
     query = "(md-get-buffers-in-modes 'erc-mode)" 

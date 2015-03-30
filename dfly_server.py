@@ -182,6 +182,7 @@ class DragonflyThread(DragonflyNode):
         rule = self.hashedRules[hash]
         if rule not in self.activatedRules:
             log.error("Received match for deactivated rule! [%s -- %s]" % (rule.rule.name, hash))
+            # TODO: insert check to see if its been deactivated but not committed yet?
             return
 
         rule = rule.rule

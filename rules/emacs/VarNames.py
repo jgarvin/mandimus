@@ -33,6 +33,7 @@ EmacsTypingRule.context.addRequirement(IsEmacs)
     
 _mapping = {
     "fasten <text>" : EmacsText("%(text)s", False, spaceCheck=False),
+    "cap fasten <text>" : EmacsText("%(text)s", False, spaceCheck=False, allCaps=True),
 }
 
 EmacsFastenRule = makeContextualRule("EmacsFastenRule", _mapping, _extras, _defaults, RuleType.TERMINAL)
