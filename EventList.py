@@ -20,6 +20,7 @@ MajorModeEvent = namedtuple("MajorModeEvent", "modeList")
 NickEvent = namedtuple("NickEvent", "choices")
 ProjectFileListEvent = namedtuple("BufferListEvent", "choices") 
 ProjectListEvent = namedtuple("ProjectListEvent", "choices") 
+RecognitionStateEvent = namedtuple("RecognitionStateEvent", "state") 
 
 class ConnectedEvent(object): pass
 class DisconnectedEvent(object): pass

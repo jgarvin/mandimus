@@ -73,6 +73,7 @@ class MainThread(object):
         self.MainControlRule.activate()
         
     def subscribeEvent(self, eventType, handler, priority=100):
+        log.info("Setting up event sub: [%s] [%s] [%s]" % (eventType, handler, priority))
         if eventType not in self.eventSubscribers:
             self.eventSubscribers[eventType] = []
         self.eventSubscribers[eventType].append((priority, handler))
@@ -86,6 +87,7 @@ class MainThread(object):
         return SubscriptionHandle(entry)
 
     def unsubscribe(self, handleData):
+        log.info("Unsubscribing [%s]" % (handleData,))
         if isinstance(handleData, TimerEntry):
             self.timers.remove(handleData)
         else:
@@ -118,14 +120,16 @@ class MainThread(object):
                     continue
                     
     def put(self, p):
+        log.info("Adding [%s] to events" % (p,))
         self.events += [p]
 
     def processEvent(self, ev):
+        log.info("processing %s subscribers for event [%s]" % (len(self.eventSubscribers[type(ev)]) if type(ev) in self.eventSubscribers else "wtf", type(ev)))
         if type(ev) in self.eventSubscribers:
-            log.debug("processing %d subscribers for event [%s] : [%s]" % (len(self.eventSubscribers[type(ev)]), ev, self.eventSubscribers[type(ev)]))
+            #log.info("processing %d subscribers for event [%s] : [%s]" % (len(self.eventSubscribers[type(ev)]), ev, self.eventSubscribers[type(ev)]))
             subscribers = copy(self.eventSubscribers[type(ev)])
             for i, h in enumerate(subscribers):
-                log.debug("processing subscriber number %d" % i)
+                log.info("processing subscriber number %d" % i)
                 try:
                     h[1](ev)
                 except KeyboardInterrupt:
@@ -143,6 +147,7 @@ class MainThread(object):
             while self.run:
                 try:
                     ev = self.events.pop()
+                    log.info("Processing event: [%s]" % (ev,))
                 except IndexError:
                     break
 

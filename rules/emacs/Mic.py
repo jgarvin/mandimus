@@ -4,39 +4,57 @@ log.setLevel(10)
 
 from EventLoop import getLoop
 from rules.emacs.Cmd import runEmacsCmd
-from EventList import MicrophoneEvent, ConnectedEvent, DisconnectedEvent, LoadingRulesEvent, EmacsConnectedEvent
+from EventList import (MicrophoneEvent, ConnectedEvent, DisconnectedEvent, LoadingRulesEvent, EmacsConnectedEvent,
+                       RecognitionStateEvent)
 import sys
 
 class MicrophoneState(object):
     def __init__(self):
-        self.state = "disconnected"
+        self.micState = "disconnected"
+        self.recognitionState = "success"
         self.connected = False
         self.loading = False
 
-    def updateState(self, ev):
-        log.debug(sys._getframe(0).f_code.co_name)
-        self.state = ev.state
+    def onMicState(self, ev):
+        log.info(sys._getframe(0).f_code.co_name)
+        self.micState = ev.state
+        self.sendState()
+
+    def onRecognitionState(self, ev):
+        log.info(sys._getframe(0).f_code.co_name)
+        self.recognitionState = ev.state
         self.sendState()
 
     def loadingRulesChange(self, ev):
-        log.debug(sys._getframe(0).f_code.co_name)
+        log.info(sys._getframe(0).f_code.co_name)
         self.loading = False if ev.state == "done" else True
         self.sendState()
 
     def onDisconnect(self, ev):
-        log.debug(sys._getframe(0).f_code.co_name)
+        log.info(sys._getframe(0).f_code.co_name)
         self.connected = False
         self.sendState()
 
     def onConnect(self, ev):
-        log.debug(sys._getframe(0).f_code.co_name)
+        log.info(sys._getframe(0).f_code.co_name)
         self.connected = True
         self.sendState()
 
     def sendState(self, ev=None):
-        log.debug(sys._getframe(0).f_code.co_name)
-        log.debug("connected [%s] loading [%s] state [%s]" % (self.connected, self.loading, self.state))
-        self.tellEmacs(self.state if (self.connected and not self.loading) else "disconnected")
+        log.info(sys._getframe(0).f_code.co_name)
+        log.info("connected [%s] loading [%s] state [%s] recog [%s]" % (self.connected, self.loading, self.micState,
+                                                                         self.recognitionState))
+
+        finalState = None
+        if not self.connected or self.loading:
+            finalState = "disconnected"
+        else:
+            if self.micState == "on":
+                finalState = self.recognitionState
+            else:
+                finalState = self.micState
+        
+        self.tellEmacs(finalState)
         
     def tellEmacs(self, state):
         log.info("mic state: %s" % state)
@@ -44,7 +62,8 @@ class MicrophoneState(object):
 
 _state = MicrophoneState()
 
-getLoop().subscribeEvent(MicrophoneEvent, _state.updateState)
+getLoop().subscribeEvent(MicrophoneEvent, _state.onMicState)
+getLoop().subscribeEvent(RecognitionStateEvent, _state.onRecognitionState)
 getLoop().subscribeEvent(LoadingRulesEvent, _state.loadingRulesChange)
 getLoop().subscribeEvent(ConnectedEvent, _state.onConnect)
 getLoop().subscribeEvent(DisconnectedEvent, _state.onDisconnect)

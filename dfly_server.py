@@ -16,12 +16,12 @@ from EventLoop import getLoop
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
                        RuleRegisterEvent, RuleDeactivateEvent, LoadingRulesEvent,
-                       EventsDrainedEvent, WordListEvent)
+                       EventsDrainedEvent, WordListEvent, RecognitionStateEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadStateMsg, RequestRulesMsg, RecognitionStateMsg,
                       MatchEventMsg, HeartbeatMsg, WordListMsg, makeJSON,
-                      parseMessage, Rule, HashedRule)
+                      parseMessage, Rule, HashedRule, ClientQuitMsg)
 
 BLOCK_TIME = 0.05
 
@@ -159,17 +159,21 @@ class DragonflyThread(DragonflyNode):
         elif isinstance(msg, MicStateMsg):
             self.pushQ.put(MicrophoneEvent(msg.state))
         elif isinstance(msg, RecognitionStateMsg):
-            if msg.state == "start":
+            log.info("got state message: [%s]" % msg)
+            if msg.state == "thinking":
                 self.utterance = []
-            elif msg.state == "stop":
+            elif msg.state in ["failure", "success"]:
                 if self.utterance:
                     self.pushQ.put(WordEvent(' '.join(self.utterance)))
             else:
                 log.error("Unknown recognition state [%s] ignoring message: [%s]" % json_msg)
                 return
+            self.pushQ.put(RecognitionStateEvent(msg.state))
         elif isinstance(msg, RequestRulesMsg):
             for hash in msg.hashes:
                 self.loadRule(hash)
+        elif isinstance(msg, ClientQuitMsg):
+            self.dumpOther()
         else:
             log.error("Unknown message type, ignoring: [%s]" % json_msg)
             return

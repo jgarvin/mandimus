@@ -30,7 +30,7 @@ import protocol
 from protocol import (EnableRulesMsg, LoadRuleMsg, 
                       HeartbeatMsg, MatchEventMsg, MicStateMsg, RecognitionStateMsg,
                       RequestRulesMsg, WordListMsg, RuleType, parseMessage,
-                      makeJSON, LoadStateMsg)
+                      makeJSON, LoadStateMsg, ClientQuitMsg)
 
 importOrReload("SeriesMappingRule", "SeriesMappingRule")
 importOrReload("DragonflyNode", "DragonflyNode")
@@ -50,7 +50,7 @@ def unload():
 
 def snore_and_unload():
     natlink.setMicState('sleeping')
-    client.sendMicState()
+    client.updateMicState()
     #unload()
 
 class GlobalRules(MappingRule):
@@ -374,6 +374,7 @@ class MasterGrammar(object):
             log.info("Grammar deactivated: [%s]" % self.hash)
 
     def unload(self):
+        self.deactivate()
         if self.dflyGrammar:
             self.dflyGrammar.unload()
 
@@ -556,31 +557,26 @@ class DragonflyClient(DragonflyNode):
         mdlog.flush()
         self.retrieveMessages()
         self.heartbeat()
-        self.sendMicState()
+        self.updateMicState()
             
     def setRecognitionState(self, state):
         self.recognitionState = state
         log.info("Recognition state: [%s]" % state)
+        self.sendMsg(makeJSON(RecognitionStateMsg(state)))
 
-        micOn = (natlink.getMicState() == "on")
-        if self.recognitionState == "thinking" and micOn:
-            self.sendMsg(makeJSON(RecognitionStateMsg("start")))
-        elif self.recognitionState in ["failure", "success"] and micOn:
-            self.sendMsg(makeJSON(RecognitionStateMsg("stop")))
-
-        self.sendMicState()
-
-    def sendMicState(self):
-        if not self.other:
-            return
-        
+    def updateMicState(self):
         micState = natlink.getMicState()
-        if micState == "on":
-            micState = self.recognitionState
         
+        # filter redundant change events
         if self.lastMicState is None or micState != self.lastMicState:
-            self.lastMicState = micState
-            self.sendMsg(makeJSON(MicStateMsg(self.lastMicState)))
+            if micState == "off":
+                # without this when you say 'snore' you get an utterance
+                # that never has an end, because Natlink only gives the
+                # processing beginning callback and not the end.
+                self.sendMsg(makeJSON(RecognitionStateMsg("success")))
+
+            if self.sendMsg(makeJSON(MicStateMsg(micState))):
+                self.lastMicState = micState
 
     def onMessage(self, json_msg):
         msg = parseMessage(json_msg)
@@ -836,7 +832,7 @@ class DragonflyClient(DragonflyNode):
                 grammar.unload()
         self.timer.stop()
         try:
-            self.sendMsg(makeJSON(MicStateMsg("disconnected")))
+            self.sendMsg(makeJSON(ClientQuitMsg()))
         except socket.error:
             pass
         DragonflyNode.cleanup(self)

@@ -75,6 +75,7 @@ MicStateMsg = _newDataType("MicStateMsg", "state")
 RecognitionStateMsg = _newDataType("RecognitionStateMsg", "state")
 RequestRulesMsg = _newDataType("RequestRulesMsg", "hashes")
 WordListMsg = _newDataType("WordListMsg", "name words")
+ClientQuitMsg = _newDataType("CliengQuitMsg", [])
 
 Integer = _newDataType("Integer", "name min max")
 Dictation = _newDataType("Dictation", "name")

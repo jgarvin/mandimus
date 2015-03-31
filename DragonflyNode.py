@@ -102,7 +102,7 @@ class DragonflyNode(object):
     def sendMsg(self, msg):
         if self.other is None:
             log.info("can't send msg, not connected")
-            return
+            return False
         
         try:
             try:
@@ -111,6 +111,7 @@ class DragonflyNode(object):
                 data = struct.pack("!I", len(encodedMsg)) + encodedMsg 
                 self.other.settimeout(None)
                 self.other.sendall(data)
+                return True
             except UnicodeDecodeError as e:
                 log.error(str(e))
                 log.error("attempted msg: [%s]" % msg)
@@ -125,6 +126,8 @@ class DragonflyNode(object):
             log.info("Unknown error while sending: %s" % e)
             self.dumpOther()
             raise
+
+        return False
 
 ### DRAGONSHARE RSYNC
 
