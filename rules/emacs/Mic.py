@@ -32,7 +32,8 @@ class MicrophoneState(object):
 
     def loadingRulesChange(self, ev):
         log.info(sys._getframe(0).f_code.co_name)
-        self.loading = False if ev.state == "done" else True
+        log.info("Mic received state: [%s]" % ev.state)
+        self.loading = (ev.state != "done")
         self.sendState()
 
     def onDisconnect(self, ev):

@@ -359,7 +359,7 @@ class MasterGrammar(object):
         self.dflyGrammar.disable()
         
     def active(self):
-        log.info("active check [%s %s %s]" % (self.dflyGrammar is None, self.dflyGrammar and self.dflyGrammar.loaded, self.dflyGrammar and self.dflyGrammar.enabled))
+        #log.info("active check [%s %s %s]" % (self.dflyGrammar is None, self.dflyGrammar and self.dflyGrammar.loaded, self.dflyGrammar and self.dflyGrammar.enabled))
         return self.dflyGrammar and self.dflyGrammar.loaded and self.dflyGrammar.enabled
 
     def activate(self):
@@ -505,6 +505,7 @@ class DragonflyClient(DragonflyNode):
         self.activeMasterGrammar = None
 
         self.lastMicState = None
+        self.lastLoadState = None
         self.recognitionState = "success"
 
         # hashes we've asked for but haven't got a reply for yet
@@ -520,7 +521,6 @@ class DragonflyClient(DragonflyNode):
         self.wordLists = {}
 
     def dumpOther(self):
-        self.lastMicState = None
         DragonflyNode.dumpOther(self)
 
     def _eventLoop(self):
@@ -542,10 +542,14 @@ class DragonflyClient(DragonflyNode):
                 self.other.connect(("192.168.56.1", 23133))
                 log.info('connected')
 
+                # Should reset variables here rather than on disconnect,
+                # because at startup you've never been disconnected.
                 if self.requestedLoads:
                     oldRequests = self.requestedLoads
                     self.requestedLoads = set()
                     self.sendLoadRequest(oldRequests)
+                self.lastMicState = None
+                self.lastLoadState = None
             except socket.error as e:
                 log.info('connect error')
                 self.dumpOther()
@@ -558,6 +562,7 @@ class DragonflyClient(DragonflyNode):
         self.retrieveMessages()
         self.heartbeat()
         self.updateMicState()
+        self.updateLoadState()
             
     def setRecognitionState(self, state):
         self.recognitionState = state
@@ -603,10 +608,20 @@ class DragonflyClient(DragonflyNode):
         if self.activeMasterGrammar:
             self.hashedRules[self.activeMasterGrammar].updateWordList(msg.name, msg.words)
 
+    def updateLoadState(self, forceState=None):
+        if forceState:
+            state = forceState
+        else:
+            state = 'loading'
+            if self.activeMasterGrammar:
+                g = self.hashedRules[self.activeMasterGrammar]
+                state = 'done' if g.active() else state
+        if not self.lastLoadState or self.lastLoadState != state: 
+            self.sendMsg(makeJSON(LoadStateMsg(state)))
+    
     def sendLoadRequest(self, hashes):
         unrequested = hashes - self.requestedLoads
         if unrequested:
-            self.sendMsg(makeJSON(LoadStateMsg('loading')))
             self.requestedLoads.update(unrequested)
             self.sendMsg(makeJSON(RequestRulesMsg(unrequested)))
 
@@ -682,8 +697,8 @@ class DragonflyClient(DragonflyNode):
             try:
                 # TODO: test why this doesn't work. Would be nice for
                 # seeing true amount of loading...
-                self.sendMsg(makeJSON(LoadStateMsg('loading')))
                 log.info("Activating grammar...")
+                self.updateLoadState('loading')
                 grammar.activate()
                 # Word lists may have changed since the last time the
                 # grammar was activated, and the lists have to be
@@ -693,7 +708,6 @@ class DragonflyClient(DragonflyNode):
                 for name, words in self.wordLists.items():
                     grammar.updateWordList(name, words)
                 log.info("Sending load state message...")
-                self.sendMsg(makeJSON(LoadStateMsg('done')))
             except MissingDependency as e:
                 log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
                 self.sendLoadRequest(e.hashes)

@@ -3,7 +3,10 @@ log = mdlog.getLogger(__name__)
 
 from hotCode import importOrReload
 
-import time, socket, errno, select, struct, fcntl
+import time, socket, errno, select, struct, os
+
+if os.name == "posix":
+    import fcntl
 
 from protocol import parseStream, HeartbeatMsg, makeJSON
 from EventList import DisconnectedEvent
@@ -23,9 +26,10 @@ class DragonflyNode(object):
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        fd = sock.fileno()
-        old_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
-        fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
+        if os.name == "posix":
+            fd = sock.fileno()
+            old_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+            fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
         return sock
 
     def retrieveMessages(self):
