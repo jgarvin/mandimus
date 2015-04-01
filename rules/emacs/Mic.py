@@ -8,8 +8,13 @@ from EventList import (MicrophoneEvent, ConnectedEvent, DisconnectedEvent, Loadi
                        RecognitionStateEvent)
 import sys
 
+# TODO: should create/tear down in response to connection, more robust than
+# resetting internal state
 class MicrophoneState(object):
     def __init__(self):
+        self.setupState()
+
+    def setupState(self):
         self.micState = "disconnected"
         self.recognitionState = "success"
         self.connected = False
@@ -32,7 +37,7 @@ class MicrophoneState(object):
 
     def onDisconnect(self, ev):
         log.info(sys._getframe(0).f_code.co_name)
-        self.connected = False
+        self.setupState()
         self.sendState()
 
     def onConnect(self, ev):
