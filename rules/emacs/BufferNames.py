@@ -13,6 +13,7 @@ from EventLoop import getLoop
 from EventList import BufferListEvent
 from requirements.Emacs import IsEmacs
 import string
+from Actions import Key
 
 class BufferEventGenerator(EmacsEventGenerator):
     def __init__(self, name, query):
@@ -58,7 +59,8 @@ class ShellNames(BufferNames):
     query = "(md-get-buffers-in-modes 'comint-mode)" 
 
     def _noChoice(self):
-        runEmacsCmd("(etc-open-shell nil)", queryOnly=False)
+        Key("c-z")()
+        #runEmacsCmd("(etc-open-shell nil)", queryOnly=False)
     
 class ChannelNames(BufferNames):
     phrase = "channel"

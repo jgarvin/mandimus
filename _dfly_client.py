@@ -606,6 +606,7 @@ class DragonflyClient(DragonflyNode):
         log.info("Received word list update [%s] -- [%s]" % (msg.name, msg.words))
         self.wordLists[msg.name] = msg.words
         if self.activeMasterGrammar:
+            self.updateLoadState('loading')
             self.hashedRules[self.activeMasterGrammar].updateWordList(msg.name, msg.words)
 
     def updateLoadState(self, forceState=None):
@@ -616,8 +617,9 @@ class DragonflyClient(DragonflyNode):
             if self.activeMasterGrammar:
                 g = self.hashedRules[self.activeMasterGrammar]
                 state = 'done' if g.active() else state
-        if not self.lastLoadState or self.lastLoadState != state: 
-            self.sendMsg(makeJSON(LoadStateMsg(state)))
+        if self.lastLoadState is None or self.lastLoadState != state: 
+            if self.sendMsg(makeJSON(LoadStateMsg(state))):
+                self.lastLoadState = state
     
     def sendLoadRequest(self, hashes):
         unrequested = hashes - self.requestedLoads
