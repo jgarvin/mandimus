@@ -3,7 +3,7 @@ log = mdlog.getLogger(__name__)
 log.setLevel(20)
 
 import traceback
-import os
+import os, fcntl
 import os.path as op
 import subprocess
 
@@ -42,6 +42,9 @@ class CommandClient(object):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
         self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        fd = self.sock.fileno()
+        old_flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        fcntl.fcntl(fd, fcntl.F_SETFD, old_flags | fcntl.FD_CLOEXEC)
 
     def tryConnect(self):
         if not self.sock:
