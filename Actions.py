@@ -281,11 +281,16 @@ class FormatState(object):
         self.spacesEnabled = spaces
         self.next_numeral = False
         self.next_literal = False
-        
+    
     def format(self, s):
         new = []
         first = True
-        for word in s:
+        last = False
+        for idx, word in enumerate(s):
+            if idx == len(s) - 1:
+                last = True
+                
+            log.info("Word iter: [%s]" % word)
             # startswith is used so much because at some point in development
             # all of the control words started being sent twice by Dragon,
             # so originally you would get \cap but now for some reason you get \cap\cap
@@ -325,16 +330,17 @@ class FormatState(object):
                     #log.info('newWord: ' + newWord)
                     self.no_space_once = True
                 else:
+                    log.info("New word: [%s]" % newWord)
                     if self.cap_once:
                         newWord = word.capitalize()
                         
                     if self.caps:
-                        newWord = word.upper()
-                        
+                        newWord = word.upper()                        
+
                     if not self.no_space_once:
-                        if not first and self.spacesEnabled:
-                            new.append(u' ')
-                        self.no_space_once = False
+                        if not last and self.spacesEnabled:
+                            newWord += u' '
+                            self.no_space_once = False
 
                     if self.next_numeral:
                         if newWord not in string.digits:
@@ -354,14 +360,42 @@ class FormatState(object):
                     pronunciatonIdx = newWord.find("\\\\")
                     if pronunciatonIdx != -1:
                         newWord = newWord[:pronunciatonIdx]
+                    # pronunciatonIdx = newWord.find("\\")
+                    # if pronunciatonIdx != -1:
+                    #     newWord = newWord[:pronunciatonIdx]
 
                     prohibited = ["pronoun", "determiner", "non", "apostrophe-ess",
-                                  "apostrophe ess", "apostrophe", "number", "letter"]
+                                  "apostrophe ess", "apostrophe", "number", "letter", "z"]
 
+                    # apparently for the apostrophe s in Dragons, it gets
+                    # translated to 's/z/z <-- only one dividing slash, and
+                    # it sends it as a totally separate word, so we have to
+                    # manually merge it with the preceeding word
+                    delete_preceding_space = ["z"]
+
+                    merge = False
                     for p in prohibited:
-                        newWord = newWord.replace("\\" + p, "")
+                        if newWord.find("\\" + p) != -1:
+                            log.info("Replacing [%s] with [%s]" % ("\\" + p, ""))
+                            newWord = newWord.replace("\\" + p, "")
+                            if p in delete_preceding_space:
+                                log.info("Requesting words be merged")
+                                merge = True
+
+                    log.info("new so far: [%s]" % new)
+                    if merge and len(new):
+                        log.info("Merging %s with %s" % (new[-1], newWord))
+                        if new[-1].endswith(" "):
+                            log.info("Merge [%s] [%s] [%s]" % (new[-1], new[-1][:-1], newWord))
+                            new[-1] = new[-1][:-1] + newWord
+                        else:
+                            new[-1] = new[-1] + newWord
+                    else:
+                        log.info("Appending")
+                        new.append(newWord)
+
+                    log.info("new word entry: [%s]" % new[-1])
                     log.info("Word: [%s]" % newWord)
-                    new.append(newWord)
                     first = False
                 self.next_literal = False
         return new
