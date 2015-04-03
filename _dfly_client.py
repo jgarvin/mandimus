@@ -24,7 +24,7 @@ from functools import partial
 from copy import copy
 from util import deepEmpty
 from collections import namedtuple
-import hashlib
+import hashlib, time
 
 import protocol
 from protocol import (EnableRulesMsg, LoadRuleMsg, 
@@ -227,6 +227,8 @@ class MasterGrammar(object):
             # already built
             return
 
+        buildStartTime = time.time()
+
         self.checkMissing()
         self.checkDeps(self.fullRullSet)
         self.checkMissing()
@@ -236,6 +238,8 @@ class MasterGrammar(object):
         terminal = {}
 
         allRules = []
+
+        mergeStartTime = time.time()
 
         # Merge series and terminal rules, set independent rules aside
         self.fullName = []
@@ -277,6 +281,9 @@ class MasterGrammar(object):
             # group and only one terminal rule.
             allRules.append(x)
 
+        mergeEndTime = time.time()
+        log.info("Grammar merge time: %ss" % (mergeEndTime - mergeStartTime))
+
         # We really should be doing a topological sort, but this
         # isn't a frequent operation so this inefficiency should
         # be OK. Keep trying to link deps until they're all good.
@@ -287,18 +294,32 @@ class MasterGrammar(object):
                 self.fullName.append(r["name"])
         allRules = uniqueRules
         self.fullName = ",".join(self.fullName)
+
+        concreteTime = 0
         while allRules:
             x = allRules.pop(0)
             
             if not self.cleanupProtoRule(x):
                 allRules.append(x)
                 continue
-            self.buildConcreteRule(x)
 
+            concreteStartTime = time.time()
+            self.buildConcreteRule(x)
+            concreteEndTime = time.time()
+            concreteTime += (blockEndTime - blockStartTime)
+
+
+        #log.info("Block time: %ss" % (blockEndTime - blockStartTime))
+        log.info("Concrete time: %ss" % (concreteTime))
 
         #log.info("made it out of loop")
         self.buildFinalMergedRule()
+
+        buildEndTime = time.time()
+        log.info("Grammar build time: %ss" % (buildEndTime - buildStartTime))
+
         self.setupFinalDflyGrammar()
+
 
     def buildFinalMergedRule(self):
         #log.info("Building final merged rule.")
@@ -338,7 +359,10 @@ class MasterGrammar(object):
             self.dflyGrammar.add_rule(self.finalDflyRule)
         for r in self.independentRules:
             self.dflyGrammar.add_rule(self.concreteRules[r])
+        loadStart = time.time()
         self.dflyGrammar.load()
+        loadEnd = time.time()
+        log.info("Grammar load time: %ss" % (loadEnd - loadStart))
         get_engine().set_exclusiveness(self.dflyGrammar, 1)
 
         # These should never be recognized on their own, only as part of the
