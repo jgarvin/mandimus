@@ -7,7 +7,7 @@ log = mdlog.getLogger(__name__)
 from rules.ContextualRule import makeContextualRule
 from wordUtils import extractWords
 from EventLoop import getLoop, pushEvent
-from EventList import RuleRegisterEvent, WordListEvent, ConnectedEvent, MicrophoneEvent
+from EventList import RuleRegisterEvent, WordListEvent, ConnectedEvent, RecognitionStateEvent
 from protocol import makeHashedRule, RuleType, ListRef, Repetition, RuleRef
 from Actions import runCmd
 from functools import partial
@@ -174,7 +174,7 @@ class WordSelector(object):
                 self._noChoice()
             else:
                 log.error("Command [%s] must be used with a choice." % extras[self._actionRuleRefName]["words"])
-                pushEvent(MicrophoneEvent("failure"))
+                pushEvent(RecognitionStateEvent("failure"))
             return
 
         # Selection process works as follows
@@ -218,7 +218,7 @@ class WordSelector(object):
         if not candidates:
             log.error("No choice with name containing words in order: [%s]" % words)
             log.error("selectionMap: [%s]" % self.selectionMap)
-            pushEvent(MicrophoneEvent("failure"))
+            pushEvent(RecognitionStateEvent("failure"))
             return
 
         # sort by total hole size
