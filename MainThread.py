@@ -19,6 +19,7 @@ import EventList
 import select
 from protocol import RuleType
 from copy import copy
+import collections
 
 FAIL_ON_ERROR = False
 
@@ -58,7 +59,7 @@ class MainThread(object):
         EventLoop.event_loop = self        
 
         self.run = True
-        self.events = []
+        self.events = collections.deque()
         self.eventSubscribers = {}
 
         self.dfly = DragonflyThread(('', 23133), self)
@@ -121,7 +122,7 @@ class MainThread(object):
                     
     def put(self, p):
         log.info("Adding [%s] to events" % (p,))
-        self.events += [p]
+        self.events.append(p)
 
     def processEvent(self, ev):
         #log.debug("processing %s subscribers for event [%s]" % (len(self.eventSubscribers[type(ev)]) if type(ev) in self.eventSubscribers else "wtf", type(ev)))
@@ -146,7 +147,7 @@ class MainThread(object):
         try:
             while self.run:
                 try:
-                    ev = self.events.pop()
+                    ev = self.events.popleft()
                     #log.info("Processing event: [%s]" % (ev,))
                 except IndexError:
                     break

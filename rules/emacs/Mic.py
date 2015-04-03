@@ -15,7 +15,7 @@ class MicrophoneState(object):
         self.setupState()
 
     def setupState(self):
-        self.micState = "disconnected"
+        self.micState = "sleeping"
         self.recognitionState = "success"
         self.connected = False
         self.loading = False
@@ -50,7 +50,7 @@ class MicrophoneState(object):
         log.info(sys._getframe(0).f_code.co_name)
         log.info("connected [%s] loading [%s] state [%s] recog [%s]" % (self.connected, self.loading, self.micState,
                                                                          self.recognitionState))
-
+        
         finalState = None
         if not self.connected or self.loading:
             finalState = "disconnected"

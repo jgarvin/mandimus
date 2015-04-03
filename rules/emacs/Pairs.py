@@ -62,7 +62,10 @@ class PairCmd(Cmd):
         return "(call-interactively '%s)" % op
 
 _mapping  = {
-    "<sexpFunction> [<sexpPair>] [<i>]" : PairCmd(),
+    # the pair specific ones were hardly used and smartparens doesn't handle them
+    # correctly for quotes anyway, may as well remove possibilities from the grammar
+    #"<sexpFunction> [<sexpPair>] [<i>]" : PairCmd(),
+    "<sexpFunction> [<i>]" : PairCmd(),
     "rewrap" : Cmd("(sp-rewrap-sexp)"),
 }
 

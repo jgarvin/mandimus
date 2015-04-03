@@ -290,7 +290,6 @@ class FormatState(object):
             if idx == len(s) - 1:
                 last = True
                 
-            log.info("Word iter: [%s]" % word)
             # startswith is used so much because at some point in development
             # all of the control words started being sent twice by Dragon,
             # so originally you would get \cap but now for some reason you get \cap\cap
@@ -330,17 +329,11 @@ class FormatState(object):
                     #log.info('newWord: ' + newWord)
                     self.no_space_once = True
                 else:
-                    log.info("New word: [%s]" % newWord)
                     if self.cap_once:
                         newWord = word.capitalize()
                         
                     if self.caps:
                         newWord = word.upper()                        
-
-                    if not self.no_space_once:
-                        if not last and self.spacesEnabled:
-                            newWord += u' '
-                            self.no_space_once = False
 
                     if self.next_numeral:
                         if newWord not in string.digits:
@@ -360,10 +353,12 @@ class FormatState(object):
                     pronunciatonIdx = newWord.find("\\\\")
                     if pronunciatonIdx != -1:
                         newWord = newWord[:pronunciatonIdx]
-                    # pronunciatonIdx = newWord.find("\\")
-                    # if pronunciatonIdx != -1:
-                    #     newWord = newWord[:pronunciatonIdx]
 
+                    if not self.no_space_once:
+                        if not last and self.spacesEnabled:
+                            newWord += u' '
+                            self.no_space_once = False
+                        
                     prohibited = ["pronoun", "determiner", "non", "apostrophe-ess",
                                   "apostrophe ess", "apostrophe", "number", "letter", "z"]
 
@@ -376,22 +371,22 @@ class FormatState(object):
                     merge = False
                     for p in prohibited:
                         if newWord.find("\\" + p) != -1:
-                            log.info("Replacing [%s] with [%s]" % ("\\" + p, ""))
+                            #log.info("Replacing [%s] with [%s]" % ("\\" + p, ""))
                             newWord = newWord.replace("\\" + p, "")
                             if p in delete_preceding_space:
-                                log.info("Requesting words be merged")
+                                #log.info("Requesting words be merged")
                                 merge = True
 
-                    log.info("new so far: [%s]" % new)
+                    #log.info("new so far: [%s]" % new)
                     if merge and len(new):
-                        log.info("Merging %s with %s" % (new[-1], newWord))
+                        #log.info("Merging %s with %s" % (new[-1], newWord))
                         if new[-1].endswith(" "):
-                            log.info("Merge [%s] [%s] [%s]" % (new[-1], new[-1][:-1], newWord))
+                            #log.info("Merge [%s] [%s] [%s]" % (new[-1], new[-1][:-1], newWord))
                             new[-1] = new[-1][:-1] + newWord
                         else:
                             new[-1] = new[-1] + newWord
                     else:
-                        log.info("Appending")
+                        #log.info("Appending")
                         new.append(newWord)
 
                     log.info("new word entry: [%s]" % new[-1])

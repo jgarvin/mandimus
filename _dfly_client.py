@@ -50,6 +50,7 @@ def unload():
 
 def snore_and_unload():
     natlink.setMicState('sleeping')
+    client.setRecognitionState('success')
     client.updateMicState()
     #unload()
 
@@ -608,15 +609,20 @@ class DragonflyClient(DragonflyNode):
         if self.activeMasterGrammar:
             self.updateLoadState('loading')
             self.hashedRules[self.activeMasterGrammar].updateWordList(msg.name, msg.words)
+            log.info("Done updating word list")
 
     def updateLoadState(self, forceState=None):
         if forceState:
             state = forceState
         else:
+            log.info("not forcing")
             state = 'loading'
             if self.activeMasterGrammar:
+                log.info("grammars chosen")
                 g = self.hashedRules[self.activeMasterGrammar]
+                log.info("active? %s" % g.active())
                 state = 'done' if g.active() else state
+        log.info("last load state [%s] new load state [%s]" % (self.lastLoadState, state))
         if self.lastLoadState is None or self.lastLoadState != state: 
             if self.sendMsg(makeJSON(LoadStateMsg(state))):
                 self.lastLoadState = state
