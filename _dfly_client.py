@@ -275,6 +275,7 @@ class MasterGrammar(object):
             x["defaults"].update(rule.defaults.items())
             log.info("Adding hash [%s] to name [%s]" % (hash, x["name"]))
             x["hash"].add(hash)
+            x["built"] = False
 
             # allRules will contain all the rules we have left
             # *after* merging. So only one series rule per merge
@@ -292,25 +293,35 @@ class MasterGrammar(object):
             if r not in uniqueRules:
                 uniqueRules.append(r)
                 self.fullName.append(r["name"])
-        allRules = uniqueRules
         self.fullName = ",".join(self.fullName)
+        allRules = uniqueRules
 
-        concreteTime = 0
-        while allRules:
-            x = allRules.pop(0)
-            
-            if not self.cleanupProtoRule(x):
-                allRules.append(x)
-                continue
+        # collapse the hashes
+        for r in allRules:
+            assert type(r["hash"]) == set
+            assert len(r["hash"]) >= 1
+            if r["ruleType"] in (RuleType.SERIES, RuleType.TERMINAL):
+                # We generate a composite hash for our new composite rules
+                log.info("Multi-hash: [%s]" % r["hash"])
+                hashes = sorted(list(r["hash"]))
+                x = hashlib.sha256()
+                x.update("".join(sorted([h for h in hashes])))
+                hash = x.hexdigest()
+                log.info("Composite: [%s]" % hash)
+            else:
+                # We just use the exising hash for a rule if it's not composite
+                [hash] = r["hash"]
+                log.info("Single hash: [%s]" % r["hash"])
+            r["hash"] = hash
 
-            concreteStartTime = time.time()
-            self.buildConcreteRule(x)
-            concreteEndTime = time.time()
-            concreteTime += (blockEndTime - blockStartTime)
+        allPrototypes = { i["hash"] : i for i in allRules }
 
+        self.concreteTime = 0
+        for k, v in allPrototypes.items():
+            if not v["built"]:
+                self.cleanupProtoRule(v, allPrototypes)
 
-        #log.info("Block time: %ss" % (blockEndTime - blockStartTime))
-        log.info("Concrete time: %ss" % (concreteTime))
+        log.info("Concrete time: %ss" % (self.concreteTime))
 
         #log.info("made it out of loop")
         self.buildFinalMergedRule()
@@ -319,7 +330,6 @@ class MasterGrammar(object):
         log.info("Grammar build time: %ss" % (buildEndTime - buildStartTime))
 
         self.setupFinalDflyGrammar()
-
 
     def buildFinalMergedRule(self):
         #log.info("Building final merged rule.")
@@ -436,22 +446,7 @@ class MasterGrammar(object):
 
         log.info("done building")
 
-    def cleanupProtoRule(self, r):
-        assert type(r["hash"]) == set
-        assert len(r["hash"]) >= 1
-        if r["ruleType"] in (RuleType.SERIES, RuleType.TERMINAL):
-            # We generate a composite hash for our new composite rules
-            log.info("Multi-hash: [%s]" % r["hash"])
-            hashes = sorted(list(r["hash"]))
-            x = hashlib.sha256()
-            x.update("".join(sorted([h for h in hashes])))
-            hash = x.hexdigest()
-            log.info("Composite: [%s]" % hash)
-        else:
-            # We just use the exising hash for a rule if it's not composite
-            [hash] = r["hash"]
-            log.info("Single hash: [%s]" % r["hash"])
-
+    def cleanupProtoRule(self, r, allPrototypes):
         # have to uniquify in this round about way because lists
         # aren't hashable and we need them for ListRef. Also this
         # cleanup function can be caled more than once if deps are
@@ -466,23 +461,21 @@ class MasterGrammar(object):
             elif isinstance(e, protocol.Dictation):
                 newExtras.append(dfly.Dictation(e.name))
             elif isinstance(e, protocol.Repetition):
-                if e.rule_ref in self.concreteRules:
-                    # Dragonfly wants RuleRef to take a RuleRef rather than an actual
-                    # Rule, so we just make one rather than forcing the server to
-                    # handle this, see protocol.py comments.
-                    concrete = self.concreteRules[e.rule_ref]
-                    log.info("concrete type: [%s]" % type(concrete))
-                    newExtras.append(dfly.Repetition(dfly.RuleRef(rule=concrete),
-                                                     e.min, e.max, e.name))
-                else:
-                    log.info("Missing [%s]" % (e,))
-                    return False
+                if e.rule_ref not in self.concreteRules:
+                    self.cleanupProtoRule(allPrototypes[e.rule_ref], allPrototypes)
+
+                # Dragonfly wants RuleRef to take a RuleRef rather than an actual
+                # Rule, so we just make one rather than forcing the server to
+                # handle this, see protocol.py comments.
+                concrete = self.concreteRules[e.rule_ref]
+                log.info("concrete type: [%s]" % type(concrete))
+                newExtras.append(dfly.Repetition(dfly.RuleRef(rule=concrete),
+                                                 e.min, e.max, e.name))
             elif isinstance(e, protocol.RuleRef):
-                if e.rule_ref in self.concreteRules:
-                    newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name))
-                else:
-                    log.info("Missing [%s]" % (e,))
-                    return False
+                if e.rule_ref not in self.concreteRules:
+                    self.cleanupProtoRule(allPrototypes[e.rule_ref], allPrototypes)
+
+                newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name))
             elif isinstance(e, protocol.ListRef):
                 self.concreteWordLists[e.name] = List(e.name + "ConcreteList")
                 self.concreteWordLists[e.name].set(e.words)
@@ -491,9 +484,13 @@ class MasterGrammar(object):
                 raise Exception("Unknown extra type: [%s]" % e)
 
         r["extras"] = newExtras
-        # we only do this after we know there are no missing deps, otherwise
-        # the hash changing logic at the top can get applied multiple times!
-        r["hash"] = hash
+        
+        concreteStartTime = time.time()
+        self.buildConcreteRule(r)
+        concreteEndTime = time.time()
+        self.concreteTime += (concreteEndTime - concreteStartTime)
+        
+        r["built"] = True
         return True
 
     def updateWordList(self, name, words):
