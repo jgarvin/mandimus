@@ -54,11 +54,14 @@ class MicrophoneState(object):
                                                                          self.recognitionState))
         
         finalState = None
-        if not self.connected or self.loading:
+        if not self.connected:
             finalState = "disconnected"
         else:
             if self.micState == "on":
-                finalState = self.recognitionState
+                if self.loading:
+                    finalState = "disconnected"
+                else:
+                    finalState = self.recognitionState
             else:
                 finalState = self.micState
         
