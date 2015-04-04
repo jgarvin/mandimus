@@ -155,7 +155,7 @@ class MasterGrammar(object):
         # all we need.
         x = hashlib.sha256()
         x.update("".join(sorted([r for r in self.baseRuleSet])))
-        self.hash = x.hexdigest()
+        self.hash = x.hexdigest()[:32]
 
         # Hashes of rules we depend on but haven't arrived yet.
         # These will be discovered during the dfly grammar building
@@ -276,6 +276,7 @@ class MasterGrammar(object):
             log.info("Adding hash [%s] to name [%s]" % (hash, x["name"]))
             x["hash"].add(hash)
             x["built"] = False
+            x["exported"] = (rule.ruleType == RuleType.INDEPENDENT)
 
             # allRules will contain all the rules we have left
             # *after* merging. So only one series rule per merge
@@ -306,7 +307,7 @@ class MasterGrammar(object):
                 hashes = sorted(list(r["hash"]))
                 x = hashlib.sha256()
                 x.update("".join(sorted([h for h in hashes])))
-                hash = x.hexdigest()
+                hash = x.hexdigest()[:32]
                 log.info("Composite: [%s]" % hash)
             else:
                 # We just use the exising hash for a rule if it's not composite
@@ -317,11 +318,16 @@ class MasterGrammar(object):
         allPrototypes = { i["hash"] : i for i in allRules }
 
         self.concreteTime = 0
+        cleanupTime = 0
         for k, v in allPrototypes.items():
             if not v["built"]:
+                cleanupStart = time.time()
                 self.cleanupProtoRule(v, allPrototypes)
-
-        log.info("Concrete time: %ss" % (self.concreteTime))
+                cleanupEnd = time.time()
+                cleanupTime += (cleanupEnd - cleanupStart)
+                
+        log.info("Total Cleanup time: %ss" % cleanupTime)
+        log.info("Total Concrete time: %ss" % (self.concreteTime))
 
         #log.info("made it out of loop")
         self.buildFinalMergedRule()
@@ -357,8 +363,11 @@ class MasterGrammar(object):
 
         log.info("Building master grammar rule with name [%s] mapping [%s] extras [%s] defaults [%s]"
                  % (self.fullName, mapping, extras, {}))
+        masterTimeStart = time.time()
         self.finalDflyRule = MappingRule(name=self.hash, mapping=mapping, extras=extras,
-                                         defaults={})
+                                         defaults={}, exported=True)
+        masterTimeEnd = time.time()
+        log.info("Master rule construction time: %ss" % (masterTimeEnd - masterTimeStart))
 
     def setupFinalDflyGrammar(self):
         log.info("Setting up final grammar.")
@@ -414,24 +423,28 @@ class MasterGrammar(object):
             self.dflyGrammar.unload()
 
     def buildConcreteRule(self, r):
-        # for independent rules we can use the plain
+        # for independent rules we could use the plain
         # name, but it turns out Dragon crashes if your
         # names get too long, so for combined rules we
         # just use the hash as the name... hopefully
         # that's under the limit
-        name = r["name"]
+        name = r["hash"]
         if r["ruleType"] == RuleType.SERIES:
             t = SeriesMappingRule
-            name = r["hash"]
         elif r["ruleType"] == RuleType.TERMINAL:
             t = MappingRule
-            name = r["hash"]
         else:
             t = MappingRule
 
+        constructionStartTime = time.time()
+
+        log.info("Building rule [%s] with size [%s] num extras [%s] num defaults [%s]" % (r["name"], len(r["mapping"]), len(r["extras"]), len(r["defaults"])))
+
         rule = t(name=name, mapping=r["mapping"], extras=r["extras"],
-                 defaults=r["defaults"])
-        log.info("Building rule with defaults: %s -- %s -- %s" % (r["name"], r["defaults"], r["hash"]))
+                 defaults=r["defaults"], exported=r["exported"])
+        constructionEndTime = time.time()
+
+        log.info("Rule construction time: %ss" % (constructionEndTime - constructionStartTime))
 
         self.concreteRules[r["hash"]] = rule
 
@@ -448,9 +461,7 @@ class MasterGrammar(object):
 
     def cleanupProtoRule(self, r, allPrototypes):
         # have to uniquify in this round about way because lists
-        # aren't hashable and we need them for ListRef. Also this
-        # cleanup function can be caled more than once if deps are
-        # missing so we have to have the check to make idempotent.
+        # aren't hashable and we need them for ListRef.
         if type(r["extras"]) == dict:
             r["extras"] = r["extras"].values()
 
@@ -478,17 +489,17 @@ class MasterGrammar(object):
                 newExtras.append(dfly.RuleRef(self.concreteRules[e.rule_ref], e.name))
             elif isinstance(e, protocol.ListRef):
                 self.concreteWordLists[e.name] = List(e.name + "ConcreteList")
-                self.concreteWordLists[e.name].set(e.words)
+                # self.concreteWordLists[e.name].set(e.words)
                 newExtras.append(dfly.ListRef(e.ref_name, self.concreteWordLists[e.name]))
             else:
                 raise Exception("Unknown extra type: [%s]" % e)
 
         r["extras"] = newExtras
         
-        concreteStartTime = time.time()
+        self.concreteStartTime = time.time()
         self.buildConcreteRule(r)
-        concreteEndTime = time.time()
-        self.concreteTime += (concreteEndTime - concreteStartTime)
+        self.concreteEndTime = time.time()
+        self.concreteTime += (self.concreteEndTime - self.concreteStartTime)
         
         r["built"] = True
         return True
@@ -504,9 +515,13 @@ class MasterGrammar(object):
         # because Dragon is slow.
         if sorted(words) != sorted(self.concreteWordLists[name]):
             log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, words))
+            log.info("old list: %s" % self.concreteWordLists[name])
             # TODO: need to check existing load state, then send a loading message here, then restore
             # old state. This way we can see when word lists are taking a long time to load...
+            updateStart = time.time()
             self.concreteWordLists[name].set(words)
+            updateEnd = time.time()
+            log.info("Word list update time: %ss" % (updateEnd - updateStart))
 
 class DragonflyClient(DragonflyNode):
     def __init__(self):
@@ -699,7 +714,7 @@ class DragonflyClient(DragonflyNode):
 
         x = hashlib.sha256()
         x.update("".join(sorted([r for r in msg.hashes])))
-        hash = x.hexdigest()
+        hash = x.hexdigest()[:32]
 
         if hash in self.hashedRules:
             assert isinstance(self.hashedRules[hash], MasterGrammar)
@@ -727,6 +742,7 @@ class DragonflyClient(DragonflyNode):
                 # TODO: test why this doesn't work. Would be nice for
                 # seeing true amount of loading...
                 log.info("Activating grammar...")
+                activateStart = time.time()
                 self.updateLoadState('loading')
                 grammar.activate()
                 # Word lists may have changed since the last time the
@@ -737,6 +753,8 @@ class DragonflyClient(DragonflyNode):
                 for name, words in self.wordLists.items():
                     grammar.updateWordList(name, words)
                 log.info("Sending load state message...")
+                activateEnd = time.time()
+                log.info("Activation time: %ss" % (activateEnd - activateStart))
             except MissingDependency as e:
                 log.info("Can't build grammar yet, still missing deps: [%s]" % e.hashes)
                 self.sendLoadRequest(e.hashes)

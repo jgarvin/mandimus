@@ -142,7 +142,7 @@ def makeHashedRule(name, mapping, extras=[], defaults={}, ruleType=RuleType.SERI
     # Then remake the rule with the actions included. Up to server to strip them again
     # before sending to client.
     r = Rule(ruleType, seriesMergeGroup, name, mapping, extras, defaults)
-    return HashedRule(r, x.hexdigest())
+    return HashedRule(r, x.hexdigest()[:32])
 
 def parseNamedTuple(p, t):
     del p["dataType"]
