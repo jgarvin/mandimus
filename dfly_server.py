@@ -112,7 +112,7 @@ class DragonflyThread(DragonflyNode):
         
     def dumpOther(self):
         if self.otherHandle:
-            getLoop().unsubscribe(self.otherHandle)
+            self.otherHandle.unsubscribe()
         DragonflyNode.dumpOther(self)
 
     def onClientData(self):

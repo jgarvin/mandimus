@@ -109,7 +109,7 @@ class MainThread(object):
         if isinstance(handleData, TimerEntry):
             self.timers.remove(handleData)
         elif isinstance(handleData[0], int):
-            self.fileSubscribers[handleData[0]].remove(*handleData[1:])
+            self.fileSubscribers[handleData[0]].remove((handleData[1], handleData[2], handleData[3]))
             # TODO: this is wrong, it should be doing counts for each of the
             # event flags if there are really multiple subscriptions to the
             # same fd they are probably on different events.
@@ -147,7 +147,7 @@ class MainThread(object):
                     continue
                     
     def put(self, p):
-        log.info("Adding [%s] to events" % (p,))
+        log.info("Adding [%s] to events" % (type(p),))
         self.events.append(p)
 
     def processEvent(self, ev):
