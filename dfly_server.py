@@ -23,6 +23,7 @@ from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       MatchEventMsg, HeartbeatMsg, WordListMsg, makeJSON,
                       parseMessage, Rule, HashedRule, ClientQuitMsg)
 
+HEARTBEAT_TIME = 1
 BLOCK_TIME = 0.05
 
 class DragonflyThread(DragonflyNode):
@@ -45,11 +46,13 @@ class DragonflyThread(DragonflyNode):
         self.server_socket.bind(self.address)
         self.server_socket.listen(1)
         self.other = None
+        self.otherHandle = None
         self.buf = ''
 
         self.utterance = []
 
-        getLoop().subscribeTimer(BLOCK_TIME, self)
+        getLoop().subscribeTimer(HEARTBEAT_TIME, self.onTimer)
+        getLoop().subscribeFile(self.server_socket.fileno(), getLoop().FILE_INPUT | getLoop().FILE_HUP | getLoop().FILE_ERROR, self.onClientConnect)
         getLoop().subscribeEvent(RuleActivateEvent, self.onRuleActivate)
         getLoop().subscribeEvent(RuleRegisterEvent, self.onRuleRegister)
         getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
@@ -94,19 +97,28 @@ class DragonflyThread(DragonflyNode):
         log.info("Deactivating rule [%s]" % (ev.rule.rule.name,))
         self.activatedRules.remove(ev.rule)
 
-    def __call__(self):
+    def onClientConnect(self):
         if not self.other:
             # we use a timeout so ctrl-c will work
             self.server_socket.settimeout(BLOCK_TIME)
             try:
                 #log.info('waiting for connection')
                 self.other, addr = self.server_socket.accept()
+                self.otherHandle = getLoop().subscribeFile(self.other.fileno(), getLoop().FILE_INPUT, self.onClientData)
                 log.info('connected')
                 self.onConnect()
             except socket.timeout:
                 return
+        
+    def dumpOther(self):
+        if self.otherHandle:
+            getLoop().unsubscribe(self.otherHandle)
+        DragonflyNode.dumpOther(self)
 
+    def onClientData(self):
         self.retrieveMessages()
+
+    def onTimer(self):
         self.heartbeat()
 
     def cleanup(self):

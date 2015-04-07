@@ -53,14 +53,22 @@ class TimerEntry(object):
         self.priority = priority
 
 class MainThread(object):
+    FILE_INPUT = select.EPOLLIN
+    FILE_PRI = select.EPOLLPRI
+    FILE_OUTPUT = select.EPOLLOUT
+    FILE_ERROR = select.EPOLLERR
+    FILE_HUP = select.EPOLLHUP
+    
     def __init__(self):
         # this needs to run before any user modes are imported
+        self.epoll = select.epoll()
         self.timers = []
         EventLoop.event_loop = self        
 
         self.run = True
         self.events = collections.deque()
         self.eventSubscribers = {}
+        self.fileSubscribers = {}
 
         self.dfly = DragonflyThread(('', 23133), self)
         self.win = WindowEventWatcher(self, filterWindows)
@@ -72,7 +80,7 @@ class MainThread(object):
                     "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
         self.MainControlRule = makeContextualRule("MainControlRule", mapping, ruleType=RuleType.INDEPENDENT)
         self.MainControlRule.activate()
-        
+
     def subscribeEvent(self, eventType, handler, priority=100):
         log.info("Setting up event sub: [%s] [%s] [%s]" % (eventType, handler, priority))
         if eventType not in self.eventSubscribers:
@@ -81,17 +89,34 @@ class MainThread(object):
         self.eventSubscribers[eventType].sort(key=lambda x: x[0])
         return SubscriptionHandle((eventType, priority, handler))
 
-    def subscribeTimer(self, seconds, cb, priority=100,):
+    def subscribeTimer(self, seconds, cb, priority=100):
         entry = TimerEntry(time.time() + seconds, cb, seconds, priority)
         self.timers.append(entry)
         self.timers.sort(key=lambda x: x.priority)
         return SubscriptionHandle(entry)
 
+    def subscribeFile(self, fd, flags, cb, priority=100):
+        log.info("Subscribing to fd [%s]" % fd)
+        self.epoll.register(fd, flags)
+        if fd not in self.fileSubscribers:
+            self.fileSubscribers[fd] = []
+        self.fileSubscribers[fd].append((flags, priority, cb))
+        self.fileSubscribers[fd].sort(key=lambda x: x[1])
+        return SubscriptionHandle((fd, flags, priority, cb))
+
     def unsubscribe(self, handleData):
         log.info("Unsubscribing [%s]" % (handleData,))
         if isinstance(handleData, TimerEntry):
             self.timers.remove(handleData)
+        elif isinstance(handleData[0], int):
+            self.fileSubscribers[handleData[0]].remove(*handleData[1:])
+            # TODO: this is wrong, it should be doing counts for each of the
+            # event flags if there are really multiple subscriptions to the
+            # same fd they are probably on different events.
+            if not len(self.fileSubscribers[handleData[0]]):
+                self.epoll.unregister(handleData[0])
         else:
+            # regular event subscription
             self.eventSubscribers[handleData[0]].remove((handleData[1], handleData[2]))
 
     def timeout(self):
@@ -105,6 +130,7 @@ class MainThread(object):
         return max(nextExpiration - time.time(), 0)
 
     def dispatchTimers(self):
+        # TODO: if these were sorted we could break early
         now = time.time()
         for t in self.timers:
             if now >= t.nextExpiration:
@@ -142,10 +168,25 @@ class MainThread(object):
                         raise
                     continue
 
-    def drainEvents(self):
+    def drainEvents(self, fileEvents):
         ranOnce = False
         try:
-            while self.run:
+            # log.info("Checking epoll events")
+            for fileno, event in fileEvents:
+                # log.info("Got event on file [%d]!" % fileno)
+                if fileno in self.fileSubscribers:
+                    # log.info("Dispatching...")
+                    for sub in self.fileSubscribers[fileno]:
+                        # log.info("event [%s] [%s]" % (event, sub[0]))
+                        # log.info("event togethe [%s] [%s]" % (event, sub[0]))
+                        if event & sub[0]:
+                            # log.info("Calling callback")
+                            sub[2]()
+                            ranOnce = True
+                else:
+                    log.error("Received event for file without subscription [%d] [%s]" % (fileno, event))
+            
+            while self.run:                
                 try:
                     ev = self.events.popleft()
                     #log.info("Processing event: [%s]" % (ev,))
@@ -164,9 +205,10 @@ class MainThread(object):
     def __call__(self):
         try:
             while self.run:
-                time.sleep(self.timeout())
+                events = self.epoll.poll(self.timeout())
+                #time.sleep(self.timeout())
                 self.dispatchTimers()
-                self.drainEvents()
+                self.drainEvents(events)
         except KeyboardInterrupt:
             self.stop()
             sys.exit()
