@@ -10,7 +10,8 @@ from EventList import PedalsEvent, ExitEvent, RestartEvent
 from piehid32 import *
 from ctypes import *
 from eventfd import eventfd
-import sys
+import struct
+import sys, os
 import atexit
 
 def bitsToNum(bits):
@@ -41,15 +42,31 @@ def printBuf(data, length):
                 print
                 print
 
+wakeupFd = eventfd(0, 0)
+
 def dataCb(data, deviceId, error):
     log.info("==============Got data==============")
     print data, deviceId, error
+    log.info("Going to push")
+    pushEvent(PedalsEvent(None))
+    global wakeupFd
+    # We use eventfd to wakeup the main thread so it will
+    # see the pedal event
+    log.info("Going to write")
+    written = os.write(wakeupFd, c_longlong(1))
+    if written != 8:
+        log.error("Error writing to eventfd.")
     return 0
 
 def errorCb(deviceId, status):
-    log.info("==============ERROR================")
-    print deviceId, status
+    log.error("Error in pedals: [%s] [%s]" % (deviceId, status))
     return 0
+
+def readOut():
+    num = os.read(wakeupFd, 8)
+    log.info("Read %d" % struct.unpack('@Q', num)[0])
+
+getLoop().subscribeFile(wakeupFd, getLoop().FILE_INPUT, readOut)
 
 _dataCb = PHIDDataEvent(dataCb)
 _errorCb = PHIDErrorEvent(errorCb)
@@ -105,7 +122,11 @@ def exitHandler():
         ClearBuffer(dev.contents.Handle)
         dev = None
 
-atexit.register(exitHandler)
+#atexit.register(exitHandler)
 getLoop().subscribeEvent(ExitEvent, exitHandler)
 getLoop().subscribeEvent(RestartEvent, exitHandler)
 
+def pedalsTest(ev):
+    log.info("got pedals event")
+
+getLoop().subscribeEvent(PedalsEvent, pedalsTest)

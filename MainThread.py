@@ -149,9 +149,9 @@ class MainThread(object):
                     continue
                     
     def put(self, p):
-        with self.eventsLock:
-            log.info("Adding [%s] to events" % (type(p),))
-            self.events.append(p)
+        # with self.eventsLock:
+        log.info("Adding [%s] to events" % (type(p),))
+        self.events.append(p)
 
     def processEvent(self, ev):
         #log.debug("processing %s subscribers for event [%s]" % (len(self.eventSubscribers[type(ev)]) if type(ev) in self.eventSubscribers else "wtf", type(ev)))
@@ -172,39 +172,39 @@ class MainThread(object):
                     continue
 
     def drainEvents(self, fileEvents):
-        with self.eventsLock:
-            ranOnce = False
-            try:
-                # log.info("Checking epoll events")
-                for fileno, event in fileEvents:
-                    # log.info("Got event on file [%d]!" % fileno)
-                    if fileno in self.fileSubscribers:
-                        # log.info("Dispatching...")
-                        for sub in self.fileSubscribers[fileno]:
-                            # log.info("event [%s] [%s]" % (event, sub[0]))
-                            # log.info("event togethe [%s] [%s]" % (event, sub[0]))
-                            if event & sub[0]:
-                                # log.info("Calling callback")
-                                sub[2]()
-                                ranOnce = True
-                    else:
-                        log.error("Received event for file without subscription [%d] [%s]" % (fileno, event))
+        # with self.eventsLock:
+        ranOnce = False
+        try:
+            # log.info("Checking epoll events")
+            for fileno, event in fileEvents:
+                # log.info("Got event on file [%d]!" % fileno)
+                if fileno in self.fileSubscribers:
+                    # log.info("Dispatching...")
+                    for sub in self.fileSubscribers[fileno]:
+                        # log.info("event [%s] [%s]" % (event, sub[0]))
+                        # log.info("event togethe [%s] [%s]" % (event, sub[0]))
+                        if event & sub[0]:
+                            # log.info("Calling callback")
+                            sub[2]()
+                            ranOnce = True
+                else:
+                    log.error("Received event for file without subscription [%d] [%s]" % (fileno, event))
 
-                while self.run:                
-                    try:
-                        ev = self.events.popleft()
-                        #log.info("Processing event: [%s]" % (ev,))
-                    except IndexError:
-                        break
+            while self.run:                
+                try:
+                    ev = self.events.popleft()
+                    #log.info("Processing event: [%s]" % (ev,))
+                except IndexError:
+                    break
 
-                    self.processEvent(ev)
-                    ranOnce = True
+                self.processEvent(ev)
+                ranOnce = True
 
-                if ranOnce:
-                    self.processEvent(EventsDrainedEvent())
-            except KeyboardInterrupt:
-                self.stop()
-                sys.exit()
+            if ranOnce:
+                self.processEvent(EventsDrainedEvent())
+        except KeyboardInterrupt:
+            self.stop()
+            sys.exit()
         
     def __call__(self):
         try:
