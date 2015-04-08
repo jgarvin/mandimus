@@ -10,6 +10,9 @@ RuleRegisterEvent = namedtuple("RuleRegisterEvent", "rule")
 WindowListEvent = namedtuple("WindowListEvent", "windows") 
 WordEvent = namedtuple("WordEvent", "words")
 WordListEvent = namedtuple("WordListEvent", "name words")
+RecognitionStateEvent = namedtuple("RecognitionStateEvent", "state") 
+PedalsEvent = namedtuple("PedalsEvent", "pedalStates")
+ExitEvent = namedtuple("ExitEvent", [])
 
 # emacs events
 BufferListEvent = namedtuple("BufferListEvent", "query choices") 
@@ -20,12 +23,10 @@ MajorModeEvent = namedtuple("MajorModeEvent", "modeList")
 NickEvent = namedtuple("NickEvent", "choices")
 ProjectFileListEvent = namedtuple("BufferListEvent", "choices") 
 ProjectListEvent = namedtuple("ProjectListEvent", "choices") 
-RecognitionStateEvent = namedtuple("RecognitionStateEvent", "state") 
 
 class ConnectedEvent(object): pass
 class DisconnectedEvent(object): pass
 class EventsDrainedEvent(object): pass
-class ExitEvent(object): pass
 class RestartEvent(object): pass
 class StartupCompleteEvent(object): pass
 

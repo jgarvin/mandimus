@@ -20,8 +20,9 @@ import select
 from protocol import RuleType
 from copy import copy
 import collections
+from threading import Lock
 
-FAIL_ON_ERROR = False
+FAIL_ON_ERROR = True
 
 badWindows = {
     "Desktop",
@@ -67,6 +68,7 @@ class MainThread(object):
 
         self.run = True
         self.events = collections.deque()
+        self.eventsLock = Lock()
         self.eventSubscribers = {}
         self.fileSubscribers = {}
 
@@ -147,8 +149,9 @@ class MainThread(object):
                     continue
                     
     def put(self, p):
-        log.info("Adding [%s] to events" % (type(p),))
-        self.events.append(p)
+        with self.eventsLock:
+            log.info("Adding [%s] to events" % (type(p),))
+            self.events.append(p)
 
     def processEvent(self, ev):
         #log.debug("processing %s subscribers for event [%s]" % (len(self.eventSubscribers[type(ev)]) if type(ev) in self.eventSubscribers else "wtf", type(ev)))
@@ -169,38 +172,39 @@ class MainThread(object):
                     continue
 
     def drainEvents(self, fileEvents):
-        ranOnce = False
-        try:
-            # log.info("Checking epoll events")
-            for fileno, event in fileEvents:
-                # log.info("Got event on file [%d]!" % fileno)
-                if fileno in self.fileSubscribers:
-                    # log.info("Dispatching...")
-                    for sub in self.fileSubscribers[fileno]:
-                        # log.info("event [%s] [%s]" % (event, sub[0]))
-                        # log.info("event togethe [%s] [%s]" % (event, sub[0]))
-                        if event & sub[0]:
-                            # log.info("Calling callback")
-                            sub[2]()
-                            ranOnce = True
-                else:
-                    log.error("Received event for file without subscription [%d] [%s]" % (fileno, event))
-            
-            while self.run:                
-                try:
-                    ev = self.events.popleft()
-                    #log.info("Processing event: [%s]" % (ev,))
-                except IndexError:
-                    break
+        with self.eventsLock:
+            ranOnce = False
+            try:
+                # log.info("Checking epoll events")
+                for fileno, event in fileEvents:
+                    # log.info("Got event on file [%d]!" % fileno)
+                    if fileno in self.fileSubscribers:
+                        # log.info("Dispatching...")
+                        for sub in self.fileSubscribers[fileno]:
+                            # log.info("event [%s] [%s]" % (event, sub[0]))
+                            # log.info("event togethe [%s] [%s]" % (event, sub[0]))
+                            if event & sub[0]:
+                                # log.info("Calling callback")
+                                sub[2]()
+                                ranOnce = True
+                    else:
+                        log.error("Received event for file without subscription [%d] [%s]" % (fileno, event))
 
-                self.processEvent(ev)
-                ranOnce = True
+                while self.run:                
+                    try:
+                        ev = self.events.popleft()
+                        #log.info("Processing event: [%s]" % (ev,))
+                    except IndexError:
+                        break
 
-            if ranOnce:
-                self.processEvent(EventsDrainedEvent())
-        except KeyboardInterrupt:
-            self.stop()
-            sys.exit()
+                    self.processEvent(ev)
+                    ranOnce = True
+
+                if ranOnce:
+                    self.processEvent(EventsDrainedEvent())
+            except KeyboardInterrupt:
+                self.stop()
+                sys.exit()
         
     def __call__(self):
         try:
@@ -231,6 +235,7 @@ if __name__ == "__main__":
     main = MainThread()
     
     imports = [
+        ('Pedals', ['']),
         ('rules.Always', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),
