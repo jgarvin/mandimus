@@ -14,6 +14,7 @@ _keywords = [
     ["cp", "copy"],
     "date",
     ["/dev/null", "dev null"],
+    "diff",
     "disown",
     "do",
     "done",

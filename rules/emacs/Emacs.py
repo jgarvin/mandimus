@@ -118,8 +118,6 @@ _mapping = {
     # buffer commands
     "switch (buff | buffer)"      : Key("c-x, b"),
     "destroy buff"                : Key("c-x,k,enter"),
-# supplanted by more general FolderNames rule
-#    "folder"                      : Key("c-x,c-j"),
 
     "open client log"             : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
@@ -194,8 +192,8 @@ _mapping  = {
     "per [<n>]"                     : Key("a-b:%(n)d"),
     "over [<n>]"                    : Cmd("(forward-symbol 1)"),
     "under [<n>]"                   : Cmd("(forward-symbol -1)"),
-    "leaf [<n>]"                    : Key("c-v:%(n)d"),
-    "feel [<n>]"                    : Key("a-v:%(n)d"),
+    "leaf [<n>]"                    : Key("pgdown:%(n)d"),
+    "feel [<n>]"                    : Key("pgup:%(n)d"),
     "center"                        : Key("c-l"),
     "gruff [<n>]"                   : Key("a-lbrace:%(n)d"),
     "graph [<n>]"                   : Key("a-rbrace:%(n)d"),

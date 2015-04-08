@@ -13,8 +13,9 @@ class EmacsText(Text):
     def __init__(self, data, lower=True, capitalCheck=True, spaceCheck=True,
                  allCaps=False):
         Text.__init__(self, data, lower=lower)
-        self.capitalCheck = capitalCheck
+        self.capitalCheck = capitalCheck and not allCaps
         self.spaceCheck = spaceCheck 
+        self.allCaps = allCaps
 
     def _print(self, words):
         # There's no good elisp way to handle putting characters into
@@ -22,6 +23,7 @@ class EmacsText(Text):
         # focus disables search as you type.
         inSearchMode = runEmacsCmd("isearch-mode") != 'nil'
         inMiniBuffer = '*Minibuf-' in runEmacsCmd("(with-current-buffer (buffer-name))")
+        words = words if not self.allCaps else [i.upper() for i in words]
         if inSearchMode or inMiniBuffer:
             Text._print(self, words)
         else:
