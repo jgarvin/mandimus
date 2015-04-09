@@ -23,7 +23,7 @@ Mandimus isn't very mature yet, better documentation is forthcoming. Rough sketc
 
 #Features
 
- * Staring multiple commands together in a single utterance, "left up larp camel hello world" will work.
+ * Saying multiple commands together in a single utterance, "left up larp camel hello world" will work.
  * Seamlessly switch between arbitrary dictation and command mode within an utterance
  * Dynamic grammars for things like window names, words near cursor, etc.
  * Window management
