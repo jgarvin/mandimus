@@ -18,6 +18,19 @@ wakeupFd = eventfd(0, 0)
 
 oldPedals = [0] * 3
 
+_pedalCb = None
+
+def setPedalCallback(cb):
+    """
+    Set a callback that gets executed on the pedal reading thread,
+    unlike the PedalEvent which is always received on the main thread.
+    """
+    global _pedalCb
+    _pedalCb = cb
+
+def getPedalCallback():
+    return _pedalCb
+
 def dataCb(data, deviceId, error):
     global oldPedals
     pedals = [0] * 3
@@ -30,6 +43,8 @@ def dataCb(data, deviceId, error):
     oldPedals = pedals
     log.info("Pedals: [%s]" % pedals)
     pushEvent(PedalsEvent(pedals, changed))
+    if _pedalCb:
+        _pedalCb(pedals, changed)
     global wakeupFd
     # We use eventfd to wakeup the main thread so it will
     # see the pedal event

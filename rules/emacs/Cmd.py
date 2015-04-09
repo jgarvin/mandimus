@@ -98,8 +98,12 @@ class CommandClient(object):
                 newData = self.sock.recv(4096)
                 out += newData
                 # out += unicode(self.sock.recv(4096), 'utf-8')
+        except socket.timeout as e:
+            log.info("Emacs socket timeout.")
+            self.dumpOther()
+            return False
         except socket.error as e:
-            log.info("Socket error while receiving: %s" % e)
+            log.info("Emacs socket error while receiving: %s" % e)
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
                 self.dumpOther()
                 return False
@@ -153,7 +157,7 @@ class CommandClient(object):
             return "nil"
 
         out = self.recvMsg().rstrip()
-            
+        
         if dolog or logCommands:
             log.info('emacs output: [%s]' % out)
         return out
