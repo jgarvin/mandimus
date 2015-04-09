@@ -14,45 +14,25 @@ import struct
 import sys, os
 import atexit
 
-def bitsToNum(bits):
-    m = { 4 : 3, 8 : 4, 16 : 5, 32 : 6 }
-    val = ord(bits)
-    if val in m:
-        return m[val]
-    return val
-
-def getIndexOfKey(data):
-    if data[3] > 0:
-        return bitsToNum(data[3])-1;
-    if data[4] > 0:
-        return bitsToNum(data[4])+7;
-    if data[5] > 0:
-        return bitsToNum(data[5])+15;
-    if data[6] > 0:
-        return bitsToNum(data[6])+23;
-    return -1; 
-
-def printBuf(data, length):
-    for i in range(length):
-        print "%02x" % ord(data[i]),
-        if (i + 1) % 8 == 0:
-            print " ",
-            if (i + 1) % 16 == 0:
-                print
-                print
-                print
-
 wakeupFd = eventfd(0, 0)
 
+oldPedals = [0] * 3
+
 def dataCb(data, deviceId, error):
-    log.info("==============Got data==============")
-    print data, deviceId, error
-    log.info("Going to push")
-    pushEvent(PedalsEvent(None))
+    global oldPedals
+    pedals = [0] * 3
+    pedals[0] = (data[3] & 2) != 0
+    pedals[1] = (data[3] & 4) != 0
+    pedals[2] = (data[3] & 8) != 0
+    for i in range(3):
+        if pedals[i] != oldPedals[i]:
+            changed = i
+    oldPedals = pedals
+    log.info("Pedals: [%s]" % pedals)
+    pushEvent(PedalsEvent(pedals, changed))
     global wakeupFd
     # We use eventfd to wakeup the main thread so it will
     # see the pedal event
-    log.info("Going to write")
     written = os.write(wakeupFd, c_longlong(1))
     if written != 8:
         log.error("Error writing to eventfd.")
@@ -64,7 +44,7 @@ def errorCb(deviceId, status):
 
 def readOut():
     num = os.read(wakeupFd, 8)
-    log.info("Read %d" % struct.unpack('@Q', num)[0])
+    log.debug("Pedal EventFD Read: %d" % struct.unpack('@Q', num)[0])
 
 getLoop().subscribeFile(wakeupFd, getLoop().FILE_INPUT, readOut)
 
@@ -126,7 +106,7 @@ def exitHandler():
 getLoop().subscribeEvent(ExitEvent, exitHandler)
 getLoop().subscribeEvent(RestartEvent, exitHandler)
 
-def pedalsTest(ev):
-    log.info("got pedals event")
+# def pedalsTest(ev):
+#     log.info("got pedals event")
 
-getLoop().subscribeEvent(PedalsEvent, pedalsTest)
+# getLoop().subscribeEvent(PedalsEvent, pedalsTest)

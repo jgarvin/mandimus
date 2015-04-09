@@ -11,7 +11,7 @@ WindowListEvent = namedtuple("WindowListEvent", "windows")
 WordEvent = namedtuple("WordEvent", "words")
 WordListEvent = namedtuple("WordListEvent", "name words")
 RecognitionStateEvent = namedtuple("RecognitionStateEvent", "state") 
-PedalsEvent = namedtuple("PedalsEvent", "pedalStates")
+PedalsEvent = namedtuple("PedalsEvent", "pedalStates changed")
 ExitEvent = namedtuple("ExitEvent", [])
 
 # emacs events

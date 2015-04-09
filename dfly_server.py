@@ -71,11 +71,17 @@ class DragonflyThread(DragonflyNode):
         self.lastWordList[ev.name] = copy(ev.words)
 
     def onRuleRegister(self, ev):
+        # if not isinstance(ev.rule, HashedRule):
+        #     return
+
         if ev.rule.hash not in self.hashedRules:
             log.info("Adding new hashed rule [%s]" % (ev.rule.rule.name,))
             self.hashedRules[ev.rule.hash] = ev.rule
 
     def onRuleActivate(self, ev):
+        # if not isinstance(ev.rule, HashedRule):
+        #     return
+        
         self.onRuleRegister(ev)
 
         if ev.rule in self.activatedRules:
@@ -86,6 +92,9 @@ class DragonflyThread(DragonflyNode):
         self.activatedRules.add(ev.rule)
 
     def onRuleDeactivate(self, ev):
+        # if not isinstance(ev.rule, HashedRule):
+        #     return
+
         if ev.rule.hash not in self.hashedRules:
             log.error("Deactivating rule that was never added [%s]" % (ev.rule,))
             return

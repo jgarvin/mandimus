@@ -236,6 +236,7 @@ if __name__ == "__main__":
     
     imports = [
         ('Pedals', ['']),
+        ('rules.PedalConfig', ['']),
         ('rules.Always', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),
