@@ -13,21 +13,21 @@ Mandimus is VERY rough around the edges. I wrote it as quickly as possible to ge
 
 Mandimus isn't very mature yet, better documentation is forthcoming. Rough sketch:
 
--Setup Natlink/DNS12 on windows host or VM (check the much more complete aenea installation instructions for this for now)
--Copy _dfly_client.py over to the Macrosystem folder in Natlink
--Run mainloop.sh on your linux host
--Take all the md-*.el files from my joe-etc repository and load them into emacs
--Change hard coded IPs/ports for your machines
--Install xdotool
--Probably more I've forgotten
+ * Setup Natlink/DNS12 on windows host or VM (check the much more complete aenea installation instructions for this for now)
+ * Copy _dfly_client.py over to the Macrosystem folder in Natlink
+ * Run mainloop.sh on your linux host
+ * Take all the md-*.el files from my joe-etc repository and load them into emacs
+ * Change hard coded IPs/ports for your machines
+ * Install xdotool
+ * Probably more I've forgotten
 
 #Features
 
--String multiple commands together in a single utterance, "left up larp camel hello world" will work.
--Seamlessly switch between arbitrary dictation and command mode within an utterance
--Dynamic grammars for things like window names, words near cursor, etc.
--Window management
--Emacs text/buffer navigation
--Emacs mode specific commands
--Support for X-Keys foot pedals, can be used to trigger grammar changes
--Support out of the box for emacs lisp, python, and some C++
+ * Staring multiple commands together in a single utterance, "left up larp camel hello world" will work.
+ * Seamlessly switch between arbitrary dictation and command mode within an utterance
+ * Dynamic grammars for things like window names, words near cursor, etc.
+ * Window management
+ * Emacs text/buffer navigation
+ * Emacs mode specific commands
+ * Support for X-Keys foot pedals, can be used to trigger grammar changes
+ * Support out of the box for emacs lisp, python, and some C++
