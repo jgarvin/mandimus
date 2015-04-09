@@ -1,7 +1,7 @@
 '''Wrapper for PieHid32.h
 
 Generated with:
-./ctypesgen.py -o piehid32.py -l /home/prophet/opt/lib/libpiehid.so /home/prophet/Downloads/xkeys/piehid/PieHid32.h
+./ctypesgen.py -o piehid32.py -l libpiehid.so /home/prophet/Downloads/xkeys/piehid/PieHid32.h
 
 Do not modify this file.
 '''
@@ -604,7 +604,7 @@ add_library_search_dirs([])
 
 # Begin libraries
 
-_libs["/home/prophet/opt/lib/libpiehid.so"] = load_library("/home/prophet/opt/lib/libpiehid.so")
+_libs["libpiehid.so"] = load_library("libpiehid.so")
 
 # 1 libraries
 # End libraries
@@ -657,122 +657,122 @@ PHIDDataEvent = CFUNCTYPE(UNCHECKED(c_uint), POINTER(c_ubyte), c_uint, c_uint) #
 PHIDErrorEvent = CFUNCTYPE(UNCHECKED(c_uint), c_uint, c_uint) # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 149
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 151
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'GetErrorString'):
-    GetErrorString = _libs['/home/prophet/opt/lib/libpiehid.so'].GetErrorString
+if hasattr(_libs['libpiehid.so'], 'GetErrorString'):
+    GetErrorString = _libs['libpiehid.so'].GetErrorString
     GetErrorString.argtypes = [c_int, String, c_int]
     GetErrorString.restype = None
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 152
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'EnumeratePIE'):
-    EnumeratePIE = _libs['/home/prophet/opt/lib/libpiehid.so'].EnumeratePIE
+if hasattr(_libs['libpiehid.so'], 'EnumeratePIE'):
+    EnumeratePIE = _libs['libpiehid.so'].EnumeratePIE
     EnumeratePIE.argtypes = [c_long, POINTER(TEnumHIDInfo), POINTER(c_long)]
     EnumeratePIE.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 153
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'GetXKeyVersion'):
-    GetXKeyVersion = _libs['/home/prophet/opt/lib/libpiehid.so'].GetXKeyVersion
+if hasattr(_libs['libpiehid.so'], 'GetXKeyVersion'):
+    GetXKeyVersion = _libs['libpiehid.so'].GetXKeyVersion
     GetXKeyVersion.argtypes = [c_long]
     GetXKeyVersion.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 154
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'SetupInterfaceEx'):
-    SetupInterfaceEx = _libs['/home/prophet/opt/lib/libpiehid.so'].SetupInterfaceEx
+if hasattr(_libs['libpiehid.so'], 'SetupInterfaceEx'):
+    SetupInterfaceEx = _libs['libpiehid.so'].SetupInterfaceEx
     SetupInterfaceEx.argtypes = [c_long]
     SetupInterfaceEx.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 155
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'CloseInterface'):
-    CloseInterface = _libs['/home/prophet/opt/lib/libpiehid.so'].CloseInterface
+if hasattr(_libs['libpiehid.so'], 'CloseInterface'):
+    CloseInterface = _libs['libpiehid.so'].CloseInterface
     CloseInterface.argtypes = [c_long]
     CloseInterface.restype = None
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 156
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'CleanupInterface'):
-    CleanupInterface = _libs['/home/prophet/opt/lib/libpiehid.so'].CleanupInterface
+if hasattr(_libs['libpiehid.so'], 'CleanupInterface'):
+    CleanupInterface = _libs['libpiehid.so'].CleanupInterface
     CleanupInterface.argtypes = [c_long]
     CleanupInterface.restype = None
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 157
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'ReadData'):
-    ReadData = _libs['/home/prophet/opt/lib/libpiehid.so'].ReadData
+if hasattr(_libs['libpiehid.so'], 'ReadData'):
+    ReadData = _libs['libpiehid.so'].ReadData
     ReadData.argtypes = [c_long, POINTER(c_ubyte)]
     ReadData.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 158
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'BlockingReadData'):
-    BlockingReadData = _libs['/home/prophet/opt/lib/libpiehid.so'].BlockingReadData
+if hasattr(_libs['libpiehid.so'], 'BlockingReadData'):
+    BlockingReadData = _libs['libpiehid.so'].BlockingReadData
     BlockingReadData.argtypes = [c_long, POINTER(c_ubyte), c_int]
     BlockingReadData.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 159
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'WriteData'):
-    WriteData = _libs['/home/prophet/opt/lib/libpiehid.so'].WriteData
+if hasattr(_libs['libpiehid.so'], 'WriteData'):
+    WriteData = _libs['libpiehid.so'].WriteData
     WriteData.argtypes = [c_long, POINTER(c_ubyte)]
     WriteData.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 160
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'FastWrite'):
-    FastWrite = _libs['/home/prophet/opt/lib/libpiehid.so'].FastWrite
+if hasattr(_libs['libpiehid.so'], 'FastWrite'):
+    FastWrite = _libs['libpiehid.so'].FastWrite
     FastWrite.argtypes = [c_long, POINTER(c_ubyte)]
     FastWrite.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 161
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'ReadLast'):
-    ReadLast = _libs['/home/prophet/opt/lib/libpiehid.so'].ReadLast
+if hasattr(_libs['libpiehid.so'], 'ReadLast'):
+    ReadLast = _libs['libpiehid.so'].ReadLast
     ReadLast.argtypes = [c_long, POINTER(c_ubyte)]
     ReadLast.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 162
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'ClearBuffer'):
-    ClearBuffer = _libs['/home/prophet/opt/lib/libpiehid.so'].ClearBuffer
+if hasattr(_libs['libpiehid.so'], 'ClearBuffer'):
+    ClearBuffer = _libs['libpiehid.so'].ClearBuffer
     ClearBuffer.argtypes = [c_long]
     ClearBuffer.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 163
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'GetReadLength'):
-    GetReadLength = _libs['/home/prophet/opt/lib/libpiehid.so'].GetReadLength
+if hasattr(_libs['libpiehid.so'], 'GetReadLength'):
+    GetReadLength = _libs['libpiehid.so'].GetReadLength
     GetReadLength.argtypes = [c_long]
     GetReadLength.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 164
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'GetWriteLength'):
-    GetWriteLength = _libs['/home/prophet/opt/lib/libpiehid.so'].GetWriteLength
+if hasattr(_libs['libpiehid.so'], 'GetWriteLength'):
+    GetWriteLength = _libs['libpiehid.so'].GetWriteLength
     GetWriteLength.argtypes = [c_long]
     GetWriteLength.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 165
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'SetDataCallback'):
-    SetDataCallback = _libs['/home/prophet/opt/lib/libpiehid.so'].SetDataCallback
+if hasattr(_libs['libpiehid.so'], 'SetDataCallback'):
+    SetDataCallback = _libs['libpiehid.so'].SetDataCallback
     SetDataCallback.argtypes = [c_long, PHIDDataEvent]
     SetDataCallback.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 166
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'SetErrorCallback'):
-    SetErrorCallback = _libs['/home/prophet/opt/lib/libpiehid.so'].SetErrorCallback
+if hasattr(_libs['libpiehid.so'], 'SetErrorCallback'):
+    SetErrorCallback = _libs['libpiehid.so'].SetErrorCallback
     SetErrorCallback.argtypes = [c_long, PHIDErrorEvent]
     SetErrorCallback.restype = c_uint
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 170
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'SuppressDuplicateReports'):
-    SuppressDuplicateReports = _libs['/home/prophet/opt/lib/libpiehid.so'].SuppressDuplicateReports
+if hasattr(_libs['libpiehid.so'], 'SuppressDuplicateReports'):
+    SuppressDuplicateReports = _libs['libpiehid.so'].SuppressDuplicateReports
     SuppressDuplicateReports.argtypes = [c_long, c_bool]
     SuppressDuplicateReports.restype = None
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 171
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'DisableDataCallback'):
-    DisableDataCallback = _libs['/home/prophet/opt/lib/libpiehid.so'].DisableDataCallback
+if hasattr(_libs['libpiehid.so'], 'DisableDataCallback'):
+    DisableDataCallback = _libs['libpiehid.so'].DisableDataCallback
     DisableDataCallback.argtypes = [c_long, c_bool]
     DisableDataCallback.restype = None
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 172
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'IsDataCallbackDisabled'):
-    IsDataCallbackDisabled = _libs['/home/prophet/opt/lib/libpiehid.so'].IsDataCallbackDisabled
+if hasattr(_libs['libpiehid.so'], 'IsDataCallbackDisabled'):
+    IsDataCallbackDisabled = _libs['libpiehid.so'].IsDataCallbackDisabled
     IsDataCallbackDisabled.argtypes = [c_long]
     IsDataCallbackDisabled.restype = c_bool
 
 # /home/prophet/Downloads/xkeys/piehid/PieHid32.h: 173
-if hasattr(_libs['/home/prophet/opt/lib/libpiehid.so'], 'GetSuppressDuplicateReports'):
-    GetSuppressDuplicateReports = _libs['/home/prophet/opt/lib/libpiehid.so'].GetSuppressDuplicateReports
+if hasattr(_libs['libpiehid.so'], 'GetSuppressDuplicateReports'):
+    GetSuppressDuplicateReports = _libs['libpiehid.so'].GetSuppressDuplicateReports
     GetSuppressDuplicateReports.argtypes = [c_long]
     GetSuppressDuplicateReports.restype = c_bool
 
