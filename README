@@ -1,39 +1,31 @@
 #Mandimus
-Mandimus is a speech recognizer that will run commands when a user speaks preset sentences.
+Mandimus is a program that interfaces with Dragon Naturally Speaking to provide speech recognition based control of your computer, and in particular Emacs. I wrote this because I developed a repetitive strain injury and want to save other programmers from the pain and frustration I experienced. Existing recognition tools are almost all targeted towards writing word documents, not code.
 
-##Requirements
-1. pocketsphinx
-2. gstreamer-0.10 (and what ever plugin has pocket sphinx support)
-3. gstreamer-0.10 base plugins (required for alsa)
-4. pyside (only required for the Qt based UI)
-5. pygtk (only required for the Gtk based UI)
+Originally inspired by the work by Travis Rudd in his Python Coding By Voice video, although AFAIK he never published his code.
 
-##Usage
-0. move commands.tmp to ~/.config/mandimus/commands.conf and fill the file with sentences and command to run
-1. Run Mandimus.py, this will generate ~/.config/mandimus/sentences.corpus based on sentences in the 'commands' file
-2. quit mandimus (there is a good chance it will just segfault)
-3. go to <http://www.speech.cs.cmu.edu/tools/lmtool.html> and upload the sentences.corpus file
-4. download the resulting XXXX.lm file to the ~/.config/mandimus/language directory and rename to file to 'lm'
-5. download the resulting XXXX.dic file to the ~/.config/mandimus/language directory and rename to file to 'dic'
-6. run Mandimus.py
-    * for Qt GUI, run Mandimus.py -i q
-    * for Gtk GUI, run Mandimus.py -i g
-    * to start a UI in 'continuous' listen mode, use the -c flag
-    * to use a microphone other than the system default, use the -d flag
-7. start talking
+#Status
 
-####Bonus
-once the sentences.corpus file has been created, run the language_updater.sh script to automate the process of creating and downloading language files.
+Mandimus is VERY rough around the edges. I wrote it as quickly as possible to get productive again after my injury. To make matters worse this is the project I used to learn elisp. Not even all the code is in this repo, this is only the python client/server. joe-etc contains the elisp stuff, which I will move over here eventually. There's blocking I/O, shelling out to external utilities needlessly, things checked on timers instead of using events, etc. I'm slowly fixing it. But if you manage to install it it's very functional. I use it for 50% of my work time.
 
-####Examples
-To run mandimus with the GTK UI and start in continuous listen mode:
-./mandimus.py -i g -c
+#Installation
 
-To run mandimus with no UI and using a USB microphone recognized and device 2:
-./mandimus.py -d 2
+Mandimus isn't very mature yet, better documentation is forthcoming. Rough sketch:
 
-####Finding the Device Number of a USB microphone
-There are a few ways to find the device number of a USB microphone.
+-Setup Natlink/DNS12 on windows host or VM (check the much more complete aenea installation instructions for this for now)
+-Copy _dfly_client.py over to the Macrosystem folder in Natlink
+-Run mainloop.sh on your linux host
+-Take all the md-*.el files from my joe-etc repository and load them into emacs
+-Change hard coded IPs/ports for your machines
+-Install xdotool
+-Probably more I've forgotten
 
-* `cat /proc/asound/cards`
-* `arecord -l`
+#Features
+
+-String multiple commands together in a single utterance, "left up larp camel hello world" will work.
+-Seamlessly switch between arbitrary dictation and command mode within an utterance
+-Dynamic grammars for things like window names, words near cursor, etc.
+-Window management
+-Emacs text/buffer navigation
+-Emacs mode specific commands
+-Support for X-Keys foot pedals, can be used to trigger grammar changes
+-Support out of the box for emacs lisp, python, and some C++
