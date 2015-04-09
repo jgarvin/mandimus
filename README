@@ -1,7 +1,9 @@
 #Mandimus
 Mandimus is a program that interfaces with Dragon Naturally Speaking to provide speech recognition based control of your computer, and in particular Emacs. I wrote this because I developed a repetitive strain injury and want to save other programmers from the pain and frustration I experienced. Existing recognition tools are almost all targeted towards writing word documents, not code.
 
-Originally inspired by the work by Travis Rudd in his Python Coding By Voice video, although AFAIK he never published his code.
+Originally inspired by the work by Travis Rudd in his Python Coding By Voice video, although AFAIK he never published his code, so this is reimplemented from scratch.
+
+"Mandimus" was supposed to be Latin for "we command" but it turns out I misheard and it's Latin for "we are chomping." I find this sufficiently hilarious that I am unmotivated to rename it. 
 
 #Status
 
