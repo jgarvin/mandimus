@@ -3,6 +3,8 @@ from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
+from rules.emacs.Cmd import Minibuf
+from protocol import RuleType
 
 _mapping = {
     "refresh"       : Key("g"),
@@ -30,5 +32,9 @@ MagitRule = makeContextualRule("Magit", _mapping, emacsExtras, emacsDefaults)
 MagitRule.context.addRequirement(IsEmacs)
 MagitRule.context.addRequirement(ModeRequirement(modes="magit-status-mode"))
 
+_mapping = {
+    "inquisition" : Minibuf("magit-blame-mode"),
+}
 
-    
+MagitMiscRule = makeContextualRule("MagitMisc", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.INDEPENDENT)
+MagitMiscRule.context.addRequirement(IsEmacs)

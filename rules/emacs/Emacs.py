@@ -145,8 +145,9 @@ EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, emacsExtras, e
 EmacsIsolatedRule.context.addRequirement(IsEmacs)
 
 _mapping = {
-    "search [<text>]"                : Key('c-s') + Text("%(text)s"),
-    "lurch [<text>]"                 : Key('c-r') + Text("%(text)s"),
+    "search [<text>]" : Key('c-s') + Text("%(text)s"),
+    "lurch [<text>]"  : Key('c-r') + Text("%(text)s"),
+    "toggle"          : Key('a-t'),
 }
 
 EmacsSearchRule = makeContextualRule("EmacsSearch", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.TERMINAL)
