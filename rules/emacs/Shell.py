@@ -42,6 +42,7 @@ _keywords = [
     "localhost",
     ["ls", "list"],
     "kill",
+    "make",
     ["mkdir", "make dir"],
     ["mv", "move"],
     "ping",

@@ -92,7 +92,7 @@ _mapping = {
     # projectile commands
     "switch project"              : Key("c-c,p,p"),
     "root folder"                 : Key("c-c,p,d"),
-    "ack"                         : Key("c-c,p,s,a"),
+    "ack"                         : Key("c-c,p,s,g"),
     "occur"                       : Key("c-c,p,o"),
     "project replace"             : Key("c-c,p,r"),
     "kill project"                : Key("c-c,p,k"),
@@ -131,13 +131,14 @@ _mapping = {
     "get status"                  : Key("a-x") + Text("magit-status") + Key("enter"),
     "submit"                      : Key("c-x,hash"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
-    #"create shell"                : Cmd("(etc-open-shell nil)"),
+    #"create shell"               : Cmd("(etc-open-shell nil)"),
     "show top"                    : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
     "toggle command logging"      : toggleCommandLogging,
     "toggle refresh client"       : toggleRefreshClientSources,
     "magnify [<i>]"               : Key("c-x,c-plus:%(i)d"),
     "demagnify [<i>]"             : Key("c-x,c-minus:%(i)d"),
+    "compile"                     : Minibuf("compile"),
 }
 
 

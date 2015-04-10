@@ -9,7 +9,7 @@ from EventList import ProjectFileListEvent
 from requirements.Emacs import IsEmacs
 from Actions import Key
 
-projectFileListGen = EmacsEventGenerator("ProjectFile", "md-projectile-files", ProjectFileListEvent)
+#projectFileListGen = EmacsEventGenerator("ProjectFile", "md-projectile-files", ProjectFileListEvent)
 
 _openProjetileFileEl = """
 (find-file-existing (concat (file-name-as-directory (projectile-project-root)) \"%s\"))

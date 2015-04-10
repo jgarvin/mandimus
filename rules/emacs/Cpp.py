@@ -84,6 +84,16 @@ keywords = [
     "volatile",
     ["wchar_t", "wide char"],
     "while",
+
+    ["endl", "end line"],
+    "final",
+    ["#include", "include"],
+    ["int32_t", "int 32"],
+    ["int64_t", "int 64"],
+    "override",
+    ["std", "stood"],
+    ["uint32_t", "you int 32"],
+    ["uint64_t", "you int 64"],
 ]
 
 types = [
