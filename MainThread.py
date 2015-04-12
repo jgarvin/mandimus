@@ -235,9 +235,8 @@ if __name__ == "__main__":
     main = MainThread()
     
     imports = [
-        ('Pedals', ['']),
-        ('rules.PedalConfig', ['']),
         ('rules.Always', ['']),
+        ('rules.emacs.Build', ['']),
         ('rules.CUA', ['']),
         ('rules.Chrome', ['']),
         ('rules.emacs.Belt', ['']),
@@ -259,6 +258,8 @@ if __name__ == "__main__":
         ('rules.emacs.Nav', ['']),
         ('rules.emacs.NickNames', ['']),
         ('rules.emacs.Org', ['']),
+        ('Pedals', ['']),
+        ('rules.PedalConfig', ['']),
         ('rules.emacs.ProjectFileNames', ['']),
         ('rules.emacs.ProjectNames', ['']),
         ('rules.emacs.Term', ['']),
