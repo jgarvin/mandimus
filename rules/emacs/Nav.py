@@ -31,13 +31,15 @@ _mapping = {
     "miss <charrule> [<i>]"    : CharCmd("(md-move-up-to-symbol-starting-with-char -1 %s)"),
     "line <charrule> [<i>]"    : CharCmd("(md-find-line-starting-with-char 1 %s)"),
     "Nile <charrule> [<i>]"    : CharCmd("(md-find-line-starting-with-char -1 %s)"),
-    "store <charrule>"         : CharCmd("(point-to-register %s)"),
+    "store <charrule>"         : CharCmd("(copy-to-register %s)"),
+    "insert <charrule>"        : CharCmd("(insert-to-register %s)"),
+    "store point <charrule>"   : CharCmd("(point-to-register %s)"),
+    "store buff <charrule>"    : CharCmd("(window-configuration-to-register %s)"),
     "load <charrule>"          : CharCmd("(jump-to-register %s)"),
     "previous [<n>]"           : Cmd("(md-get-previous-instance-of-symbol)"),
     "next [<n>]"               : Cmd("(md-get-next-instance-of-symbol)"),
     "lookup"                   : Key("a-dot"),
     "references"               : Key("a-comma"),
-    "sort lines"               : Cmd("(call-interactively #'sort-lines)"),
 }
 
 NavRule = makeContextualRule("Nav", _mapping, emacsExtras, emacsDefaults)

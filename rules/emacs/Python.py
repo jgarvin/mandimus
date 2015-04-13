@@ -9,7 +9,7 @@ from rules.emacs.Keywords import KeywordRule
 import keyword
 
 _mapping = {
-    "align dic"   : Cmd("(align-dict)"),
+    "align hash"   : Cmd("(align-dict)"),
     "align list"  : Cmd("(align-list)"),
     "mark block"  : Cmd("(er/mark-python-block)"),
     "mark state"  : Cmd("(er/mark-python-statement)"),

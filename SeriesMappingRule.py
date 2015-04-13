@@ -15,7 +15,7 @@ class SeriesMappingRule(CompoundRule):
                                    defaults=defaults, exported=False,
                                    name=name + "Mapping")
         single = RuleRef(rule=mapping_rule)
-        series = Repetition(single, min=1, max=8, name="series")
+        series = Repetition(single, min=1, max=5, name="series")
 
         compound_spec = "<series>"
         compound_extras = [series]

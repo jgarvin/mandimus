@@ -38,6 +38,7 @@ _mapping = {
     "drop [<n>]"             : Key("a-down:%(n)d"),
     #"var <charrule> [<n>]"  : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
     "phone [<i>]"            : Cmd("(md-cycle-homophones-at-point)"),
+    "sort lines"             : Cmd("(call-interactively #'sort-lines)"),
 }
 
 EditRule = makeContextualRule("Edit", _mapping, emacsExtras, emacsDefaults)

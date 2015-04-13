@@ -10,6 +10,7 @@ from rules.emacs.Cmd import Cmd
 from rules.emacs.Keywords import KeywordRule
 
 keywords = [
+    # true keywords
     ["alignas", "align as"],
     ["alignof", "align of"],
     "assert",
@@ -85,18 +86,25 @@ keywords = [
     ["wchar_t", "wide char"],
     "while",
 
+    # common enough
     ["endl", "end line"],
     "final",
     ["#include", "include"],
     ["int32_t", "int 32"],
     ["int64_t", "int 64"],
+    "main"
     "override",
     ["std", "stood"],
     ["uint32_t", "you int 32"],
     ["uint64_t", "you int 64"],
+
+    # boost
+    ["bxxst", "boost"],
+    "optional",
 ]
 
 types = [
+    "deque"
     "map",
     "multimap",
     "set",
@@ -104,4 +112,4 @@ types = [
     "vector",
 ]
 
-CppKeywordRule = KeywordRule("c++-mode", keywords)
+CppKeywordRule = KeywordRule("c++-mode", keywords + types)

@@ -106,7 +106,7 @@ _mapping = {
     "spoo"                        : Key("a-g,p"),
     "file oops"                   : Key("a-rbrace"),
     "file spoo"                   : Key("a-lbrace"),
-    "toggle oops trace"           : Key("c-c,c-f"),
+    "toggle trace"                : Key("c-c,c-f"),
 
     # file commands
     "plain open file"             : Key("c-x,c-f"),
@@ -146,9 +146,26 @@ EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, emacsExtras, e
 EmacsIsolatedRule.context.addRequirement(IsEmacs)
 
 _mapping = {
-    "search [<text>]" : Key('c-s') + Text("%(text)s"),
-    "lurch [<text>]"  : Key('c-r') + Text("%(text)s"),
-    "toggle"          : Key('a-t'),
+    "search [<text>]"    : Key('c-s') + Text("%(text)s"),
+    "lurch [<text>]"     : Key('c-r') + Text("%(text)s"),
+    "toggle"             : Key('a-t'),
+    "help function"      : Key("c-h,f"),
+    "help function slap" : Key("c-h,f,enter"),
+    "help variable"      : Key("c-h,v"),
+    "help variable slap" : Key("c-h,v,enter"),
+    "help key"           : Key("c-h,k"),
+    "help mode"          : Key("c-h,m"),
+    "help docks"         : Key("c-h,d"),
+    "help news"          : Key("c-h,n"),
+    "help info"          : Key("c-h,i"),
+    "help syntax"        : Key("c-h,s"),
+    "help bindings"      : Key("c-h,b"),
+
+    # navigation commands
+    "ace"                : Key("c-c,space"),
+    "ace care"           : Key("c-u,c-c,space"),
+
+    "inspect character"             : Key("c-u,c-x,equal"),
 }
 
 EmacsSearchRule = makeContextualRule("EmacsSearch", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.TERMINAL)
@@ -163,26 +180,9 @@ _mapping  = {
     "mack"                          : Key("F4"),
     "other [<i>]"                   : Key("c-x,o") * Repeat(extra="i"),
     "collapse"                      : Key("ca-rbracket"),
-    "other [<i>] collapse"          : (Key("c-x, o") * Repeat(extra="i")) + Key("c-x, 1"),
-
-    "help function"                 : Key("c-h,f"),
-    "help function slap"            : Key("c-h,f,enter"),
-    "help variable"                 : Key("c-h,v"),
-    "help variable slap"            : Key("c-h,v,enter"),
-    "help key"                      : Key("c-h,k"),
-    "help mode"                     : Key("c-h,m"),
-    "help docks"                    : Key("c-h,d"),
-    "help news"                     : Key("c-h,n"),
-    "help info"                     : Key("c-h,i"),
-    "help syntax"                   : Key("c-h,s"),
-    "help bindings"                 : Key("c-h,b"),
-
-    # navigation commands
-    "ace"                           : Key("c-c,space"),
-    "ace care"                      : Key("c-u,c-c,space"),
+    #"other [<i>] collapse"         : (Key("c-x, o") * Repeat(extra="i")) + Key("c-x, 1"),
 
     "replace"                       : Key('as-percent'),
-
     "home [<i>]"                    : Key("c-a:%(i)d"),
     "edge"                          : Cmd("(end-of-line)"),
     "cliff"                         : Cmd("(md-go-to-cliff)"),
@@ -228,15 +228,15 @@ _mapping  = {
 
     "yank"                          : Key("c-y"),
     "yank pop [<i>]"                : Key("a-y:%(i)d"),
-    "term (yank | paste)"           : Key("s-insert"),
+    #"term (yank | paste)"          : Key("s-insert"),
 
     "select all"                    : Key("c-home,c-space,c-end"),
     "fish"                          : Key("a-space"),
     "undo [<i>]"                    : Key("cs-underscore:%(i)d"),
     "redo [<i>]"                    : Key("as-underscore:%(i)d"),
 
-    "shift right"                   : Cmd("(call-interactively 'python-indent-shift-right)"),
-    "shift left"                    : Cmd("(call-interactively 'python-indent-shift-left)"),
+    "shift right [<i>]"             : Cmd("(call-interactively 'python-indent-shift-right)"),
+    "shift left [<i>]"              : Cmd("(call-interactively 'python-indent-shift-left)"),
     "align regexp"                  : Cmd("(call-interactively 'align-regexp)"),
 
     "indent"                        : Cmd("(call-interactively 'indent-region)"),
@@ -255,7 +255,6 @@ _mapping  = {
     "big snap [<i>]"                : Key("c-x,c-space:%(i)d"),
 
     "num <big>"                     : EmacsText("%(big)d"),
-    "inspect character"             : Key("c-u,c-x,equal"),
     "insert character"              : Key("c-x,8,enter"),
     "complete"                      : Minibuf("company-complete"),
     "open this"                     : Minibuf("find-file-at-point"),
