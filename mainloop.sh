@@ -7,6 +7,8 @@ else
     echo "No local libpiehid.so found, trying global..."
 fi
 
+cd $(dirname $(realpath $0))
+
 while true; do
     sleep 1
     kill -9 $(jobs -p)
@@ -19,7 +21,7 @@ while true; do
     # to trigger restarts
     TRAPINT() {}
     
-    python $(dirname $0)/MainThread.py
+    python MainThread.py
 
     # but only when python is running, this way if we
     # hold control-c we still quit the whole loop
