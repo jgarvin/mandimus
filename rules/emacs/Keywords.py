@@ -39,26 +39,32 @@ class KeywordCmd(Cmd):
 def normalizeKeywords(keywords):
     return [x if type(x) not in (str, unicode) else (x, x) for x in keywords]
 
-def makeKeywordListRule(modeName, keywords):
+def makeKeywordListRule(name, keywords):
     keywords = normalizeKeywords(keywords)
     _mapping = { k[1] : k[0] for k in keywords }
-    return makeHashedRule(modeName + "-keyword-list", _mapping, ruleType=RuleType.INDEPENDENT)
+    return makeHashedRule(name, _mapping, ruleType=RuleType.INDEPENDENT)
 
 class KeywordRule(object):
-    def __init__(self, modes, keywords):
-        if type(modes) in (str, unicode):
-            modes = [modes]
-        self.modes = modes
+    def __init__(self, requirements, keywords, name=None):
+        if type(requirements) in (str, unicode):
+            # a string is interpreted to be a mode requirement
+            self.requirements = [ModeRequirement([requirements])]
+        elif type(requirements) in (list,) and all([type(x) in (str, unicode) for x in requirements]):
+            # a list of strings is interpreted to be multiple possible modes 
+            self.requirements = [ModeRequirement(requirements)]
+        else:
+            # otherwise we assume we're being passed a real list of requirement objects
+            self.requirements = requirements
+        self.name = name
+        if not self.name:
+            self.name = requirements[0] + "-keyword-rule"
         self.keywords = normalizeKeywords(keywords)
 
-        self.rule = self._buildRule(self.modes, self.keywords)
+        self.rule = self._buildRule(self.requirements, self.keywords)
         self.tellEmacs()
 
-    def _buildRule(self, modes, keywords):
-        # choice is arbitrary, just for naming
-        modeName = modes[0]
-
-        listRule = makeKeywordListRule(modeName, keywords)
+    def _buildRule(self, requirements, keywords):
+        listRule = makeKeywordListRule(self.name + "-list", keywords)
         pushEvent(RuleRegisterEvent(listRule))
 
         mapping = {
@@ -70,14 +76,19 @@ class KeywordRule(object):
             RuleRef(listRule, "keyword"),
         ]
 
-        KeywordRule = makeContextualRule(modeName + "-keyword-rule", mapping, extras)
+        KeywordRule = makeContextualRule(self.name, mapping, extras)
         KeywordRule.context.addRequirement(IsEmacs)
-        KeywordRule.context.addRequirement(ModeRequirement(modes=modes))
+        for r in self.requirements:
+            KeywordRule.context.addRequirement(r)
         return KeywordRule
 
     def tellEmacs(self):
-        for m in self.modes:
-            keywordString = "'(" + " ".join([("\"%s\"" % x[0]) for x in self.keywords]) + ")"
-            runEmacsCmd("(md-register-mode-keywords '%s %s)" % (m, keywordString))
+        # this isn't ideal, because it only takes into account one type of requirement
+        # however that is the most common kind
+        keywordString = "'(" + " ".join([("\"%s\"" % x[0]) for x in self.keywords]) + ")"
+        for m in self.requirements:
+            if isinstance(m, ModeRequirement):
+                for mode in m.modes:
+                    runEmacsCmd("(md-register-mode-keywords '%s %s)" % (mode, keywordString))
 
 # something else will handle the pushing and activating...

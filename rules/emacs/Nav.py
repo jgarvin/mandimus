@@ -37,6 +37,7 @@ _mapping = {
     "next [<n>]"               : Cmd("(md-get-next-instance-of-symbol)"),
     "lookup"                   : Key("a-dot"),
     "references"               : Key("a-comma"),
+    "sort lines"               : Cmd("(call-interactively #'sort-lines)"),
 }
 
 NavRule = makeContextualRule("Nav", _mapping, emacsExtras, emacsDefaults)

@@ -37,6 +37,11 @@ class ModeRequirement(Requirement):
         getLoop().subscribeEvent(MajorModeEvent, self.onModeChange)
 
     def onModeChange(self, ev):
+        # if you have no mode requirement, you trivially match
+        if not self.modes:
+            self._met(True)
+            return
+
         matched = False
         for m in ev.modeList:
             if m in self.modes:

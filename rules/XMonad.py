@@ -22,7 +22,7 @@ _mapping  = {
     "master"                      : Key("ca-enter"),
     "add master [<i>]"            : Key("ca-comma:%(i)d"),
     "remove master"               : Key("ca-period"),
-    "editor"                      : Key("csa-w"),
+    "launch emacs"                : Key("csa-w"),
     "browser"                     : Key("csa-b"),
     "new terminal"                : Key("csa-t"),
     "restart window manager"      : Key("csa-q"),

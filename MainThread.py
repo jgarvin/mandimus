@@ -22,7 +22,7 @@ from copy import copy
 import collections
 from threading import Lock
 
-FAIL_ON_ERROR = True
+FAIL_ON_ERROR = False
 
 badWindows = {
     "Desktop",
@@ -237,20 +237,20 @@ if __name__ == "__main__":
     imports = [
         ('rules.Always', ['']),
         ('rules.emacs.Build', ['']),
-        ('rules.CUA', ['']),
-        ('rules.Chrome', ['']),
         ('rules.emacs.Belt', ['']),
         ('rules.emacs.BufferNames', ['']),
+        ('rules.Chrome', ['']),
         ('rules.emacs.Comint', ['']),
         ('rules.emacs.Cpp', ['']),
+        ('rules.CUA', ['']),
         ('rules.emacs.Dired', ['']),
         ('rules.emacs.Emacs', ['']),
         ('rules.emacs.Eww', ['']),
-        ('rules.emacs.Python', ['']),
-        ('rules.emacs.Lisp', ['']),
         ('rules.emacs.Edit', ['']),
         ('rules.emacs.ERC', ['']),
-        ('rules.emacs.VarNames', ['']),
+        ('rules.emacs.GnuDebugger', ['']),
+        ('rules.emacs.Lisp', ['']),
+        ('rules.emacs.Python', ['']),
         ('rules.emacs.Pairs', ['']),
         ('rules.emacs.Profiling', ['']),
         ('rules.emacs.Mic', ['']),
@@ -267,8 +267,9 @@ if __name__ == "__main__":
         ('rules.emacs.Shell', ['']),
         ('rules.emacs.Snippet', ['']),
         ('rules.emacs.SymbolPicker', ['']),
-        ('rules.emacs.Words', ['']),
+        ('rules.emacs.VarNames', ['']),
         ('rules.WindowNames', ['']),
+        ('rules.emacs.Words', ['']),
         ('rules.XMonad', ['']),
         ('RefreshClient', ['']),
     ]

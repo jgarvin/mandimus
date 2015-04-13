@@ -43,11 +43,16 @@ class PressKey(object):
         for r in range(repetitions):
             Key(''.join(keystring))()
   
+# class PrintLetter(object):
+#     def __call__(self, extras):
+#         log.info("Heard letter! %s" % extras['words'])
+
 _mapping = {
     'rep [<n>]'                                : RepeatPreviousAction(),
     "[control] [alt] [cap] <charrule> [<i>]"   : PressKey(),
     'scoot [<i>]'                              : Key("tab:%(i)d"),
     'cap scoot [<i>]'                          : Key("s-tab:%(i)d"),
+#    "letter <dgnletters>" : PrintLetter(),
 }
 
 _extras = [
