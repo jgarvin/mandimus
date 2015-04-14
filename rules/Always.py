@@ -112,3 +112,19 @@ _mapping = {
 
 UnderscoreRule = makeContextualRule("UnderscoreRule", _mapping, _extras, {}, RuleType.TERMINAL)
 UnderscoreRule.context.addRequirement(NotEmacs)
+
+class WriteLetters(object):
+    def __call__(self, extras={}):
+        for word in extras['letters']['words']:
+            Key(AlphaRule.rule.mapping[word])()        
+
+_mapping = {
+    "spell <letters>" : WriteLetters()
+}
+
+_extras = [
+    Repetition(AlphaRule, 1, 5, "letters")
+]
+
+SpellRule = makeContextualRule("SpellRule", _mapping, _extras, {}, RuleType.TERMINAL)
+SpellRule.activate()

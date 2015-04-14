@@ -514,7 +514,7 @@ class MasterGrammar(object):
         # it with this one and we don't want to disturb Dragon unless we have to
         # because Dragon is slow.
         if sorted(words) != sorted(self.concreteWordLists[name]):
-            log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, words))
+            log.info("Updating word list [%s] on grammar [%s] with contents [%s]" % (name, self.hash, len(words)))
             log.info("old list: %s" % self.concreteWordLists[name])
             # TODO: need to check existing load state, then send a loading message here, then restore
             # old state. This way we can see when word lists are taking a long time to load...
@@ -640,7 +640,7 @@ class DragonflyClient(DragonflyNode):
             log.error(''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
 
     def onWordListMsg(self, msg):
-        log.info("Received word list update [%s] -- [%s]" % (msg.name, msg.words))
+        log.info("Received word list update [%s] -- [%s]" % (msg.name, len(msg.words)))
         self.wordLists[msg.name] = msg.words
         if self.activeMasterGrammar:
             self.updateLoadState('loading')
