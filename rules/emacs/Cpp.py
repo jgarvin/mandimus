@@ -107,8 +107,10 @@ types = [
     "deque"
     "map",
     "multimap",
+    "pair",
     "set",
-    "unordered_map",
+    ["unique_ptr", "unique pointer"],
+    ["unordered_map", "unordered map"],
     "vector",
 ]
 

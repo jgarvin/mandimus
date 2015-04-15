@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from Actions import Key
+from Actions import Key, Repeat
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
@@ -12,20 +12,25 @@ from rules.emacs.Keywords import KeywordRule
 
 import keyword
 
-# _mapping = {
-#     "align dic"   : Cmd("(align-dict)"),
-#     "align list"  : Cmd("(align-list)"),
-#     "mark block"  : Cmd("(er/mark-python-block)"),
-#     "mark state"  : Cmd("(er/mark-python-statement)"),
-#     "send funk"   : Key("ca-x"),
-#     "send buff"   : Key("c-c,c-c"),
-#     "send region" : Key("c-c,c-r"),
-#     "interpreter" : Key("c-c,c-z"),
-# }
+_mapping = {
+    "good source"            : Key("c-x,c-a,c-l"), 
+    "set break point"        : Key("c-x,c-a,c-b"),
+    "delete break point"     : Key("c-x,c-a,c-d"),
+    "good step [<i>]"        : Key("c-x,c-a,c-s") * Repeat(extra="i"),
+    "good next [<i>]"        : Key("c-x,c-a,c-n") * Repeat(extra="i"),
+    "good instruction [<i>]" : Key("c-x,c-a,c-i") * Repeat(extra="i"),
+    "good eval"              : Key("c-x,c-a,c-p"),
+    "good continue"          : Key("c-x,c-a,c-r"),
+    "good up"                : Key("c-x,c-a,langle"),
+    "good down"              : Key("c-x,c-a,rangle"),
+    "good until"             : Key("c-x,c-a,c-u"),
+    "good finish"            : Key("c-x,c-a,c-f"),
+    "good jump"              : Key("c-x,c-a,c-j"),
+}
 
-# GnuDebuggerRule = makeContextualRule("GnuDebugger", _mapping, emacsExtras, emacsDefaults)
-# GnuDebuggerRule.context.addRequirement(IsEmacs)
-# GnuDebuggerRule.context.addRequirement(ModeRequirement(modes=["python-mode", "inferior-python-mode"]))
+GnuDebuggerRule = makeContextualRule("GnuDebugger", _mapping, emacsExtras, emacsDefaults)
+GnuDebuggerRule.context.addRequirement(IsEmacs)
+GnuDebuggerRule.context.addRequirement(ModeRequirement(modes=["c-mode", "c++-mode"]))
 
 keywords = [
     "all",

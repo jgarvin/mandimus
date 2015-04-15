@@ -83,7 +83,7 @@ _mapping = {
     "band"       : "bar",
     "plus"       : "plus",
     "underscore" : "underscore",
-    "pa"         : "space",
+    "pop"         : "space",
 }
 
 _literalMapping = {

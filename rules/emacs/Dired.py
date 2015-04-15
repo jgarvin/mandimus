@@ -24,7 +24,7 @@ _mapping = {
     "unflag"              : Key("u"),
     "commit delete"       : Key("x"),
     "delete picks"        : Key("D"),
-    "ascend"              : Text("^"),
+    "ascend [<n>]"        : Key("caret:%(n)d"),
     "refresh"             : Key("g"),
     "open picks"          : Key("c-u,0,F"),
     "copy"                : Key("C"),
