@@ -26,6 +26,19 @@ from Pedals import setPedalCallback, getPedalCallback
 #getLoop().subscribeEvent(PedalsEvent, onPedalTypingDay)
 #getLoop().subscribeEvent(PedalsEvent, onPedalSpeakingDay)
 
+def toggleMic():
+    runCmd("amixer -c 2 sset Mic toggle")
+
+def pedalArrowCb2(pedalStates, changed):
+    updown = ["keyup", "keydown"]
+    pedalKeys = ["Up", toggleMic, "Down"]
+    global _lastPedal
+    if not pedalStates[1] and changed == 1 and _lastPedal == 1:
+        pedalKeys[changed]()
+        _lastPedal = changed
+        return
+    runCmd("xdotool %s %s" % (updown[pedalStates[changed]], pedalKeys[changed]))
+    _lastPedal = changed    
 
 def pedalModifierCb(pedalStates, changed):
     updown = ["keyup", "keydown"]
@@ -62,11 +75,13 @@ def pedalWindowCb(pedalStates, changed):
     _lastPedal = changed
 
 # default assume speaking day
-setPedalCallback(pedalWindowCb)
+#setPedalCallback(pedalWindowCb)
+setPedalCallback(pedalArrowCb2)
 
 def cyclePedals(extras={}):
     cb = getPedalCallback()
-    cbs = [pedalArrowCb, pedalWindowCb]
+#    cbs = [pedalArrowCb, pedalWindowCb]
+    # cbs = [pedalArrowCb2, pedalWindowCb]
     newCb = cbs[(cbs.index(cb) + 1) % len(cbs)]
     log.info("Setting pedal mode: [%s]" % newCb)
     setPedalCallback(newCb)

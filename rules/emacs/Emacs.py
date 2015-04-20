@@ -226,8 +226,8 @@ _mapping  = {
     "knock [<n>]"                   : Key("backspace:%(n)d"),
     "squeeze"                       : Cmd('(cycle-spacing)'),
 
-    "yank"                          : Key("c-y"),
-    "yank pop [<i>]"                : Key("a-y:%(i)d"),
+    "paste"                         : Key("c-y"),
+    "rotate [<i>]"                  : Key("a-y:%(i)d"),
     #"term (yank | paste)"          : Key("s-insert"),
 
     "select all"                    : Key("c-home,c-space,c-end"),

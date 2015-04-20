@@ -10,6 +10,12 @@ from listHelpers import dictReplace
 from Window import Window, getFocusedWindow
 from util import deepEmpty
 
+from unicodedata import category
+def strip_punctuation(word):
+    # taken from: http://stackoverflow.com/a/11066443
+    # by: Daenyth
+    return u"".join(char for char in word if not category(char).startswith('P'))
+
 def runCmd(cmd):
     log.info('cmd: [' + cmd + ']')
     # TODO: why calling with shell?!
@@ -217,6 +223,7 @@ class FormatState(object):
         ur"}\right-curly-bracket" : ur"right curly bracket",
         ur"&\ampersand" : ur"ampersand",
         ur"\cap" : ur"cap",
+        ur"^\caret" : ur"caret",
         }
     
     formatting = {
@@ -256,6 +263,7 @@ class FormatState(object):
         ur"{\left-curly-bracket" : ur"{",
         ur"}\right-curly-bracket" : ur"}",
         ur"&\ampersand" : ur"&",
+        ur"^\caret" : ur"^",
         }
 
     numeralmap = {
@@ -474,6 +482,7 @@ class Camel(Text):
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
+        words = [strip_punctuation(word) for word in words]
         words = [w.lower() for w in words]
         words = [self.caps(words[0])] + [w.capitalize() for w in words[1:]]
         return ''.join(words)
@@ -489,6 +498,7 @@ class Underscore(Text):
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
         words = [self.caps(w) for w in words]
+        words = [strip_punctuation(word) for word in words]
         return '_'.join(words)        
 
 class Hyphen(Text):
@@ -501,6 +511,7 @@ class Hyphen(Text):
 
     def _text(self, extras):
         words = (self.data % extras).lower().split(' ')
+        words = [strip_punctuation(word) for word in words]
         words = [self.caps(w) for w in words]
         return '-'.join(words)        
 

@@ -44,7 +44,7 @@ ChromeSearchRule = makeContextualRule("ChromeSearch", _mapping, _extras, _defaul
 ChromeSearchRule.context.addRequirement(IsChrome)
 
 _mapping  = {
-    "new"                           : Key("c-t"),
+    "new tab"                       : Key("c-t"),
     "new window"                    : Key("c-n"),
     "new incognito window"          : Key("cs-n"),
     "close [<n>]"                   : Key("c-w:%(n)d"),

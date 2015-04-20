@@ -23,15 +23,15 @@ ERCTextRule.context.addRequirement(IsEmacs)
 ERCTextRule.context.addRequirement(IsErcMode)
 
 _mapping = {
-    "hiss"                : Key("a-p"),
-    "piss"                : Key("a-n"),
-    "smiley wink"         : EmacsText(";)"),
-    "smiley tongue"       : EmacsText(":P", lower=False),
-    "smiley wink tongue"  : EmacsText(";P", lower=False),
-    "slash part"          : EmacsText("/part"),
-    "kick dragon"         : EmacsText("/me kicks Dragon"),
-    "slash message"       : EmacsText("/msg"),
-    "slash whois"         : EmacsText("/whois"),
+    "prior"              : Key("a-p"),
+    "future"             : Key("a-n"),
+    "smiley wink"        : EmacsText(";)"),
+    "smiley tongue"      : EmacsText(":P", lower=False),
+    "smiley wink tongue" : EmacsText(";P", lower=False),
+    "slash part"         : EmacsText("/part"),
+    "kick dragon"        : EmacsText("/me kicks Dragon"),
+    "slash message"      : EmacsText("/msg"),
+    "slash whois"        : EmacsText("/whois"),
 }
 
 ERCRule = makeContextualRule("ERC", _mapping, emacsExtras, emacsDefaults)

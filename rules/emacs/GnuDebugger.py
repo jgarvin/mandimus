@@ -28,6 +28,7 @@ _mapping = {
     "good jump"              : Key("c-x,c-a,c-j"),
 }
 
+# TODO: check gdb-running/gdb-stopped variable
 GnuDebuggerRule = makeContextualRule("GnuDebugger", _mapping, emacsExtras, emacsDefaults)
 GnuDebuggerRule.context.addRequirement(IsEmacs)
 GnuDebuggerRule.context.addRequirement(ModeRequirement(modes=["c-mode", "c++-mode"]))
@@ -76,7 +77,9 @@ keywords = [
     ["rwatch", "read watch"],
     ["stepi", "step instruction"],
     ["tbreak", "one-shot break"],
+    "where",
+    "backtrace",
 ]
 
-IsDebugWindow = VarRequirement(r'(string-match-p "\\*gdb.*" (buffer-name))', 0, useFocus=True, useTimer=False)
+IsDebugWindow = VarRequirement(r'(string-match-p "\\*\\(gud\\|gdb\\).*" (buffer-name))', 0, useFocus=True, useTimer=False)
 GnuDebuggerKeywordRule = KeywordRule([IsDebugWindow], keywords, "GnuDebuggerKeyword")

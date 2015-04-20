@@ -4,7 +4,7 @@ from protocol import RuleType, RuleRef, makeHashedRule
 from EventLoop import pushEvent
 from EventList import RuleRegisterEvent
 import rules.BaseRules as BaseRules
-from rules.emacs.Cmd import CharCmd, Cmd
+from rules.emacs.Cmd import CharCmd, Cmd, Minibuf
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from rules.emacs.common import emacsExtras, emacsDefaults
@@ -66,7 +66,7 @@ _mapping  = {
     # correctly for quotes anyway, may as well remove possibilities from the grammar
     #"<sexpFunction> [<sexpPair>] [<i>]" : PairCmd(),
     "<sexpFunction> [<i>]" : PairCmd(),
-    "rewrap" : Cmd("(sp-rewrap-sexp)"),
+    "rewrap" : Minibuf("sp-rewrap-sexp"),
 }
 
 _extras = emacsExtras + [
