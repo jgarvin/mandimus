@@ -4,6 +4,6 @@ from EventList import WordEvent
 import sys
 
 def onWordEvent(ev):
-    runEmacsCmd("(mandimus-word-event \"%s\")" % ev.words)
+    runEmacsCmd(u"(mandimus-word-event \"%s\")" % ev.words)
 
 getLoop().subscribeEvent(WordEvent, onWordEvent)

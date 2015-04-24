@@ -88,6 +88,7 @@ _mapping = {
     "mini buffer"                 : Cmd("(md-select-minibuffer)"),        
 
     "list buffs"                  : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
+    "list project files"          : Key("c-c,p,f"),
 
     # projectile commands
     "switch project"              : Key("c-c,p,p"),

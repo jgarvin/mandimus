@@ -130,17 +130,17 @@ class CommandClient(object):
                 log.error("Can't run command, not connected: [%s]" % command)
                 return "nil"
 
-        wrapper = ["{}"]
+        wrapper = [u"{}"]
 
         if allowError:
-            wrapper += ['(condition-case err {} (error nil))']
+            wrapper += [u'(condition-case err {} (error nil))']
 
         if inFrame:
-            wrapper += ['(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) {})']
+            wrapper += [u'(with-current-buffer (window-buffer (if (window-minibuffer-p) (active-minibuffer-window) (selected-window))) {})']
 
         # See elisp function's documentation
         if not queryOnly:
-            wrapper += ['(let ((result {})) (md-generate-noop-input-event) result)']
+            wrapper += [u'(let ((result {})) (md-generate-noop-input-event) result)']
 
         for w in reversed(wrapper):
             command = w.format(command)
