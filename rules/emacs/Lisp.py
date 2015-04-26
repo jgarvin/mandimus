@@ -33,6 +33,7 @@ keywords = [
     "cons",
     "defadvice",
     "defconst",
+    "define-key",
     "defmacro",
     "defstruct",
     "defun",
