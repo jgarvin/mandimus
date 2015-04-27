@@ -12,25 +12,33 @@ from Actions import Key
 # possibilities?
 
 _mapping = {
+    "home"                     : Cmd("(md-beginning-or-indentation-toggle)"),
+    "edge"                     : Cmd("(end-of-line)"),
+    "cliff"                    : Cmd("(md-go-to-cliff)"),
+    "top side"                 : Key("a-langle"),
+    "bottom"                   : Key("a-rangle"),
+    "window top side"          : Cmd("(goto-char (window-start))"),
+    "window bottom"            : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
+    "pro [<n>]"                : Key("a-f:%(n)d"),
+    "per [<n>]"                : Key("a-b:%(n)d"),
+    "over [<n>]"               : Cmd("(forward-symbol 1)"),
+    "under [<n>]"              : Cmd("(forward-symbol -1)"),
+    "leaf [<n>]"               : Key("pgdown:%(n)d"),
+    "feel [<n>]"               : Key("pgup:%(n)d"),
+
+    "gruff [<n>]"              : Key("a-lbrace:%(n)d"),
+    "graph [<n>]"              : Key("a-rbrace:%(n)d"),
+    "left [<n>]"               : Key("left:%(n)d"),
+    "right [<n>]"              : Key("right:%(n)d"),
+    "up [<n>]"                 : Key("up:%(n)d"),
+    "down [<n>]"               : Key("down:%(n)d"),
+
     "go <charrule> [<i>]"      : CharCmd("(md-move-up-to-char 1 %s)"),
     "come <charrule> [<i>]"    : CharCmd("(md-move-up-to-char -1 %s)"),
-    # these weren't as useful as I thought because you can't switch the context
-    # mid-utterance so that dragon knows what chars are eligible
-    # "north <charrule> [<i>]" : CharCmd("(md-move-up-to-char-after-line -1 %s)"),
-    # "south <charrule> [<i>]" : CharCmd("(md-move-up-to-char-after-line 1 %s)"),
-    # "east <charrule> [<i>]"  : CharCmd("(md-move-up-to-char-same-line 1 %s)"),
-    # "west <charrule> [<i>]"  : CharCmd("(md-move-up-to-char-same-line -1 %s)"),
     "snug [<i>]"               : Cmd("(md-find-indentation-change 1 '>)"),
     "guns [<i>]"               : Cmd("(md-find-indentation-change -1 '>)"),
     "loosen [<i>]"             : Cmd("(md-find-indentation-change 1 '<)"),
     "nesool [<i>]"             : Cmd("(md-find-indentation-change -1 '<)"),
-    # these were made obsolete by 'go'
-    #"sled [<i>]"              : Cmd("(md-next-whitespace-separated-thing)"),
-    #"dels [<i>]"              : Cmd("(md-previous-whitespace-separated-thing)"),
-    "sym <charrule> [<i>]"     : CharCmd("(md-move-up-to-symbol-starting-with-char 1 %s)"),
-    "miss <charrule> [<i>]"    : CharCmd("(md-move-up-to-symbol-starting-with-char -1 %s)"),
-    "line <charrule> [<i>]"    : CharCmd("(md-find-line-starting-with-char 1 %s)"),
-    "Nile <charrule> [<i>]"    : CharCmd("(md-find-line-starting-with-char -1 %s)"),
     "store <charrule>"         : CharCmd("(copy-to-register %s (region-beginning) (region-end))"),
     "insert <charrule>"        : CharCmd("(insert-register %s)"),
     "store point <charrule>"   : CharCmd("(point-to-register %s)"),
@@ -38,6 +46,13 @@ _mapping = {
     "load <charrule>"          : CharCmd("(jump-to-register %s)"),
     "previous [<n>]"           : Cmd("(md-get-previous-instance-of-symbol)"),
     "next [<n>]"               : Cmd("(md-get-next-instance-of-symbol)"),
+
+    "line <charrule> [<i>]"    : CharCmd("(md-find-line-starting-with-char 1 %s)"),
+    "Nile <charrule> [<i>]"    : CharCmd("(md-find-line-starting-with-char -1 %s)"),
+    # chopping block?
+    "sym <charrule> [<i>]"     : CharCmd("(md-move-up-to-symbol-starting-with-char 1 %s)"),
+    "miss <charrule> [<i>]"    : CharCmd("(md-move-up-to-symbol-starting-with-char -1 %s)"),
+
     "lookup"                   : Key("a-dot"),
     "references"               : Key("a-comma"),
 }

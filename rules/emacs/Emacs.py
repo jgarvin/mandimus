@@ -33,12 +33,10 @@ class AlignRegexp(Cmd):
 class Copy(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "line" in words:
-            return "(md-copy-line)"
-        elif "word" in words:
-            return "(md-copy-word)"
-        elif "graph" in words:
-            return "(md-copy-paragraph)"
+        if "line" in words or "word" in words or "graph" in words:
+            Mark()(extras)
+            Key("a-w")()
+            return
         else:
             Key("a-w")()
             return 
@@ -46,25 +44,23 @@ class Copy(Cmd):
 class Cut(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "line" in words:
-            return "(md-cut-line)"
-        elif "word" in words:
-            return "(md-forward-kill-word)"
-        elif "graph" in words:
-            return "(md-cut-paragraph)"
+        if "line" in words or "word" in words or "graph" in words:
+            Mark()(extras)
+            Key("c-w")()
+            return
         else:
-            Key("c-x,c-k")()
+            Key("c-w")()
             return 
 
 class Mark(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
         if "line" in words:
-            return "(md-mark-line)"
+            return "(md-mark-thing 'line)"
         elif "word" in words:
-            return "(md-mark-word)"
+            return "(md-mark-thing 'word)"
         elif "graph" in words:
-            return "(md-mark-paragraph)"
+            return "(md-mark-thing 'paragraph)"
         else:
             Key("c-space")()
             return ""
@@ -79,7 +75,7 @@ _mapping = {
     "ace line"                    : Key("c-u,c-u,c-c,space"),
 
     "go to line"                  : Key("a-g,a-g"),
-    "go to line <line>"           : Key("a-g,a-g") + Text("%(line)d") + Key("enter"),
+    "go to line <big>"            : Key("a-g,a-g") + Text("%(big)d") + Key("enter"),
 
     # window commands
     "destroy emacs window"        : Cmd("(delete-window)"),
@@ -174,98 +170,80 @@ EmacsSearchRule.context.addRequirement(IsEmacs)
 
 _mapping  = {
     # general commands
-    "axe [<i>]"                     : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
-    "super axe [<i>]"               : Key("c-g:%(i)d"),
-    "eval"                          : Key("c-x,c-e"),
-    "start macro"                   : Key("F3"),
-    "mack"                          : Key("F4"),
-    "other [<i>]"                   : Key("c-x,o") * Repeat(extra="i"),
-    "collapse"                      : Key("ca-rbracket"),
-    #"other [<i>] collapse"         : (Key("c-x, o") * Repeat(extra="i")) + Key("c-x, 1"),
+    "axe [<i>]"                        : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
+    "super axe [<i>]"                  : Key("c-g:%(i)d"),
+    "eval"                             : Key("c-x,c-e"),
+    "start macro"                      : Key("F3"),
+    "mack"                             : Key("F4"),
+    "other [<i>]"                      : Key("c-x,o") * Repeat(extra="i"),
+    "collapse"                         : Key("ca-rbracket"),
+    #"other [<i>] collapse"            : (Key("c-x, o") * Repeat(extra="i")) + Key("c-x, 1"),
 
-    "replace"                       : Key('as-percent'),
-    "home [<i>]"                    : Key("c-a:%(i)d"),
-    "edge"                          : Cmd("(end-of-line)"),
-    "cliff"                         : Cmd("(md-go-to-cliff)"),
-    "top side"                      : Key("a-langle"),
-    "bottom"                        : Key("a-rangle"),
-    "window top side"               : Cmd("(goto-char (window-start))"),
-    "window bottom"                 : Cmd("(goto-char (- (window-end) 1)) (previous-line) (beginning-of-line)"),
-    "pro [<n>]"                     : Key("a-f:%(n)d"),
-    "per [<n>]"                     : Key("a-b:%(n)d"),
-    "over [<n>]"                    : Cmd("(forward-symbol 1)"),
-    "under [<n>]"                   : Cmd("(forward-symbol -1)"),
-    "leaf [<n>]"                    : Key("pgdown:%(n)d"),
-    "feel [<n>]"                    : Key("pgup:%(n)d"),
-    "center"                        : Key("c-l"),
-    "gruff [<n>]"                   : Key("a-lbrace:%(n)d"),
-    "graph [<n>]"                   : Key("a-rbrace:%(n)d"),
-    "left [<n>]"                    : Key("left:%(n)d"),
-    "right [<n>]"                   : Key("right:%(n)d"),
-    "up [<n>]"                      : Key("up:%(n)d"),
-    "down [<n>]"                    : Key("down:%(n)d"),
+    "replace"                          : Key('as-percent'),
+    "center"                           : Key("c-l"),
 
-    "slap [<i>]"                    : Key("enter:%(i)d"),
-    "pals [<i>]"                    : Cmd("(md-new-line-anywhere)"),
-    "open [<i>]"                    : Key("c-o:%(i)d"),
-    "nepo [<i>]"                    : Cmd("(md-open-line-anywhere)"),
+    "slap [<i>]"                       : Key("enter:%(i)d"),
+    "pals [<i>]"                       : Cmd("(md-new-line-anywhere)"),
+    "open [<i>]"                       : Key("c-o:%(i)d"),
+    "nepo [<i>]"                       : Cmd("(md-open-line-anywhere)"),
 
     # mark commands
-    "mark [<i>]"                    : Key("c-space:%(i)d"),
-    "exchange"                      : Cmd("(exchange-point-and-mark)"),
-    "select [<i>]"                  : Key("c-equal:%(i)d"),
-    "contract"                      : Key("a-equal"),
+    "mark [<i>]"                       : Key("c-space:%(i)d"),
+    "exchange"                         : Cmd("(exchange-point-and-mark)"),
+    "select [<i>]"                     : Key("c-equal:%(i)d"),
+    "contract"                         : Key("a-equal"),
 
     # text manip commands
-    "copy [(line | word | graph)]"  : Copy(),
-    "cut [(line | word | graph)]"   : Cut(),        
+    "copy [the (line | word | graph)]" : Copy(),
+    "cut [the (line | word | graph)]"  : Cut(),
+    "mark [the (line | word | graph)]" : Mark(),
 
-    "kill [<n>]"                    : Key('c-k:%(n)d'),
-    "nip [<n>]"                     : Cmd('(md-backward-kill-word)'),
-    "pin [<n>]"                     : Cmd('(md-forward-kill-word)'),        
-    "pat [<n>]"                     : Key("delete:%(n)d"),
-    "knock [<n>]"                   : Key("backspace:%(n)d"),
-    "squeeze"                       : Cmd('(cycle-spacing)'),
+    "kill [<n>]"                       : Key('c-k:%(n)d'),
+    "nip [<n>]"                        : Cmd('(md-backward-kill-word)'),
+    "pin [<n>]"                        : Cmd('(md-forward-kill-word)'),        
+    "pat [<n>]"                        : Key("delete:%(n)d"),
+    "knock [<n>]"                      : Key("backspace:%(n)d"),
+    "squeeze"                          : Cmd('(cycle-spacing)'),
 
-    "paste"                         : Key("c-y"),
-    "rotate [<i>]"                  : Key("a-y:%(i)d"),
-    #"term (yank | paste)"          : Key("s-insert"),
+    "paste"                            : Key("c-y"),
+    "rotate [<i>]"                     : Key("a-y:%(i)d"),
+    #"term (yank | paste)"             : Key("s-insert"),
 
-    "select all"                    : Key("c-home,c-space,c-end"),
-    "fish"                          : Key("a-space"),
-    "undo [<i>]"                    : Key("cs-underscore:%(i)d"),
-    "redo [<i>]"                    : Key("as-underscore:%(i)d"),
+    "select all"                       : Key("c-home,c-space,c-end"),
+    "fish"                             : Key("a-space"),
+    "undo [<i>]"                       : Key("cs-underscore:%(i)d"),
+    "redo [<i>]"                       : Key("as-underscore:%(i)d"),
 
-    "shift right [<i>]"             : Cmd("(call-interactively 'python-indent-shift-right)"),
-    "shift left [<i>]"              : Cmd("(call-interactively 'python-indent-shift-left)"),
-    "align regexp"                  : Cmd("(call-interactively 'align-regexp)"),
+    "shift right [<i>]"                : Cmd("(call-interactively 'python-indent-shift-right)"),
+    "shift left [<i>]"                 : Cmd("(call-interactively 'python-indent-shift-left)"),
+    "align regexp"                     : Cmd("(call-interactively 'align-regexp)"),
 
-    "indent"                        : Cmd("(call-interactively 'indent-region)"),
+    "indent"                           : Cmd("(call-interactively 'indent-region)"),
 
-    "comment"                       : Key("c-slash"),
+    "comment"                          : Key("c-slash"),
 
     # text commands
-    "capital"                       : Key("a-c"),
-    "upper"                         : Key("a-u"),
-    "lower"                         : Key("a-l"),
+    "capital"                          : Key("a-c"),
+    "upper"                            : Key("a-u"),
+    "lower"                            : Key("a-l"),
 
     # save mark, almost never use, need to get used to
-    #"push"                         : Key("c-space,c-space"),
+    #"push"                            : Key("c-space,c-space"),
 
-    "snap [<i>]"                    : Key("c-u,c-space:%(i)d"),
-    "big snap [<i>]"                : Key("c-x,c-space:%(i)d"),
+    "snap [<i>]"                       : Key("c-u,c-space:%(i)d"),
+    "big snap [<i>]"                   : Key("c-x,c-space:%(i)d"),
 
-    "num <big>"                     : EmacsText("%(big)d"),
-    "insert character"              : Key("c-x,8,enter"),
-    "complete"                      : Minibuf("company-complete"),
-    "open this"                     : Minibuf("find-file-at-point"),
-    "shell command"                 : Minibuf("etc-shell-command"),
-    "insert path"                   : InsertString("(buffer-file-name)"),
-    "insert base name"              : InsertString("(file-name-base (buffer-file-name))"),
-    "insert buffer name"            : InsertString("(buffer-name)"),
-    "insert name without extension" : InsertString("(file-name-sans-extension (buffer-file-name))"),
-    "insert directory"              : InsertString("(file-name-directory (buffer-file-name))"),
-    "insert extension"              : InsertString("(file-name-extension (buffer-file-name))"),    
+    "num <big>"                        : EmacsText("%(big)d"),
+    "insert character"                 : Key("c-x,8,enter"),
+    "complete"                         : Minibuf("company-complete"),
+    "open this"                        : Minibuf("find-file-at-point"),
+    "shell command"                    : Minibuf("etc-shell-command"),
+    "insert path"                      : InsertString("(buffer-file-name)"),
+    "insert base name"                 : InsertString("(file-name-base (buffer-file-name))"),
+    "insert buffer name"               : InsertString("(buffer-name)"),
+    "insert name without extension"    : InsertString("(file-name-sans-extension (buffer-file-name))"),
+    "insert directory"                 : InsertString("(file-name-directory (buffer-file-name))"),
+    "insert extension"                 : InsertString("(file-name-extension (buffer-file-name))"),    
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)
