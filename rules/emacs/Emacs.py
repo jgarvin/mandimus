@@ -33,7 +33,7 @@ class AlignRegexp(Cmd):
 class Copy(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "line" in words or "word" in words or "graph" in words:
+        if "the" in words:
             Mark()(extras)
             Key("a-w")()
             return
@@ -44,7 +44,7 @@ class Copy(Cmd):
 class Cut(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "line" in words or "word" in words or "graph" in words:
+        if "the" in words:
             Mark()(extras)
             Key("c-w")()
             return
@@ -58,9 +58,12 @@ class Mark(Cmd):
         if "line" in words:
             return "(md-mark-thing 'line)"
         elif "word" in words:
+            # TODO: This doesn't do what I want for subwords
             return "(md-mark-thing 'word)"
         elif "graph" in words:
             return "(md-mark-thing 'paragraph)"
+        elif "sym" in words:
+            return "(md-mark-thing 'symbol)"
         else:
             Key("c-space")()
             return ""
@@ -188,15 +191,14 @@ _mapping  = {
     "nepo [<i>]"                       : Cmd("(md-open-line-anywhere)"),
 
     # mark commands
-    "mark [<i>]"                       : Key("c-space:%(i)d"),
     "exchange"                         : Cmd("(exchange-point-and-mark)"),
     "select [<i>]"                     : Key("c-equal:%(i)d"),
     "contract"                         : Key("a-equal"),
 
     # text manip commands
-    "copy [the (line | word | graph)]" : Copy(),
-    "cut [the (line | word | graph)]"  : Cut(),
-    "mark [the (line | word | graph)]" : Mark(),
+    "copy [the (line | word | sym | graph)]" : Copy(),
+    "cut [the (line | word | sym | graph)]"  : Cut(),
+    "mark [the (line | word | sym | graph)]" : Mark(),
 
     "kill [<n>]"                       : Key('c-k:%(n)d'),
     "nip [<n>]"                        : Cmd('(md-backward-kill-word)'),
