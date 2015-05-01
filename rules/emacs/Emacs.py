@@ -218,7 +218,7 @@ _mapping  = {
 
     "shift right [<i>]"                      : Cmd("(call-interactively 'python-indent-shift-right)"),
     "shift left [<i>]"                       : Cmd("(call-interactively 'python-indent-shift-left)"),
-    "align regexp"                           : Cmd("(call-interactively 'align-regexp)"),
+    "align regexp"                           : Minibuf("align-regexp"),
 
     "indent"                                 : Cmd("(call-interactively 'indent-region)"),
 
@@ -246,6 +246,7 @@ _mapping  = {
     "insert name without extension"          : InsertString("(file-name-sans-extension (buffer-file-name))"),
     "insert directory"                       : InsertString("(file-name-directory (buffer-file-name))"),
     "insert extension"                       : InsertString("(file-name-extension (buffer-file-name))"),
+    "insert username"                        : InsertString('(user-login-name)'),
 
     "switch previous"                        : Key("c-x,c-left"),
     "switch next"                            : Key("c-x,c-right"),
