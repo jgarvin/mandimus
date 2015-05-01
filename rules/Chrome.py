@@ -33,7 +33,7 @@ _mapping = {
 
 _extras = [
     Dictation("text"),
-    Integer("n", 2, 20),
+    Integer("n", 3, 20),
 ]
 
 _defaults = {
@@ -78,8 +78,8 @@ _mapping  = {
 
 _extras = [
     Dictation("text"),
-    Integer("n", 2, 20),
-    Integer("i", 2, 8),
+    Integer("n", 3, 20),
+    Integer("i", 3, 8),
     ]
 
 _defaults = {

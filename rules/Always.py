@@ -56,8 +56,8 @@ _mapping = {
 }
 
 _extras = [
-    Integer("i", 2, 8),
-    Integer("n", 2, 20),
+    Integer("i", 3, 8),
+    Integer("n", 3, 20),
     Integer("digit", 0, 10),
     Dictation("text"),
     RuleRef(AlphaRule, "alpharule"),

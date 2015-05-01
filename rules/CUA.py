@@ -56,8 +56,8 @@ _mapping = {
 } 
 
 _extras = [
-    Integer("n", 2, 20),
-    Integer("i", 2, 8),
+    Integer("n", 3, 20),
+    Integer("i", 3, 8),
     Integer("big", 0, 2**14),
 ]
 

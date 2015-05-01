@@ -1,4 +1,4 @@
-from Actions import Key, Text
+from Actions import Key, Text, RepeatPreviousAction
 from protocol import Integer
 from rules.ContextualRule import makeContextualRule
 
@@ -26,12 +26,14 @@ _mapping  = {
     "browser"                     : Key("csa-b"),
     "new terminal"                : Key("csa-t"),
     "restart window manager"      : Key("csa-q"),
+    # we need this because we are a different series merge group
+    'rep [<n>]'                   : RepeatPreviousAction(),
 }
 
 _extras = [
-    Integer("n", 2, 20),
+    Integer("n", 3, 20),
     Integer("d", 0, 10),
-    Integer("i", 2, 8),
+    Integer("i", 3, 8),
 ]
 
 _defaults = {

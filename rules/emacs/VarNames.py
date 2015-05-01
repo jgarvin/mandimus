@@ -16,13 +16,10 @@ EmacsHyphen._print = emacsTextPrint
 EmacsUnderscore._print = emacsTextPrint
 
 _extras = [
-    Integer("n", 1, 20),
     Dictation("text")
     ]
 
-_defaults = {
-    "n": 1,
-    }    
+_defaults = {}    
 
 _mapping = {
     "type <text>" : EmacsText("%(text)s", False),
