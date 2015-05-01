@@ -48,6 +48,7 @@ keywords = [
     "inline",
     "int",
     "long",
+    "main",
     "mutable",
     "namespace",
     "new",
@@ -95,6 +96,7 @@ keywords = [
     "main"
     "override",
     ["std", "stood"],
+    ["std::string", "string"],
     ["uint32_t", "you int 32"],
     ["uint64_t", "you int 64"],
 

@@ -55,6 +55,7 @@ _keywords = [
     "setopt",
     "sort",
     ["ssh", "S S H"],
+    "sudo",
     "then",
     "touch",
     "true",
@@ -75,7 +76,6 @@ _keywords = [
     [">", "stood out"],
     ["2>", "stood err"],
     ["&>", "stood both"],
-    ["|", "pipe"],
 ] 
 
 ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)

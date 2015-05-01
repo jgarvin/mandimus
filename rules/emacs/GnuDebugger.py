@@ -35,6 +35,7 @@ GnuDebuggerRule.context.addRequirement(ModeRequirement(modes=["c-mode", "c++-mod
 
 keywords = [
     "all",
+    "backtrace",
     "break",
     "catch",
     "clear",
@@ -68,6 +69,7 @@ keywords = [
     "thread",
     "until",
     "watch",
+    "where",
     ["awatch", "access watch"],
     ["nexti", "next instruction"],
     ["nopass", "no pass"],
@@ -77,8 +79,6 @@ keywords = [
     ["rwatch", "read watch"],
     ["stepi", "step instruction"],
     ["tbreak", "one-shot break"],
-    "where",
-    "backtrace",
 ]
 
 IsDebugWindow = VarRequirement(r'(string-match-p "\\*\\(gud\\|gdb\\).*" (buffer-name))', 0, useFocus=True, useTimer=False)
