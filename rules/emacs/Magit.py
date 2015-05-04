@@ -28,9 +28,14 @@ _mapping = {
     "pull"          : Key("F"),
 }
 
-MagitRule = makeContextualRule("Magit", _mapping, emacsExtras, emacsDefaults)
-MagitRule.context.addRequirement(IsEmacs)
-MagitRule.context.addRequirement(ModeRequirement(modes="magit-status-mode"))
+## Turns out that since these are all single letter triggered,
+## it's better to jus remember the letter and say the phrase for
+## that. That way there's nothing different to remember between
+## using voice vs. keyboard. So we comment out.
+
+# MagitRule = makeContextualRule("Magit", _mapping, emacsExtras, emacsDefaults)
+# MagitRule.context.addRequirement(IsEmacs)
+# MagitRule.context.addRequirement(ModeRequirement(modes="magit-status-mode"))
 
 _mapping = {
     "inquisition" : Minibuf("magit-blame-mode"),

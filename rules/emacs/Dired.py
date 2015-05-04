@@ -30,7 +30,12 @@ _mapping = {
     "copy"                : Key("C"),
 }
 
-DiredRule = makeContextualRule("Dired", _mapping, emacsExtras, emacsDefaults)
-DiredRule.context.addRequirement(IsEmacs)
-DiredRule.context.addRequirement(ModeRequirement(modes="dired-mode"))
+## Turns out that since these are all single letter triggered,
+## it's better to jus remember the letter and say the phrase for
+## that. That way there's nothing different to remember between
+## using voice vs. keyboard. So we comment out.
+
+# DiredRule = makeContextualRule("Dired", _mapping, emacsExtras, emacsDefaults)
+# DiredRule.context.addRequirement(IsEmacs)
+# DiredRule.context.addRequirement(ModeRequirement(modes="dired-mode"))
 
