@@ -115,7 +115,7 @@ def fixBadConsonantPairs(w):
         word.extend(w[i])
         i += 1
     return ''.join(word)
-    
+
 # TODO: maybe give translate a better default
 def extractWords(wordstr, splitters={' ', '\n', '\t'} | set(string.punctuation), translate={},
                  useDict=False, removeLeetSpeak=False, detectBadConsonantPairs=False,
@@ -136,6 +136,8 @@ def extractWords(wordstr, splitters={' ', '\n', '\t'} | set(string.punctuation),
 
         # change 'camelCase' to ['camel', 'case']
         new_words = [i.lower() for i in deCamelize(''.join(w))]
+        # you have to capitalize single letters for Dragon to recognize them as words
+        new_words = [i if len(i) > 1 else i.upper() for i in new_words]
 
         toReplace = {}
         if detectBadConsonantPairs:
@@ -172,7 +174,7 @@ def extractWords(wordstr, splitters={' ', '\n', '\t'} | set(string.punctuation),
             new_words.append(v)
 
         all_words.extend(new_words)
-                        
+
     for c in wordstr:
         if c in splitters:
             if word:
@@ -195,7 +197,7 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
 
     leadingTerm is the prefix for each command that will
     be generated.
-    
+
     spokenSelects is a dictionary that maps choices to a list
     of sets of words that correspond to that choice.
 
@@ -218,7 +220,7 @@ def buildSelectMapping(leadingTerm, spokenSelects, selectAction):
             first = False
         grammar += [")"]
         grammar = ' '.join(grammar)
-        omapping[grammar] = selector 
+        omapping[grammar] = selector
 
     if not omapping:
         return None
