@@ -67,7 +67,6 @@ _mapping  = {
     # these are provided by the 'tabasco' extension
     "close other tabs"              : Key("as-o"),
     "close tabs to the right"       : Key("as-r"),
-    "close right tabs"              : Key("as-r"),
     "pin tab"                       : Key("as-p"),
     # provided ty the "duplicate tab" extension
     "duplicate"                     : Key("as-d"),

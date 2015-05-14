@@ -11,7 +11,10 @@ emacsExtras = [
 
     # Big repetition count
     Integer("n", 3, 20),
-    
+
+    # generic integer argument, not used for repetitions
+    Integer("j", 0, 20),
+
     Dictation("text"),
     Dictation("match"),
     Dictation("replace"),

@@ -29,7 +29,7 @@ class AlignRegexp(Cmd):
         whitespace = "\\\(\\\s-*\\\)%s"
         command %= (whitespace % data)
         Cmd.__init__(self, command)
-            
+
 class Copy(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
@@ -39,7 +39,7 @@ class Copy(Cmd):
             return
         else:
             Key("a-w")()
-            return 
+            return
 
 class Cut(Cmd):
     def _lisp(self, extras={}):
@@ -50,7 +50,7 @@ class Cut(Cmd):
             return
         else:
             Key("c-w")()
-            return 
+            return
 
 class Mark(Cmd):
     def _lisp(self, extras={}):
@@ -84,7 +84,7 @@ _mapping = {
     "destroy emacs window"        : Cmd("(delete-window)"),
 
     "new frame [<i>]"             : Cmd("(make-frame-command)"),
-    "mini buffer"                 : Cmd("(md-select-minibuffer)"),        
+    "mini buffer"                 : Cmd("(md-select-minibuffer)"),
 
     "list buffs"                  : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
     "list project files"          : Key("c-c,p,f"),
@@ -113,7 +113,7 @@ _mapping = {
     "alternate file"              : Key("c-x,c-v"),
     "recent files"                : Key("c-c,c-e"),
     "man page"                    : Key("a-x") + Text("man") + Key("enter"),
-    "find file"                   : Minibuf("find-name-dired"), 
+    "find file"                   : Minibuf("find-name-dired"),
 
     # buffer commands
     "switch (buff | buffer)"      : Key("c-x, b"),
@@ -139,6 +139,9 @@ _mapping = {
     "magnify [<i>]"               : Key("c-x,c-plus:%(i)d"),
     "demagnify [<i>]"             : Key("c-x,c-minus:%(i)d"),
     "compile"                     : Minibuf("compile"),
+    "visual line mode"            : Minibuf("visual-line-mode"),
+    "set indent <j>"              : Cmd("(etc-set-indent-preference %(j)d)"),
+    "toggle namespace indent"     : Cmd("(etc-toggle-namespace-indent)"),
 }
 
 
@@ -171,7 +174,7 @@ _mapping = {
 EmacsSearchRule = makeContextualRule("EmacsSearch", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.TERMINAL)
 EmacsSearchRule.context.addRequirement(IsEmacs)
 
-_mapping  = { 
+_mapping  = {
     # general commands
     "axe [<i>]"                              : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
     "super axe [<i>]"                        : Key("c-g:%(i)d"),
@@ -202,7 +205,7 @@ _mapping  = {
 
     "kill [<n>]"                             : Key('c-k:%(n)d'),
     "nip [<n>]"                              : Cmd('(md-backward-kill-word)'),
-    "pin [<n>]"                              : Cmd('(md-forward-kill-word)'),        
+    "pin [<n>]"                              : Cmd('(md-forward-kill-word)'),
     "pat [<n>]"                              : Key("delete:%(n)d"),
     "knock [<n>]"                            : Key("backspace:%(n)d"),
     "squeeze"                                : Cmd('(cycle-spacing)'),
