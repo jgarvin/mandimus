@@ -8,10 +8,12 @@ from rules.emacs.Keywords import KeywordRule
 from rules.emacs.Text import EmacsText
 
 _keywords = [
+    ["awk", "ock"],
     "cat",
     ["cd", "CD"],
     #["cd", "see D"],
     ["cp", "copy"],
+    "cut",
     "date",
     ["/dev/null", "dev null"],
     "diff",
@@ -31,6 +33,9 @@ _keywords = [
     ["g++", "G plus plus"],
     ["gcc", "GCC"],
     "git",
+    "git rebase",
+    "git pull",
+    "git push",
     "grep",
     ["--help", "help"],
     "history",
@@ -67,6 +72,7 @@ _keywords = [
     "unsetopt",
     ["/usr/bin/", "user bin"],
     "up",
+    "wait",
     ["wc", "word count"],
     "which",
     "while",
@@ -76,10 +82,10 @@ _keywords = [
     [">", "stood out"],
     ["2>", "stood err"],
     ["&>", "stood both"],
-] 
+]
 
 ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
-    
+
 _mapping = {
     "back [<i>]"        : Key("b,enter") * Repeat(extra="i"),
     "forward [<i>]"     : Key("f,enter") * Repeat(extra="i"),

@@ -56,10 +56,13 @@ def deCamelize(word):
     wordList = []
     buildingWord = []
 
+    # temporary hack, need better parsing
+    mixedCase = len({category(c) for c in word}) > 1
+
     for i, c in enumerate(word):
         newCategory = category(c)
         isLast = i == len(word)-1
-        if (cat and cat != newCategory) or (newCategory == UPPER and cat == UPPER):
+        if (cat and cat != newCategory) or (newCategory == UPPER and cat == UPPER and mixedCase):
             wordList.append(''.join(buildingWord))
             buildingWord = []
         if isLast:
@@ -72,6 +75,8 @@ def deCamelize(word):
 
 if __name__ == "__main__":
     assert(deCamelize("helloWorld") == ["hello", "World"])
+    assert(deCamelize("FXWorld") == ["F", "X", "World"])
+    assert(deCamelize("FXWorld") == ["F", "X", "World"])
     assert(deCamelize("hello2world") == ["hello", "2", "world"])
     assert(deCamelize("3hello@WorldThere") == ["3", "hello", "@", "World", "There"])
     print deCamelize("a7a")
