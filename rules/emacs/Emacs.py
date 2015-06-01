@@ -33,10 +33,11 @@ class AlignRegexp(Cmd):
 class Copy(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "the" in words:
-            Mark()(extras)
-            Key("a-w")()
-            return
+        for w in words:
+            if w in UnitList:
+                Mark()(extras)
+                Key("a-w")()
+                return
         else:
             Key("a-w")()
             return
@@ -44,29 +45,34 @@ class Copy(Cmd):
 class Cut(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "the" in words:
-            Mark()(extras)
-            Key("c-w")()
-            return
+        for w in words:
+            if w in UnitList:
+                Mark()(extras)
+                Key("c-w")()
+                return
         else:
             Key("c-w")()
             return
 
+#UnitList = ["line", "word", "symbol", "paragraph", "buffer", "filename", "sentence", "string", "parens", "brackets", "braces"]
+UnitList = ["line", "word", "symbol", "paragraph", "buffer", "filename", "sentence", "string", "pair"]
+UnitsOpt = "(" + " | ".join(UnitList) + ")"
+
 class Mark(Cmd):
     def _lisp(self, extras={}):
         words = extras['words']
-        if "line" in words:
-            return "(md-mark-thing 'line)"
-        elif "word" in words:
-            # TODO: This doesn't do what I want for subwords
-            return "(md-mark-thing 'word)"
-        elif "graph" in words:
-            return "(md-mark-thing 'paragraph)"
-        elif "sym" in words:
-            return "(md-mark-thing 'symbol)"
-        else:
-            Key("c-space")()
-            return ""
+        for w in words:
+            if w in UnitList:
+                return "(md-mark-thing '%s)" % w
+        Key("c-space")()
+        return ""
+
+class Comment(Cmd):
+    def _lisp(self, extras={}):
+        Mark()(extras)
+        Key("c-slash")()
+        return ""
+
 
 _mapping = {
     "command"                     : Key("c-x,c-m"),
@@ -79,9 +85,6 @@ _mapping = {
 
     "go to line"                  : Key("a-g,a-g"),
     "go to line <big>"            : Key("a-g,a-g") + Text("%(big)d") + Key("enter"),
-
-    # window commands
-    "destroy emacs window"        : Cmd("(delete-window)"),
 
     "new frame [<i>]"             : Cmd("(make-frame-command)"),
     "mini buffer"                 : Cmd("(md-select-minibuffer)"),
@@ -131,7 +134,6 @@ _mapping = {
     "get status"                  : Key("a-x") + Text("magit-status") + Key("enter"),
     "submit"                      : Key("c-x,hash"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
-    #"create shell"               : Cmd("(etc-open-shell nil)"),
     "show top"                    : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
     "toggle command logging"      : toggleCommandLogging,
@@ -168,7 +170,10 @@ _mapping = {
     "ace"                : Key("c-c,space"),
     "ace care"           : Key("c-u,c-c,space"),
 
-    "inspect character"             : Key("c-u,c-x,equal"),
+    "inspect character"  : Key("c-u,c-x,equal"),
+
+    "last change"        : Key("c-period"),
+    "next change"        : Key("c-comma"),
 }
 
 EmacsSearchRule = makeContextualRule("EmacsSearch", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.TERMINAL)
@@ -199,9 +204,10 @@ _mapping  = {
     "contract"                               : Key("a-equal"),
 
     # text manip commands
-    "copy [the (line | word | sym | graph)]" : Copy(),
-    "cut [the (line | word | sym | graph)]"  : Cut(),
-    "mark [the (line | word | sym | graph)]" : Mark(),
+    "copy [%s]" % UnitsOpt : Copy(),
+    "cut [%s]" % UnitsOpt  : Cut(),
+    "mark [%s]" % UnitsOpt : Mark(),
+    "comment [%s]" % UnitsOpt : Comment(),
 
     "kill [<n>]"                             : Key('c-k:%(n)d'),
     "nip [<n>]"                              : Cmd('(md-backward-kill-word)'),

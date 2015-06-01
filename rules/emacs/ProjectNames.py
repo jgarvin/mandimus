@@ -1,6 +1,6 @@
 import mdlog
 log = mdlog.getLogger(__name__)
-from rules.emacs.Cmd import runEmacsCmd 
+from rules.emacs.Cmd import runEmacsCmd
 from rules.WordSelector import WordSelector
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
 from wordUtils import extractWords
@@ -9,7 +9,7 @@ from EventList import ProjectListEvent
 from requirements.Emacs import IsEmacs
 from Actions import Key
 
-projectListGen = EmacsEventGenerator("Project", "(projectile-relevant-known-projects)", ProjectListEvent)
+projectListGen = EmacsEventGenerator("Project", "md-projectile-projects", ProjectListEvent)
 #projectListGen.logging = True
 
 class ProjectNames(WordSelector):

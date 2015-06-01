@@ -3,7 +3,8 @@
 
 import mdlog
 log = mdlog.getLogger(__name__)
-from rules.emacs.Cmd import runEmacsCmd 
+
+from rules.emacs.Cmd import runEmacsCmd
 from rules.WordSelector import WordSelector
 from rules.emacs.EmacsEventGenerator import EmacsEventGenerator
 from rules.ContextualRule import makeContextualRule
@@ -14,6 +15,7 @@ from EventList import BufferListEvent
 from requirements.Emacs import IsEmacs
 import string
 from Actions import Key
+from protocol import RuleType
 
 class BufferEventGenerator(EmacsEventGenerator):
     def __init__(self, name, query):
@@ -49,26 +51,26 @@ class BufferNames(WordSelector):
 
 class FolderNames(BufferNames):
     phrase = "folder"
-    query = "(md-get-buffers-in-modes 'dired-mode)" 
+    query = "(md-get-buffers-in-modes 'dired-mode)"
 
     def _noChoice(self):
         runEmacsCmd("(md-folder-switch)", queryOnly=False)
 
 class ShellNames(BufferNames):
     phrase = "shell"
-    query = "(md-get-buffers-in-modes 'comint-mode)" 
+    query = "(md-get-buffers-in-modes 'comint-mode)"
 
     def _noChoice(self):
         Key("c-z")()
         #runEmacsCmd("(etc-open-shell nil)", queryOnly=False)
-    
+
 class ChannelNames(BufferNames):
     phrase = "channel"
-    query = "(md-get-buffers-in-modes 'erc-mode)" 
+    query = "(md-get-buffers-in-modes 'erc-mode)"
 
 class SpecialNames(BufferNames):
     phrase = "special"
-    query = "(md-get-special-buffers)" 
+    query = "(md-get-special-buffers)"
 
 _bufferQueryTable = [
     FolderNames,
@@ -100,3 +102,11 @@ _mapping = {
 }
 ShellOneRule = makeContextualRule("ShellOneRule", _mapping)
 ShellOneRule.context.addRequirement(IsEmacs)
+
+
+_mapping = {}
+for e in _bufferQueryTable:
+    _mapping["last " + e.phrase] = Cmd("(md-switch-to-next-buffer-in-list %s)" % e.query)
+
+LastBufferRule = makeContextualRule("LastBufferRule", _mapping, [], {}, ruleType=RuleType.TERMINAL)
+LastBufferRule.context.addRequirement(IsEmacs)

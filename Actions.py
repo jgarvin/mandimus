@@ -25,10 +25,10 @@ def splitKeyString(keyStr):
     """Translate dragonfly style key descriptions
     with numeric repeating into a key description
     without repetition."""
-    
+
     # dragonfly uses comma sep keys, xdotool uses spaces
     singles = keyStr.split(',')
-    
+
     keys = []
     for s in singles:
         if ':' in s:
@@ -37,15 +37,15 @@ def splitKeyString(keyStr):
         else:
             key, count = s, 1
         keys.extend([key] * count)
-            
-    return keys    
+
+    return keys
 
 def parseKeyString(keyStr):
     """Translate dragonfly style key descriptions
     to xdotool's preferred versions"""
-    
+
     keys = [parseSingleKeystring(k) for k in splitKeyString(keyStr)]
-    return ' '.join(keys)    
+    return ' '.join(keys)
 
 def parseSingleKeystring(keyStr):
     xdo = []
@@ -65,7 +65,7 @@ def parseSingleKeystring(keyStr):
             xdo += ['shift']
         else:
             raise Exception('Unknown modifier: ' + modifier)
-
+    
     replacements = {
         "left"        : "Left",
         "right"       : "Right",
@@ -101,7 +101,7 @@ def parseSingleKeystring(keyStr):
     }
 
     keys = dictReplace(keys, replacements)
-    
+
     keys = re.sub("f([0-9])+", "F\\1", keys)
     xdo.append(keys)
     return '+'.join(xdo)
@@ -109,7 +109,7 @@ def parseSingleKeystring(keyStr):
 class ActionList(object):
     def __init__(self, lst=[]):
         self.lst = []
-        
+
     def __add__(self, other):
         if isinstance(other, ActionList):
             self.lst.extend(other.lst)
@@ -173,7 +173,7 @@ class Speak(Action):
 class Key(Action):
     def __call__(self, extras={}):
         cmd = "xdotool key " + parseKeyString(self.data % extras)
-        runCmd(cmd)    
+        runCmd(cmd)
 
 class FormatState(object):
     noformatting = {
@@ -215,7 +215,7 @@ class FormatState(object):
         ur"/\slash" : ur"slash",
         ur"\backslash" : ur"backslash",
         ur"<\less-than-sign" : ur"less than sign",
-        ur">\greater-than-sign" : ur"greater than sign", 
+        ur">\greater-than-sign" : ur"greater than sign",
         ur"=\equals-sign" : ur"equals sign",
         ur"[\left-square-bracket" : ur"left square bracket",
         ur"]\right-square-bracket" : ur"right square bracket",
@@ -225,7 +225,7 @@ class FormatState(object):
         ur"\cap" : ur"cap",
         ur"^\caret" : ur"caret",
         }
-    
+
     formatting = {
         ur".\period" : ur".",
         ur",\comma" : ur",",
@@ -256,8 +256,8 @@ class FormatState(object):
         ur"/\slash" : ur"/",
         ur"\backslash" : u"\\\\",
         ur"<\less-than-sign" : ur"<",
-        ur">\greater-than-sign" : ur">", 
-        ur"=\equals-sign" : ur"=",        
+        ur">\greater-than-sign" : ur">",
+        ur"=\equals-sign" : ur"=",
         ur"[\left-square-bracket" : ur"[",
         ur"]\right-square-bracket" : ur"]",
         ur"{\left-curly-bracket" : ur"{",
@@ -289,7 +289,7 @@ class FormatState(object):
         self.spacesEnabled = spaces
         self.next_numeral = False
         self.next_literal = False
-    
+
     def format(self, s):
         new = []
         first = True
@@ -297,7 +297,7 @@ class FormatState(object):
         for idx, word in enumerate(s):
             if idx == len(s) - 1:
                 last = True
-                
+
             # startswith is used so much because at some point in development
             # all of the control words started being sent twice by Dragon,
             # so originally you would get \cap but now for some reason you get \cap\cap
@@ -339,15 +339,15 @@ class FormatState(object):
                 else:
                     if self.cap_once:
                         newWord = word.capitalize()
-                        
+
                     if self.caps:
-                        newWord = word.upper()                        
+                        newWord = word.upper()
 
                     if self.next_numeral:
                         if newWord not in string.digits:
                             newWord = self.numeralmap[newWord.lower()]
-                        self.next_numeral = False                    
-                    
+                        self.next_numeral = False
+
                     # dragonfly doesn't properly filter slashes when
                     # the written and spoken form of a word differ
                     # and the spoken form has spaces in it, e.g.
@@ -366,7 +366,7 @@ class FormatState(object):
                         if not last and self.spacesEnabled:
                             newWord += u' '
                             self.no_space_once = False
-                        
+
                     prohibited = ["pronoun", "determiner", "non", "apostrophe-ess",
                                   "apostrophe ess", "apostrophe", "number", "letter", "z"]
 
@@ -423,10 +423,10 @@ def typeKeys(letters):
         arglist.append(newletter)
 
     letters = ' '.join(arglist)
-    
+
     cmd = ("xdotool type --clearmodifiers " + letters)
     runCmd(cmd)
-    
+
 def lower(word):
     if isinstance(word, unicode):
         return unicode.lower(word)
@@ -447,7 +447,7 @@ class Text(Action):
     def __init__(self, data, lower=True):
         Action.__init__(self, data)
         self.lower = lower
-        
+
     def __call__(self, extras={}):
         log.info("extras: [%s]" % extras)
         for k, v in extras.items():
@@ -467,11 +467,11 @@ class Text(Action):
 
     def _text(self, extras):
         words = (self.data % extras)
-        
+
         if self.lower:
             words = [w.lower() for w in words]
         return ''.join(words)
-    
+
 class Camel(Text):
     def __init__(self, fmt, caps=False):
         Text.__init__(self, fmt)
@@ -499,7 +499,7 @@ class Underscore(Text):
         words = (self.data % extras).lower().split(' ')
         words = [self.caps(w) for w in words]
         words = [strip_punctuation(word) for word in words]
-        return '_'.join(words)        
+        return '_'.join(words)
 
 class Hyphen(Text):
     def __init__(self, fmt, caps=False):
@@ -513,7 +513,7 @@ class Hyphen(Text):
         words = (self.data % extras).lower().split(' ')
         words = [strip_punctuation(word) for word in words]
         words = [self.caps(w) for w in words]
-        return '-'.join(words)        
+        return '-'.join(words)
 
 class click:
     def __init__(self, keyStr):

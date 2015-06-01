@@ -41,9 +41,10 @@ _mapping = {
     # "select previous" : "sp-select-previous-thing",
     "slurp"             : "sp-forward-slurp-sexp",
     "gulp"              : "sp-backward-slurp-sexp",
-    "barf"              : "sp-forward-barf-sexp",
+    "squirt"              : "sp-forward-barf-sexp",
     "chuck"             : "sp-backward-barf-sexp",
     "strip"             : "sp-splice-sexp",
+    #"obliterate"        : "sp-splice-sexp-killing-around",
     "split"             : "sp-split-sexp",
 }
 
