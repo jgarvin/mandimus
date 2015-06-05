@@ -22,6 +22,7 @@ _mapping = {
     "new"                     : Key("a-enter"),
     "new todo"                : Key("as-enter"),
     "make headline"           : Key("c-c,asterisk"),
+    "make table"              : Key("c-c,bar"),
     "archive [<i>]"           : Key("c-c,c-x,c-a") * Repeat(extra="i"),
     "task [<i>]"              : Key("c-c,c-t") * Repeat(extra="i"),
     "follow"                  : Key("c-c,c-o"),
@@ -37,4 +38,3 @@ _mapping = {
 OrgRule = makeContextualRule("Org", _mapping, emacsExtras, emacsDefaults)
 OrgRule.context.addRequirement(IsEmacs)
 OrgRule.context.addRequirement(ModeRequirement(modes=["org-mode", "org-agenda-mode"]))
-

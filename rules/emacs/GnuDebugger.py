@@ -7,13 +7,17 @@ from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
 from requirements.VarRequirement import VarRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
-from rules.emacs.Cmd import Cmd
+from rules.emacs.Cmd import Cmd, Minibuf
 from rules.emacs.Keywords import KeywordRule
 
 import keyword
 
 _mapping = {
-    "good source"            : Key("c-x,c-a,c-l"), 
+    "track debugger"         : Minibuf("realgud-track-mode"),
+    "debug run"              : Key("c-c,d"),
+    "toggle debugger"        : Key("c-c,t,d"),
+    "toggle valgrind"        : Key("c-c,t,v"),
+    "good source"            : Key("c-x,c-a,c-l"),
     "set break point"        : Key("c-x,c-a,c-b"),
     "delete break point"     : Key("c-x,c-a,c-d"),
     "good step [<i>]"        : Key("c-x,c-a,c-s") * Repeat(extra="i"),

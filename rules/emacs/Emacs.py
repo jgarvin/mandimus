@@ -76,7 +76,7 @@ class Comment(Cmd):
 
 _mapping = {
     "command"                     : Key("c-x,c-m"),
-    "toggle debug"                : Cmd("(toggle-debug-on-error)"),
+    "toggle emacs debug"                : Cmd("(toggle-debug-on-error)"),
     "exit debug"                  : Key("c-rbracket"),
     "debug function"              : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
     "cancel debug function"       : Key("c-x,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
@@ -125,6 +125,7 @@ _mapping = {
     "open client log"             : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
     "open server log"             : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
+    "show home folder"            : Cmd("(find-file \"~\")"),
 
     # misc
     "start irc"                   : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
