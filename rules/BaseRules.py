@@ -6,34 +6,34 @@ _mapping = {
     "abe"   : "a",
     "braid" : "b",
     "coup"  : "c",
-    "dealt" : "d",
+    "dog"   : "d",
     "echo"  : "e",
     "fox"   : "f",
     "golf"  : "g",
     "his"   : "h",
-    "ivy"   : "i", 
+    "ivy"   : "i",
     "john"  : "j",
     "king"  : "k",
     "lima"  : "l",
     "mike"  : "m",
-    "no"    : "n",
-    "osh"   : "o", 
+    "nay"   : "n",
+    "osh"   : "o",
     "pig"   : "p",
     "quid"  : "q",
-    "robe"  : "r", 
+    "robe"  : "r",
     "shoe"  : "s",
     "tang"  : "t",
     "unk"   : "u",
     "vict"  : "v",
-    "web"   : "w", 
+    "web"   : "w",
     "xray"  : "x",
     "yes"   : "y",
     "zulu"  : "z",
 }
-                    
+
 AlphaRule = makeHashedRule("AlphaRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(AlphaRule))
-    
+
 _mapping = {
     "zero"  : "0",
     "one"   : "1",
@@ -145,9 +145,7 @@ pushEvent(RuleRegisterEvent(CharRule))
 def lookup(charrule, keyNames=False):
     for e in _charExtras:
         if e.name in charrule:
-            mapping = e.rule_ref.rule.mapping 
+            mapping = e.rule_ref.rule.mapping
             if e.name == "symrule" and not keyNames:
                 mapping = _literalMapping
             return mapping[charrule[e.name]["words"][0]]
-        
-

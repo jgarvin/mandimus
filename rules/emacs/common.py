@@ -10,7 +10,7 @@ emacsExtras = [
     Integer("i", 3, 8),
 
     # Big repetition count
-    Integer("n", 3, 20),
+    Integer("n", 3, 72),
 
     # generic integer argument, not used for repetitions
     Integer("j", 0, 20),
@@ -30,4 +30,3 @@ emacsDefaults = {
     "i"    : 1,
     "text" : "",
 }
-
