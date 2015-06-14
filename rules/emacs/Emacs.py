@@ -76,7 +76,7 @@ class Comment(Cmd):
 
 _mapping = {
     "command"                     : Key("c-x,c-m"),
-    "toggle emacs debug"                : Cmd("(toggle-debug-on-error)"),
+    "toggle emacs debug"          : Cmd("(toggle-debug-on-error)"),
     "exit debug"                  : Key("c-rbracket"),
     "debug function"              : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
     "cancel debug function"       : Key("c-x,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
@@ -115,6 +115,7 @@ _mapping = {
     "plain open file"             : Key("c-x,c-f"),
     "alternate file"              : Key("c-x,c-v"),
     "recent files"                : Key("c-c,c-e"),
+    "sudo open file"              : Key("c-c,o,s"),
     "man page"                    : Key("a-x") + Text("man") + Key("enter"),
     "find file"                   : Minibuf("find-name-dired"),
 
