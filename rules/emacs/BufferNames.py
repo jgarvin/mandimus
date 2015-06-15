@@ -34,7 +34,7 @@ class BufferNames(WordSelector):
         getLoop().subscribeEvent(BufferListEvent, self._onBufferList)
 
     def _onBufferList(self, ev):
-        log.info("Ev: [%s]" % (ev,))
+        # log.info("Ev: [%s]" % (ev,))
         if ev.query == self.query:
             log.info("Name: [%s] query: [%s] buffers: [%s]" % (self.name, ev.query, ev.choices))
             self._update(ev.choices)

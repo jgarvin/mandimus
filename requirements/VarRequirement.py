@@ -27,5 +27,4 @@ class VarRequirement(Requirement):
         except ValueError:
             pass
 
-        #log.info("Met status: [%s]" % (output == self.value))
         self._met(output == self.value)

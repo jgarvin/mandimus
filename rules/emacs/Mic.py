@@ -21,37 +21,37 @@ class MicrophoneState(object):
         self.loading = False
 
     def onMicState(self, ev):
-        log.info(sys._getframe(0).f_code.co_name)
-        log.info("Mic state: [%s]" % ev.state)
+        # log.info(sys._getframe(0).f_code.co_name)
+        # log.info("Mic state: [%s]" % ev.state)
         self.micState = ev.state
         self.sendState()
 
     def onRecognitionState(self, ev):
-        log.info(sys._getframe(0).f_code.co_name)
-        log.info("Recognition state: [%s]" % ev.state)
+        # log.info(sys._getframe(0).f_code.co_name)
+        # log.info("Recognition state: [%s]" % ev.state)
         self.recognitionState = ev.state
         self.sendState()
 
     def loadingRulesChange(self, ev):
-        log.info(sys._getframe(0).f_code.co_name)
-        log.info("Loading state: [%s]" % ev.state)
+        # log.info(sys._getframe(0).f_code.co_name)
+        # log.info("Loading state: [%s]" % ev.state)
         self.loading = (ev.state != "done")
         self.sendState()
 
     def onDisconnect(self, ev):
-        log.info(sys._getframe(0).f_code.co_name)
+        # log.info(sys._getframe(0).f_code.co_name)
         self.setupState()
         self.sendState()
 
     def onConnect(self, ev):
-        log.info(sys._getframe(0).f_code.co_name)
+        # log.info(sys._getframe(0).f_code.co_name)
         self.connected = True
         self.sendState()
 
     def sendState(self, ev=None):
-        log.info(sys._getframe(0).f_code.co_name)
-        log.info("connected [%s] loading [%s] state [%s] recog [%s]" % (self.connected, self.loading, self.micState,
-                                                                         self.recognitionState))
+        # log.info(sys._getframe(0).f_code.co_name)
+        # log.info("connected [%s] loading [%s] state [%s] recog [%s]" % (self.connected, self.loading, self.micState,
+        #                                                                  self.recognitionState))
         
         finalState = None
         if not self.connected:
@@ -68,7 +68,7 @@ class MicrophoneState(object):
         self.tellEmacs(finalState)
         
     def tellEmacs(self, state):
-        log.info("telling emacs cursor state: %s" % state)
+        # log.info("telling emacs cursor state: %s" % state)
         runEmacsCmd("(md-new-mic-state \"%s\")" % state)
 
 _state = MicrophoneState()

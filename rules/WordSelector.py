@@ -82,8 +82,9 @@ class WordSelector(object):
         for i in range(len(self.words)):
             for j in range(len(self.words[i])):
                 if self.words[i][j]:
-                    log.info("%s New words %dx%d len: [%d] set: [%s]" % (self.name, i, j, len(self.words[i][j]), self.words[i][j]))
-        log.info("%s word count: [%d]" % (self.name, len(allWords)))
+                    pass
+                    # log.info("%s New words %dx%d len: [%d] set: [%s]" % (self.name, i, j, len(self.words[i][j]), self.words[i][j]))
+        # log.info("%s word count: [%d]" % (self.name, len(allWords)))
         # log.info("New words [%d] for %s :: %s: [%s]" % (count, self.name, type(self), self.words))
         self._sendWords()
 

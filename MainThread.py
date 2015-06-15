@@ -150,7 +150,7 @@ class MainThread(object):
                     
     def put(self, p):
         # with self.eventsLock:
-        log.info("Adding [%s] to events" % (type(p),))
+        # log.info("Adding [%s] to events" % (type(p),))
         self.events.append(p)
 
     def processEvent(self, ev):

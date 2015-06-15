@@ -6,6 +6,7 @@ from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
 from requirements.VarRequirement import VarRequirement
+from requirements.Or import OrRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
 from rules.emacs.Cmd import Cmd, Minibuf
 from rules.emacs.Keywords import KeywordRule
@@ -86,4 +87,7 @@ keywords = [
 ]
 
 IsDebugWindow = VarRequirement(r'(string-match-p "\\*\\(gud\\|gdb\\).*" (buffer-name))', 0, useFocus=True, useTimer=False)
-GnuDebuggerKeywordRule = KeywordRule([IsDebugWindow], keywords, "GnuDebuggerKeyword")
+IsDebugTrackWindow = VarRequirement(r'realgud-track-mode', 't', useFocus=True, useTimer=False)
+GnuDebuggerKeywordRule = KeywordRule([OrRequirement([IsDebugWindow, IsDebugTrackWindow])], keywords, "GnuDebuggerKeyword")
+#GnuDebuggerKeywordRule = KeywordRule([IsDebugTrackWindow], keywords, "GnuDebuggerKeyword")
+

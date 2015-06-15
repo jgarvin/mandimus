@@ -66,7 +66,7 @@ class DragonflyThread(DragonflyNode):
         if ev.name in self.lastWordList and self.lastWordList[ev.name] == ev.words:
             return
         #log.info("Sending updated word list [%s] -- [%s]" % (ev.name, ev.words))
-        log.info("Sending updated word list [%s]" % (ev.name,))
+        # log.info("Sending updated word list [%s]" % (ev.name,))
         self.sendMsg(makeJSON(WordListMsg(ev.name, ev.words)))
         self.lastWordList[ev.name] = copy(ev.words)
 

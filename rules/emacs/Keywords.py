@@ -17,15 +17,17 @@ VerbRule = makeHashedRule("VerbRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(VerbRule))
 
 class KeywordCmd(Cmd):
-    def __init__(self, keywords, log=False):
+    def __init__(self, keywords, verbRule, kwRule, log=False):
         self.writtenForms = {}
+        self.verbRule = verbRule
+        self.kwRule = kwRule
         for i in keywords:
             self.writtenForms[i[1]] = i[0]
         Cmd.__init__(self, None, log)
 
     def _lisp(self, extras={}):
-        command = " ".join(extras['mode_verb_rule']['words'])
-        spokenKeyword = " ".join(extras['keyword']['words'])
+        command = " ".join(extras[self.verbRule]['words'])
+        spokenKeyword = " ".join(extras[self.kwRule]['words'])
         writtenKeyword = self.writtenForms[spokenKeyword]
         if command == "key":
             EmacsText("%s" % writtenKeyword, lower=False)()
@@ -50,14 +52,14 @@ class KeywordRule(object):
             # a string is interpreted to be a mode requirement
             self.requirements = [ModeRequirement([requirements])]
         elif type(requirements) in (list,) and all([type(x) in (str, unicode) for x in requirements]):
-            # a list of strings is interpreted to be multiple possible modes 
+            # a list of strings is interpreted to be multiple possible modes
             self.requirements = [ModeRequirement(requirements)]
         else:
             # otherwise we assume we're being passed a real list of requirement objects
             self.requirements = requirements
         self.name = name
         if not self.name:
-            self.name = requirements[0] + "-keyword-rule"
+            self.name = requirements[0].replace("-", "_") + "_kw_rule"
         self.keywords = normalizeKeywords(keywords)
 
         self.rule = self._buildRule(self.requirements, self.keywords)
@@ -67,13 +69,16 @@ class KeywordRule(object):
         listRule = makeKeywordListRule(self.name + "-list", keywords)
         pushEvent(RuleRegisterEvent(listRule))
 
+        verbRule = "_".join([self.name, "mode_verb_rule"])
+        kwRule = "_".join([self.name, "keyword"])
+
         mapping = {
-            "<mode_verb_rule> <keyword>" : KeywordCmd(keywords),
+            ("<%s> <%s>" % (verbRule, kwRule)) : KeywordCmd(keywords, verbRule, kwRule),
         }
 
         extras = [
-            RuleRef(VerbRule, "mode_verb_rule"),
-            RuleRef(listRule, "keyword"),
+            RuleRef(VerbRule, verbRule),
+            RuleRef(listRule, kwRule),
         ]
 
         KeywordRule = makeContextualRule(self.name, mapping, extras)
