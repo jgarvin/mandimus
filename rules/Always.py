@@ -14,7 +14,7 @@ from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 class PressKey(object):
     def __init__(self, force_shift=False):
         self.force_shift = force_shift
-    
+
     def __call__(self, extras):
         log.info("extras: [%s]" % (extras,))
         words = extras['words']
@@ -24,7 +24,7 @@ class PressKey(object):
 
         if self.force_shift and "cap" not in words:
             words = ["cap"] + words
-        
+
         repetitions = extras['i']
         if "control" in words:
             keystring.append('c')
@@ -35,14 +35,14 @@ class PressKey(object):
         if "cap" in words:
             keystring.append('s')
             foundModifier = True
-        
+
         if foundModifier:
             keystring.append('-')
 
         keystring.append(BaseRules.lookup(extras["charrule"], keyNames=True))
         for r in range(repetitions):
             Key(''.join(keystring))()
-  
+
 # class PrintLetter(object):
 #     def __call__(self, extras):
 #         log.info("Heard letter! %s" % extras['words'])
@@ -57,7 +57,7 @@ _mapping = {
 
 _extras = [
     Integer("i", 3, 8),
-    Integer("n", 3, 20),
+    Integer("n", 3, 72),
     Integer("digit", 0, 10),
     Dictation("text"),
     RuleRef(AlphaRule, "alpharule"),
@@ -75,7 +75,7 @@ AlwaysRule.activate()
 _extras = [
     Dictation("text")
 ]
-    
+
 _mapping = {
     "type <text>" : Text("%(text)s", False),
 }
@@ -100,7 +100,7 @@ StudRule.context.addRequirement(NotEmacs)
 _mapping = {
     "hyphen <text>"     : Hyphen("%(text)s"),
     "cap hyphen <text>" : Hyphen("%(text)s", True),
-}    
+}
 
 HypenRule = makeContextualRule("HypenRule", _mapping, _extras, {}, RuleType.TERMINAL)
 HypenRule.context.addRequirement(NotEmacs)
@@ -116,7 +116,7 @@ UnderscoreRule.context.addRequirement(NotEmacs)
 class WriteLetters(object):
     def __call__(self, extras={}):
         for word in extras['letters']['words']:
-            Key(AlphaRule.rule.mapping[word])()        
+            Key(AlphaRule.rule.mapping[word])()
 
 _mapping = {
     "spell <letters>" : WriteLetters()

@@ -40,20 +40,20 @@ _mapping = {
     "right [<n>]"         : Key("right:%(n)d"),
     "up [<n>]"            : Key("up:%(n)d"),
     "down [<n>]"          : Key("down:%(n)d"),
-    "pat [<n>]"           : Key("delete:%(n)d"),
+    "konk [<n>]"          : Key("delete:%(n)d"),
     "knock [<n>]"         : Key("backspace:%(n)d"),
     "slap [<n>]"          : Key("enter:%(n)d"),
     "num <big>"           : Text("%(big)d"),
     "per [<n>]"           : Key("c-left:%(n)d"),
     "pro [<n>]"           : Key("c-right:%(n)d"),
-    "nip [<n>]"           : Key("c-backspace:%(n)d"),
-    "pin [<n>]"           : Key("c-delete:%(n)d"),
+    "chip [<n>]"          : Key("c-backspace:%(n)d"),
+    "pitch [<n>]"         : Key("c-delete:%(n)d"),
     "top side"            : Key("c-home"),
     "bottom"              : Key("c-end"),
     "save file"           : Key("c-s"),
     "open file"           : Key("c-o"),
     "new file"            : Key("c-n"),
-} 
+}
 
 _extras = [
     Integer("n", 3, 20),
@@ -69,4 +69,3 @@ _defaults = {
 
 CUARule = makeContextualRule("CUA", _mapping, _extras, _defaults)
 CUARule.context.addRequirement(NotEmacs)
-

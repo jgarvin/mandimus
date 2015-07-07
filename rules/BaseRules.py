@@ -3,37 +3,40 @@ from EventList import RuleRegisterEvent
 from EventLoop import pushEvent
 
 _mapping = {
-    "abe"   : "a",
-    "braid" : "b",
-    "coup"  : "c",
-    "dog"   : "d",
-    "echo"  : "e",
-    "fox"   : "f",
-    "golf"  : "g",
-    "his"   : "h",
-    "ivy"   : "i",
-    "john"  : "j",
-    "king"  : "k",
-    "lima"  : "l",
-    "mike"  : "m",
-    "nay"   : "n",
-    "osh"   : "o",
-    "pig"   : "p",
-    "quid"  : "q",
-    "robe"  : "r",
-    "shoe"  : "s",
-    "tang"  : "t",
-    "unk"   : "u",
-    "vict"  : "v",
-    "web"   : "w",
-    "xray"  : "x",
-    "yes"   : "y",
-    "zulu"  : "z",
+    "abe"  : "a", # not great
+    "boy"  : "b",
+    "coup" : "c",
+    "dog"  : "d",
+    "echo" : "e",
+    "fox"  : "f",
+    "golf" : "g",
+    "his"  : "h", # not great
+    "ivy"  : "i",
+    "john" : "j",
+    "king" : "k",
+    "lima" : "l",
+    "mike" : "m",
+    "nay"  : "n",
+    "osh"  : "o",
+    "pig"  : "p",
+    "quid" : "q",
+    "robe" : "r",
+    "shoe" : "s",
+    "tang" : "t",
+    "umm"  : "u",
+    "vict" : "v",
+    "was"  : "w",
+    "xray" : "x",
+    "yes"  : "y",
+    "zulu" : "z",
 }
 
 AlphaRule = makeHashedRule("AlphaRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(AlphaRule))
 
+# Um, why does this exist, instead of just matching 0-9?
+# hell, why do you need 'num' ? go 0 is unambiguous.
+# so is go 0 3.
 _mapping = {
     "zero"  : "0",
     "one"   : "1",

@@ -103,6 +103,11 @@ keywords = [
     ["uint16_t", "you int sixteen"],
     ["uint32_t", "you int thirty two"],
     ["uint64_t", "you int sixty four"],
+    ["__PRETTY_FUNCTION__", "pretty function"],
+    ["cout", "see out"],
+    ["cerr", "see air"],
+    "iterator",
+    "const_iterator",
 
     # boost
     ["bxxst", "boost"],
