@@ -39,8 +39,11 @@ _mapping = {
     #"var <charrule> [<n>]"  : CharCmd("(md-insert-text (char-to-string %s) t nil)"),
     "phone [<i>]"            : Cmd("(md-cycle-homophones-at-point)"),
     "sort lines"             : Cmd("(call-interactively #'sort-lines)"),
+    "make score"             : Key("c-c,m,s"),
+    "make stud"              : Key("c-c,m,c"),
+    "make camel"             : Key("c-c,m,l"),
+    "make upper"             : Key("c-c,m,u")
 }
 
 EditRule = makeContextualRule("Edit", _mapping, emacsExtras, emacsDefaults)
 EditRule.context.addRequirement(IsEmacs)
-

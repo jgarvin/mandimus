@@ -8,6 +8,7 @@ from rules.emacs.Keywords import KeywordRule
 from rules.emacs.Text import EmacsText
 
 _keywords = [
+    "ack",
     ["awk", "ock"],
     "cat",
     ["cd", "CD"],

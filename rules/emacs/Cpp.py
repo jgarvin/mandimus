@@ -108,6 +108,7 @@ keywords = [
     ["cerr", "see air"],
     "iterator",
     "const_iterator",
+    ["std::size_t", "size T"],
 
     # boost
     ["bxxst", "boost"],
