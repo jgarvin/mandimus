@@ -109,6 +109,7 @@ keywords = [
     "iterator",
     "const_iterator",
     ["std::size_t", "size T"],
+    ["#else", "pound else"],
 
     # boost
     ["bxxst", "boost"],
