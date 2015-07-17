@@ -83,15 +83,17 @@ for i in range(count.value):
     log.info("\tUsage: %04x" % dev.contents.Usage)
     log.info("\tVersion: %04x" % dev.contents.Version)
 
-    log.info("\tSetting up interface.")
-    result = SetupInterfaceEx(dev.contents.Handle)
-    if result != 0:
-        log.info("Unable to open device. Error: %d" % result)
+    # magic constants from piehidtestgui!
+    if dev.contents.UP == 0x000c and dev.contents.Usage == 0x0001: 
+        log.info("\tSetting up interface.")
+        result = SetupInterfaceEx(dev.contents.Handle)
+        if result != 0:
+            log.info("Unable to open device. Error: %d" % result)
 
-    # Why break after one iteration? No idea, but if I don't
-    # do this then my keyboard stops working until I unplug it
-    # and plug it back in!
-    break
+        # Why break after one iteration? No idea, but if I don't
+        # do this then my keyboard stops working until I unplug it
+        # and plug it back in!
+        break
 
 if dev.contents.Handle < 0:
     log.error("Unable to open device.")
