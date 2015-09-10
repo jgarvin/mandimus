@@ -7,7 +7,12 @@ log = mdlog.getLogger(__name__)
 from EventLoop import getLoop, pushEvent
 from EventList import PedalsEvent, ExitEvent, RestartEvent
 
+log.info("Importing pedals!")
+
 from piehid32 import *
+
+log.info("Imported pedals!")
+
 from ctypes import *
 from eventfd import eventfd
 import struct

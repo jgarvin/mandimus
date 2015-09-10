@@ -9,6 +9,7 @@ from rules.emacs.Text import EmacsText
 
 _keywords = [
     "ack",
+    ["apt-get", "apt get"],
     ["awk", "ock"],
     "cat",
     ["cd", "CD"],
@@ -27,6 +28,7 @@ _keywords = [
     "exec",
     "exit",
     "export",
+    "extract",
     "false",
     ["fi", "fee"],
     "find",
@@ -44,6 +46,7 @@ _keywords = [
     ["~", "home"],
     "hostname",
     "if",
+    "install",
     ["ip", "I P"],
     "jobs",
     "localhost",
@@ -58,12 +61,14 @@ _keywords = [
     ["rm", "remove"],
     ["rsync", "R sync"],
     "search",
+    ["sed", "said"],
     "set",
     "setopt",
     "sort",
     ["ssh", "S S H"],
     "sudo",
     "tail",
+    "tee",
     "then",
     "touch",
     "true",
@@ -92,7 +97,7 @@ ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
 _mapping = {
     "back [<i>]"        : Key("b,enter") * Repeat(extra="i"),
     "forward [<i>]"     : Key("f,enter") * Repeat(extra="i"),
-    "ascend [<i>]"      : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
+    "surface [<i>]"      : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
 }
 
 ShellRule = makeContextualRule("Shell", _mapping, emacsExtras, emacsDefaults)

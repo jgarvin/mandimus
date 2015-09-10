@@ -7,7 +7,6 @@ from rules.emacs.common import emacsExtras, emacsDefaults
 
 _mapping = {
     "rename"              : Key("R"),
-    "toggle read only"    : Key("c-x,c-q"),
     "pick"                : Key("m"),
     "unpick"              : Key("u"),
     "unpick all"          : Key("U"),

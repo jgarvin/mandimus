@@ -147,6 +147,7 @@ _mapping = {
     "visual line mode"            : Minibuf("visual-line-mode"),
     "set indent <j>"              : Cmd("(etc-set-indent-preference %(j)d)"),
     "toggle namespace indent"     : Cmd("(etc-toggle-namespace-indent)"),
+    "toggle read only"            : Key("c-x,c-q"),
 }
 
 
@@ -170,7 +171,7 @@ _mapping = {
     "help bindings"      : Key("c-h,b"),
 
     # navigation commands
-    "ace"                : Key("c-c,space"),
+    "ace"                : Key("a-enter"),
     "ace care"           : Key("c-u,c-c,space"),
 
     "inspect character"  : Key("c-u,c-x,equal"),
