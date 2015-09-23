@@ -78,7 +78,7 @@ keywords = [
     "true",
     "try",
     "typedef",
-    ["typeid", "type I D"],
+    ["typeid", "type ID"],
     "typename",
     "union",
     "unsigned",

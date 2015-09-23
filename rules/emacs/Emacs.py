@@ -12,7 +12,7 @@ from EventLoop import getLoop
 from wordUtils import extractWords
 from rules.emacs.Cmd import Cmd, runEmacsCmd, toggleCommandLogging, Minibuf, InsertString
 from rules.emacs.Text import EmacsText
-import rules.BaseRules as BaseRules
+from rules.BaseRules import PressKey
 from rules.ContextualRule import makeContextualRule
 import string
 import EventList
@@ -170,10 +170,6 @@ _mapping = {
     "help syntax"        : Key("c-h,s"),
     "help bindings"      : Key("c-h,b"),
 
-    # navigation commands
-    "ace"                : Key("a-enter"),
-    "ace care"           : Key("c-u,c-c,space"),
-
     "inspect character"  : Key("c-u,c-x,equal"),
 
     "last change"        : Key("c-period"),
@@ -241,6 +237,10 @@ _mapping  = {
     "capital"                       : Key("a-c"),
     "upper"                         : Key("a-u"),
     "lower"                         : Key("a-l"),
+
+    # navigation commands
+    "jump <charrule>"                : Key("a-enter") + PressKey(),
+    "jump char <charrule>"           : Key("c-u,a-enter") + PressKey(),
 
     # save mark, almost never use, need to get used to
     #"push"                         : Key("c-space,c-space"),

@@ -1,3 +1,8 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
+from Actions import Key
+
 from protocol import RuleRef, makeHashedRule, RuleType
 from EventList import RuleRegisterEvent
 from EventLoop import pushEvent
@@ -22,7 +27,7 @@ _mapping = {
     "quid" : "q",
     "robe" : "r",
     "shoe" : "s",
-    "tall" : "t",
+    "toss" : "t",
     "use"  : "u",
     "vict" : "v",
     "was"  : "w",
@@ -34,9 +39,6 @@ _mapping = {
 AlphaRule = makeHashedRule("AlphaRule", _mapping, ruleType=RuleType.INDEPENDENT)
 pushEvent(RuleRegisterEvent(AlphaRule))
 
-# Um, why does this exist, instead of just matching 0-9?
-# hell, why do you need 'num' ? go 0 is unambiguous.
-# so is go 0 3.
 _mapping = {
     "zero"  : "0",
     "one"   : "1",
@@ -152,3 +154,35 @@ def lookup(charrule, keyNames=False):
             if e.name == "symrule" and not keyNames:
                 mapping = _literalMapping
             return mapping[charrule[e.name]["words"][0]]
+
+class PressKey(object):
+    def __init__(self, force_shift=False):
+        self.force_shift = force_shift
+
+    def __call__(self, extras):
+        log.info("extras: [%s]" % (extras,))
+        words = extras['words']
+        log.info('w: ' + str(words))
+        keystring = []
+        foundModifier = True
+
+        if self.force_shift and "cap" not in words:
+            words = ["cap"] + words
+
+        repetitions = extras['i']
+        if "control" in words:
+            keystring.append('c')
+            foundModifier = True
+        if "alt" in words:
+            keystring.append('a')
+            foundModifier = True
+        if "cap" in words:
+            keystring.append('s')
+            foundModifier = True
+
+        if foundModifier:
+            keystring.append('-')
+
+        keystring.append(lookup(extras["charrule"], keyNames=True))
+        for r in range(repetitions):
+            Key(''.join(keystring))()

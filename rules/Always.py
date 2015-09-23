@@ -4,44 +4,13 @@ log = mdlog.getLogger(__name__)
 from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
 from listHelpers import dictReplace
 import rules.BaseRules as BaseRules
-from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule
+from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule, PressKey
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import NotEmacs
 from EventList import RuleActivateEvent
 import string
 from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 
-class PressKey(object):
-    def __init__(self, force_shift=False):
-        self.force_shift = force_shift
-
-    def __call__(self, extras):
-        log.info("extras: [%s]" % (extras,))
-        words = extras['words']
-        log.info('w: ' + str(words))
-        keystring = []
-        foundModifier = True
-
-        if self.force_shift and "cap" not in words:
-            words = ["cap"] + words
-
-        repetitions = extras['i']
-        if "control" in words:
-            keystring.append('c')
-            foundModifier = True
-        if "alt" in words:
-            keystring.append('a')
-            foundModifier = True
-        if "cap" in words:
-            keystring.append('s')
-            foundModifier = True
-
-        if foundModifier:
-            keystring.append('-')
-
-        keystring.append(BaseRules.lookup(extras["charrule"], keyNames=True))
-        for r in range(repetitions):
-            Key(''.join(keystring))()
 
 # class PrintLetter(object):
 #     def __call__(self, extras):
