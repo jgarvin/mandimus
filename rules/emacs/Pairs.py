@@ -43,7 +43,7 @@ _mapping = {
     "flip slurp"        : "sp-backward-slurp-sexp",
     "barf"              : "sp-forward-barf-sexp",
     "flip barf"         : "sp-backward-barf-sexp",
-    "strip"             : "sp-splice-sexp",
+    "peel"              : "sp-splice-sexp",
     #"obliterate"       : "sp-splice-sexp-killing-around",
     "split"             : "sp-split-sexp",
 }

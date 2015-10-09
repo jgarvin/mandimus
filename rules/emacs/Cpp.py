@@ -54,7 +54,7 @@ keywords = [
     "namespace",
     "new",
     ["noexcept", "no except"],
-    "nullptr",
+    ["nullptr", "knoll pointer"],
     "operator",
     "private",
     "protected",
@@ -110,6 +110,7 @@ keywords = [
     "const_iterator",
     ["std::size_t", "size T"],
     ["#else", "pound else"],
+    "NULL",
 
     # boost
     ["bxxst", "boost"],

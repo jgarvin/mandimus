@@ -12,8 +12,8 @@ from Actions import Key
 # possibilities?
 
 _mapping = {
-    "home"                   : Cmd("(md-beginning-or-indentation-toggle)"),
-    "edge"                   : Cmd("(end-of-line)"),
+    "home"                   : Key("c-a"),
+    "edge"                   : Key("c-e"),
     "cliff"                  : Cmd("(md-go-to-cliff)"),
     "top side"               : Key("a-langle"),
     "bottom"                 : Key("a-rangle"),

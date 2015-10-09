@@ -75,7 +75,7 @@ class Comment(Cmd):
 
 
 _mapping = {
-    "command"                     : Key("c-x,c-m"),
+    "command"                     : Key("a-x"),
     "toggle emacs debug"          : Cmd("(toggle-debug-on-error)"),
     "exit debug"                  : Key("a-rbracket"),
     "debug function"              : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
@@ -155,8 +155,6 @@ EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, emacsExtras, e
 EmacsIsolatedRule.context.addRequirement(IsEmacs)
 
 _mapping = {
-    "search [<text>]"    : Key('c-s') + Text("%(text)s"),
-    "lurch [<text>]"     : Key('c-r') + Text("%(text)s"),
     "toggle"             : Key('a-t'),
     "help function"      : Key("c-h,f"),
     "help function slap" : Key("c-h,f,enter"),
@@ -212,7 +210,7 @@ _mapping  = {
     "kill [<n>]"                    : Key('c-k:%(n)d'),
     "chip [<n>]"                    : Cmd('(md-backward-kill-word)'),
     "pitch [<n>]"                   : Cmd('(md-forward-kill-word)'),
-    "konk [<n>]"                    : Key("delete:%(n)d"),
+    "thump [<n>]"                   : Key("delete:%(n)d"),
     "knock [<n>]"                   : Key("backspace:%(n)d"),
     "squeeze"                       : Cmd('(cycle-spacing)'),
 
@@ -234,13 +232,13 @@ _mapping  = {
     "comment"                       : Key("c-slash"),
 
     # text commands
-    "capital"                       : Key("a-c"),
-    "upper"                         : Key("a-u"),
-    "lower"                         : Key("a-l"),
+    "capitalize"                    : Key("a-c"),
+    "make upper"                    : Key("a-u"),
+    "make lower"                    : Key("a-l"),
 
     # navigation commands
-    "jump <charrule>"                : Key("a-enter") + PressKey(),
-    "jump char <charrule>"           : Key("c-u,a-enter") + PressKey(),
+    "jump <charrule>"               : Key("a-enter") + PressKey(),
+    "jump char <charrule>"          : Key("c-u,a-enter") + PressKey(),
 
     # save mark, almost never use, need to get used to
     #"push"                         : Key("c-space,c-space"),
@@ -263,6 +261,11 @@ _mapping  = {
 
     "switch previous"               : Key("c-x,c-left"),
     "switch next"                   : Key("c-x,c-right"),
+    
+    "search"                        : Key('c-s'),
+    "lurch"                         : Key('c-r'),
+    "swoop"                         : Key("a-i"),
+    "show kill ring"                : Key("cs-y"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

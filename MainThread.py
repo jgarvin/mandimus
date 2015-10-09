@@ -59,12 +59,12 @@ class MainThread(object):
     FILE_OUTPUT = select.EPOLLOUT
     FILE_ERROR = select.EPOLLERR
     FILE_HUP = select.EPOLLHUP
-    
+
     def __init__(self):
         # this needs to run before any user modes are imported
         self.epoll = select.epoll()
         self.timers = []
-        EventLoop.event_loop = self        
+        EventLoop.event_loop = self
 
         self.run = True
         self.events = collections.deque()
@@ -74,10 +74,10 @@ class MainThread(object):
 
         self.dfly = DragonflyThread(('', 23133), self)
         self.win = WindowEventWatcher(self, filterWindows)
-        
+
         self.subscribeEvent(RestartEvent, self.restart)
         self.subscribeEvent(ExitEvent, self.stop)
-        
+
         mapping = { "restart mandimus" : (lambda x: self.put(RestartEvent())),
                     "completely exit mandimus" : (lambda x: self.put(ExitEvent())) }
         self.MainControlRule = makeContextualRule("MainControlRule", mapping, ruleType=RuleType.INDEPENDENT)
@@ -128,7 +128,7 @@ class MainThread(object):
         else:
             # without a timeout, cgetrl-c doesn't work because.. python
             ONEYEAR = 365 * 24 * 60 * 60
-            nextExpiration = time.time() + ONEYEAR 
+            nextExpiration = time.time() + ONEYEAR
         return max(nextExpiration - time.time(), 0)
 
     def dispatchTimers(self):
@@ -147,7 +147,7 @@ class MainThread(object):
                     if FAIL_ON_ERROR:
                         raise
                     continue
-                    
+
     def put(self, p):
         # with self.eventsLock:
         # log.info("Adding [%s] to events" % (type(p),))
@@ -190,7 +190,7 @@ class MainThread(object):
                 else:
                     log.error("Received event for file without subscription [%d] [%s]" % (fileno, event))
 
-            while self.run:                
+            while self.run:
                 try:
                     ev = self.events.popleft()
                     #log.info("Processing event: [%s]" % (ev,))
@@ -205,7 +205,7 @@ class MainThread(object):
         except KeyboardInterrupt:
             self.stop()
             sys.exit()
-        
+
     def __call__(self):
         try:
             while self.run:
@@ -229,11 +229,11 @@ class MainThread(object):
         sys.stdout.flush()
         sys.stderr.flush()
         python = sys.executable
-        os.execl(python, python, *sys.argv)        
+        os.execl(python, python, *sys.argv)
 
 if __name__ == "__main__":
     main = MainThread()
-    
+
     imports = [
         ('rules.Always', ['']),
         ('rules.emacs.Build', ['']),
@@ -255,6 +255,7 @@ if __name__ == "__main__":
         ('rules.emacs.Profiling', ['']),
         ('rules.emacs.Mic', ['']),
         ('rules.emacs.Magit', ['']),
+        ('rules.emacs.Minibuf', ['']),
         ('rules.emacs.Nav', ['']),
         ('rules.emacs.NickNames', ['']),
         ('rules.emacs.Org', ['']),
