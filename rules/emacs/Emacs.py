@@ -233,8 +233,8 @@ _mapping  = {
 
     # text commands
     "capitalize"                    : Key("a-c"),
-    "make upper"                    : Key("a-u"),
-    "make lower"                    : Key("a-l"),
+    "bigger"                        : Key("a-u"),
+    "smaller"                       : Key("a-l"),
 
     # navigation commands
     "jump <charrule>"               : Key("a-enter") + PressKey(),
@@ -261,11 +261,13 @@ _mapping  = {
 
     "switch previous"               : Key("c-x,c-left"),
     "switch next"                   : Key("c-x,c-right"),
-    
+
     "search"                        : Key('c-s'),
     "lurch"                         : Key('c-r'),
     "swoop"                         : Key("a-i"),
     "show kill ring"                : Key("cs-y"),
+
+    "discard"                       : Key("c-c,c-k"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

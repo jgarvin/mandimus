@@ -12,8 +12,8 @@ from Actions import Key
 # possibilities?
 
 _mapping = {
-    "home"                   : Key("c-a"),
-    "edge"                   : Key("c-e"),
+    "home"                   : Key("home"),
+    "edge"                   : Key("end"),
     "cliff"                  : Cmd("(md-go-to-cliff)"),
     "top side"               : Key("a-langle"),
     "bottom"                 : Key("a-rangle"),

@@ -65,7 +65,7 @@ def parseSingleKeystring(keyStr):
             xdo += ['shift']
         else:
             raise Exception('Unknown modifier: ' + modifier)
-    
+
     replacements = {
         "left"        : "Left",
         "right"       : "Right",
@@ -172,7 +172,7 @@ class Speak(Action):
 
 class Key(Action):
     def __call__(self, extras={}):
-        cmd = "xdotool key " + parseKeyString(self.data % extras)
+        cmd = "xdotool key --delay 75 " + parseKeyString(self.data % extras)
         runCmd(cmd)
 
 class FormatState(object):

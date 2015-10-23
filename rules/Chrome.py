@@ -58,10 +58,9 @@ _mapping  = {
     "reopen tab"                    : Key("cs-t"),
     "magnify [<i>]"                 : Key("c-plus:%(i)d"),
     "demagnify [<i>]"               : Key("c-minus:%(i)d"),
+    "move previous [<n>]"           : Key("cs-pgup:%(n)d"),
+    "move next [<n>]"               : Key("cs-pgdown:%(n)d"),
     # these are provided by the 'tabloid' extension
-    # TODO                          : not necessary, cs-pgdown/pgup
-    "move right [<n>]"              : Key("as-l:%(n)d"),
-    "move left [<n>]"               : Key("as-h:%(n)d"),
     "move start"                    : Key("as-k"),
     "move end"                      : Key("as-j"),
     # these are provided by the 'tabasco' extension
