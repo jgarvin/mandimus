@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from Actions import Key
+from Actions import Key, Repeat
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.VarRequirement import VarRequirement

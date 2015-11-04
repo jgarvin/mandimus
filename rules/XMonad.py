@@ -26,10 +26,10 @@ _mapping  = {
     "browser"                     : Key("csa-b"),
     "new terminal"                : Key("csa-t"),
     "restart window manager"      : Key("csa-q"),
-    # we need this because we are a different series merge group
-    'rep [<n>]'                   : RepeatPreviousAction(),
     "reflect X"                   : Key("csa-x"),
     "reflect Y"                   : Key("csa-y"),
+    # we need this because we are a different series merge group
+    'rep [<n>]'                   : RepeatPreviousAction(),
 }
 
 _extras = [

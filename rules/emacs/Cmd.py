@@ -170,7 +170,8 @@ def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False, queryOnly=
 
 class Minibuf(Action):
     def __call__(self, extras={}):
-        Key("a-x")()
+#        Key("a-x")()
+        Key("c-c,m,x")() # guaranteed to not use helm
         Text(self.data % extras)()
         Key("enter")()
 

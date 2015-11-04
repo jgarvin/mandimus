@@ -78,8 +78,8 @@ _mapping = {
     "command"                     : Key("a-x"),
     "toggle emacs debug"          : Cmd("(toggle-debug-on-error)"),
     "exit debug"                  : Key("a-rbracket"),
-    "debug function"              : Key("c-x,c-m") + Text("debug-on-entry") + Key("enter"),
-    "cancel debug function"       : Key("c-x,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
+    "debug function"              : Key("c-t,c-m") + Text("debug-on-entry") + Key("enter"),
+    "cancel debug function"       : Key("c-t,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
 
     "ace line"                    : Key("c-u,c-u,c-c,space"),
 
@@ -89,7 +89,7 @@ _mapping = {
     "new frame [<i>]"             : Cmd("(make-frame-command)"),
     "mini buffer"                 : Cmd("(md-select-minibuffer)"),
 
-    "list buffs"                  : Key("c-x,c-b,c-x,o") + Cmd("(ace-jump-line-mode)"),
+    "list buffs"                  : Key("c-t,c-b,c-t,o") + Cmd("(ace-jump-line-mode)"),
     "list project files"          : Key("c-c,p,f"),
 
     # projectile commands
@@ -113,16 +113,16 @@ _mapping = {
     "toggle trace"                : Key("c-c,c-f"),
 
     # file commands
-    "plain open file"             : Key("c-x,c-f"),
-    "alternate file"              : Key("c-x,c-v"),
+    "plain open file"             : Key("c-t,c-f"),
+    "alternate file"              : Key("c-t,c-v"),
     "recent files"                : Key("c-c,c-e"),
     "sudo open file"              : Key("c-c,o,s"),
-    "man page"                    : Key("a-x") + Text("man") + Key("enter"),
+    "man page"                    : Minibuf("man"),
     "find file"                   : Minibuf("find-name-dired"),
 
     # buffer commands
-    "switch (buff | buffer)"      : Key("c-x, b"),
-    "destroy buff"                : Key("c-x,k,enter"),
+    "switch (buff | buffer)"      : Key("c-t, b"),
+    "destroy buff"                : Key("c-t,k,enter"),
 
     "open client log"             : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
@@ -130,24 +130,24 @@ _mapping = {
     "show home folder"            : Cmd("(find-file \"~\")"),
 
     # misc
-    "start irc"                   : Key("c-x,c-m") + Text("irc-maybe") + Key("enter"),
-    "stop irc"                    : Key("c-x,c-m") + Text("stop-irc") + Key("enter"),
+    "start irc"                   : Minibuf("irc-maybe"),
+    "stop irc"                    : Minibuf("stop-irc"),
     "toggle tail mode"            : Cmd("(auto-revert-tail-mode)"),
-    "list packages"               : Key("a-x") + Text("list-packages") + Key("enter"),
-    "get status"                  : Key("a-x") + Text("magit-status") + Key("enter"),
-    "submit"                      : Key("c-x,hash"),
+    "list packages"               : Minibuf("list-packages"),
+    "get status"                  : Minibuf("magit-status"),
+    "submit"                      : Key("c-t,hash"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
     "show top"                    : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
     "toggle command logging"      : toggleCommandLogging,
     "toggle refresh client"       : toggleRefreshClientSources,
-    "magnify [<i>]"               : Key("c-x,c-plus:%(i)d"),
-    "demagnify [<i>]"             : Key("c-x,c-minus:%(i)d"),
+    "magnify [<i>]"               : Key("c-t,c-plus:%(i)d"),
+    "demagnify [<i>]"             : Key("c-t,c-minus:%(i)d"),
     "compile"                     : Minibuf("compile"),
     "visual line mode"            : Minibuf("visual-line-mode"),
     "set indent <j>"              : Cmd("(etc-set-indent-preference %(j)d)"),
     "toggle namespace indent"     : Cmd("(etc-toggle-namespace-indent)"),
-    "toggle read only"            : Key("c-x,c-q"),
+    "toggle read only"            : Key("c-t,c-q"),
 }
 
 
@@ -168,7 +168,7 @@ _mapping = {
     "help syntax"        : Key("c-h,s"),
     "help bindings"      : Key("c-h,b"),
 
-    "inspect character"  : Key("c-u,c-x,equal"),
+    "inspect character"  : Key("c-u,c-t,equal"),
 
     "last change"        : Key("c-period"),
     "next change"        : Key("c-comma"),
@@ -181,12 +181,12 @@ _mapping  = {
     # general commands
     "axe [<i>]"                     : Cmd("(setq unread-command-events (append unread-command-events (list ?\\C-g)))", queryOnly=True),
     "super axe [<i>]"               : Key("c-g:%(i)d"),
-    "eval"                          : Key("c-x,c-e"),
+    "eval"                          : Key("c-t,c-e"),
     "start macro"                   : Key("F3"),
     "mack"                          : Key("F4"),
-    "other [<i>]"                   : Key("c-x,o") * Repeat(extra="i"),
+    "other [<i>]"                   : Key("c-t,o") * Repeat(extra="i"),
     "collapse"                      : Key("c-rbracket"),
-    #"other [<i>] collapse"         : (Key("c-x, o") * Repeat(extra="i")) + Key("c-x, 1"),
+    #"other [<i>] collapse"         : (Key("c-t, o") * Repeat(extra="i")) + Key("c-t, 1"),
 
     "replace"                       : Key('as-percent'),
     "center"                        : Key("c-l"),
@@ -244,10 +244,10 @@ _mapping  = {
     #"push"                         : Key("c-space,c-space"),
 
     "snap [<i>]"                    : Key("c-u,c-space:%(i)d"),
-    "big snap [<i>]"                : Key("c-x,c-space:%(i)d"),
+    "big snap [<i>]"                : Key("c-t,c-space:%(i)d"),
 
     "num <big>"                     : EmacsText("%(big)d"),
-    "insert character"              : Key("c-x,8,enter"),
+    "insert character"              : Key("c-t,8,enter"),
     "complete"                      : Minibuf("company-complete"),
     "open this"                     : Minibuf("find-file-at-point"),
     "shell command"                 : Minibuf("etc-shell-command"),
@@ -259,8 +259,8 @@ _mapping  = {
     "insert extension"              : InsertString("(file-name-extension (buffer-file-name))"),
     "insert username"               : InsertString('(user-login-name)'),
 
-    "switch previous"               : Key("c-x,c-left"),
-    "switch next"                   : Key("c-x,c-right"),
+    "switch previous"               : Key("c-t,c-left"),
+    "switch next"                   : Key("c-t,c-right"),
 
     "search"                        : Key('c-s'),
     "lurch"                         : Key('c-r'),

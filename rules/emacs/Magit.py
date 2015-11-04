@@ -16,7 +16,7 @@ _mapping = {
     "level two"     : Key("a-2"),
     "level three"   : Key("a-3"),
     "level four"    : Key("a-4"),
-    "more context"  : Key("plus"),        
+    "more context"  : Key("plus"),
     "less context"  : Key("hyphen"),
     "discard"       : Key("k"),
     "branch"        : Key("b"),
@@ -38,7 +38,7 @@ _mapping = {
 # MagitRule.context.addRequirement(ModeRequirement(modes="magit-status-mode"))
 
 _mapping = {
-    "inquisition" : Minibuf("magit-blame-mode"),
+    "inquisition" : Minibuf("magit-blame"),
 }
 
 MagitMiscRule = makeContextualRule("MagitMisc", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.INDEPENDENT)

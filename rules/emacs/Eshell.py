@@ -9,8 +9,10 @@ from rules.emacs.Text import EmacsText
 
 _keywords = [
     "ack",
+    "alias",
     ["apt-get", "apt get"],
     ["awk", "ock"],
+    ["calc-eval", "calc"],
     "cat",
     ["cd", "CD"],
     #["cd", "see D"],
@@ -18,7 +20,8 @@ _keywords = [
     "cut",
     "date",
     ["/dev/null", "dev null"],
-    "diff",
+    ["ediff-files", "diff"],
+    "date",
     "disown",
     "do",
     "done",
@@ -93,14 +96,21 @@ _keywords = [
     ["&>", "stood both"],
 ]
 
-ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
+EShellKeywordRule = KeywordRule(["eshell-mode"], _keywords)
 
 _mapping = {
-    "back [<i>]"        : Key("b,enter") * Repeat(extra="i"),
-    "forward [<i>]"     : Key("f,enter") * Repeat(extra="i"),
-    "surface [<i>]"      : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
+    # "back [<i>]"      : Key("b,enter") * Repeat(extra="i"),
+    # "forward [<i>]"   : Key("f,enter") * Repeat(extra="i"),
+    # "surface [<i>]"   : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
+    "prior [<i>]"       : Key("a-p:%(i)d"),
+    "future [<i>]"      : Key("a-n:%(i)d"),
+    "history"           : Key("a-r"),
+    "interrupt"         : Key("c-c,c-c"),
+    "prompt up [<n>]"   : Key("c-c,c-p:%(n)d"),
+    "prompt down [<n>]" : Key("c-c,c-n:%(n)d"),
+
 }
 
-ShellRule = makeContextualRule("Shell", _mapping, emacsExtras, emacsDefaults)
-ShellRule.context.addRequirement(IsEmacs)
-ShellRule.context.addRequirement(ModeRequirement(modes=["shell-mode", "sh-mode"]))
+EShellRule = makeContextualRule("Shell", _mapping, emacsExtras, emacsDefaults)
+EShellRule.context.addRequirement(IsEmacs)
+EShellRule.context.addRequirement(ModeRequirement(modes=["eshell-mode"]))

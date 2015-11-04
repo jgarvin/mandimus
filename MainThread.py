@@ -248,6 +248,7 @@ if __name__ == "__main__":
         ('rules.emacs.Eww', ['']),
         ('rules.emacs.Edit', ['']),
         ('rules.emacs.ERC', ['']),
+        ('rules.emacs.Eshell', ['']),
         ('rules.emacs.GnuDebugger', ['']),
         ('rules.emacs.Lisp', ['']),
         ('rules.emacs.Python', ['']),
