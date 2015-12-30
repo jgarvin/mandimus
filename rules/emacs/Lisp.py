@@ -144,4 +144,4 @@ keywords = [
     "while",
 ]
 
-LispKeywordRule = KeywordRule("emacs-lisp-mode", keywords)
+LispKeywordRule = KeywordRule(["emacs-lisp-mode", "eshell-mode"], keywords)

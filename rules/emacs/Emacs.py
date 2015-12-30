@@ -69,15 +69,18 @@ class Mark(Cmd):
 
 class Comment(Cmd):
     def _lisp(self, extras={}):
-        Mark()(extras)
-        Key("c-slash")()
+        words = extras['words']
+        for w in words:
+            if w in UnitList:
+                Mark()(extras)
+        Key("a-semicolon")()
         return ""
 
 
 _mapping = {
     "command"                     : Key("a-x"),
     "toggle emacs debug"          : Cmd("(toggle-debug-on-error)"),
-    "exit debug"                  : Key("a-rbracket"),
+    "exit debug"                  : Key("c-t,X,a"),
     "debug function"              : Key("c-t,c-m") + Text("debug-on-entry") + Key("enter"),
     "cancel debug function"       : Key("c-t,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
 
@@ -206,6 +209,7 @@ _mapping  = {
     "cut [%s]" % UnitsOpt           : Cut(),
     "mark [%s]" % UnitsOpt          : Mark(),
     "comment [%s]" % UnitsOpt       : Comment(),
+    "rectangle"                     : Key("c-t,space"),
 
     "kill [<n>]"                    : Key('c-k:%(n)d'),
     "chip [<n>]"                    : Cmd('(md-backward-kill-word)'),
@@ -220,8 +224,8 @@ _mapping  = {
 
     "select all"                    : Key("c-home,c-space,c-end"),
     "fish"                          : Key("a-space"),
-    "undo [<i>]"                    : Key("cs-underscore:%(i)d"),
-    "redo [<i>]"                    : Key("as-underscore:%(i)d"),
+    "undo [<i>]"                    : Key("c-slash:%(i)d"),
+    "redo [<i>]"                    : Key("a-slash:%(i)d"),
 
     "shift right [<i>]"             : Cmd("(call-interactively 'python-indent-shift-right)"),
     "shift left [<i>]"              : Cmd("(call-interactively 'python-indent-shift-left)"),
@@ -229,7 +233,6 @@ _mapping  = {
 
     "indent"                        : Cmd("(call-interactively 'indent-region)"),
 
-    "comment"                       : Key("c-slash"),
 
     # text commands
     "capitalize"                    : Key("a-c"),
@@ -268,6 +271,8 @@ _mapping  = {
     "show kill ring"                : Key("cs-y"),
 
     "discard"                       : Key("c-c,c-k"),
+
+    "view"                          : Key("a-d"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

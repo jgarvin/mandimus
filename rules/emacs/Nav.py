@@ -28,8 +28,10 @@ _mapping = {
 
     "gruff [<n>]"            : Key("a-lbrace:%(n)d"),
     "graph [<n>]"            : Key("a-rbrace:%(n)d"),
-    "left [<n>]"             : Key("left:%(n)d"),
-    "right [<n>]"            : Key("right:%(n)d"),
+    # "left [<n>]"             : Key("left:%(n)d"),
+    # "right [<n>]"            : Key("right:%(n)d"),
+    "left [<n>]"             : Key("c-b:%(n)d"),
+    "right [<n>]"            : Key("c-f:%(n)d"),
     "up [<n>]"               : Key("up:%(n)d"),
     "down [<n>]"             : Key("down:%(n)d"),
 
