@@ -67,7 +67,7 @@ def parseSingleKeystring(keyStr):
             raise Exception('Unknown modifier: ' + modifier)
 
     replacements = {
-        "left"        : "Left",
+        "left"        : "Left", # 
         "right"       : "Right",
         "up"          : "Up",
         "down"        : "Down",

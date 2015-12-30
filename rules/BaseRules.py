@@ -70,7 +70,7 @@ _mapping = {
     "ref"        : "ampersand",
     "glob"       : "asterisk",
     "dots"       : "colon",
-    "cusp"       : "semicolon",
+    "cusp"       : "semicolon", 
     "point"      : "period",
     "arg"        : "comma",
     "squiggle"   : "tilde",

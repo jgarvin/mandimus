@@ -23,8 +23,8 @@ _keywords = [
     ["ediff-files", "diff"],
     "date",
     "disown",
-    "do",
-    "done",
+    # "do",
+   # "done",
     "echo",
     "else",
     "env",
@@ -33,7 +33,7 @@ _keywords = [
     "export",
     "extract",
     "false",
-    ["fi", "fee"],
+   # ["fi", "fee"],
     "find",
     "force",
     ["g++", "G plus plus"],
@@ -99,9 +99,9 @@ _keywords = [
 EShellKeywordRule = KeywordRule(["eshell-mode"], _keywords)
 
 _mapping = {
-    # "back [<i>]"      : Key("b,enter") * Repeat(extra="i"),
-    # "forward [<i>]"   : Key("f,enter") * Repeat(extra="i"),
-    # "surface [<i>]"   : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
+    "back [<i>]"      : Key("b,enter") * Repeat(extra="i"),
+    "forward [<i>]"   : Key("f,enter") * Repeat(extra="i"),
+    "surface [<i>]"   : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
     "prior [<i>]"       : Key("a-p:%(i)d"),
     "future [<i>]"      : Key("a-n:%(i)d"),
     "history"           : Key("a-r"),
