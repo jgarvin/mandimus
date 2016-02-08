@@ -231,6 +231,8 @@ if __name__ == "__main__":
     print extractWords("ijp", detectBadConsonantPairs=True)
     print extractWords("twb", detectBadConsonantPairs=True)
     print extractWords("t4ngo")
+    print extractWords("BFF")
+    print
     print fixBadConsonantPairs("twb")
     print fixBadConsonantPairs("ijp")
     print fixBadConsonantPairs("throw")

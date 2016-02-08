@@ -67,7 +67,11 @@ def deCamelize(word):
             buildingWord = []
         if isLast:
             buildingWord.append(c)
-            wordList.append(''.join(buildingWord))
+            newWord = ''.join(buildingWord)
+            if newWord == newWord.upper():
+                wordList.extend(newWord)
+            else:
+                wordList.append(newWord)
             buildingWord = []
         cat = newCategory
         buildingWord.append(c)
@@ -79,5 +83,6 @@ if __name__ == "__main__":
     assert(deCamelize("FXWorld") == ["F", "X", "World"])
     assert(deCamelize("hello2world") == ["hello", "2", "world"])
     assert(deCamelize("3hello@WorldThere") == ["3", "hello", "@", "World", "There"])
-    print deCamelize("a7a")
     assert(deCamelize("a7a") == ["a", "7", "a"])
+    assert(deCamelize("BFF") == ["B", "F", "F"])
+    assert(deCamelize("BFFHello") == ["B", "F", "F", "Hello"])

@@ -14,7 +14,6 @@ from Actions import Key
 _mapping = {
     "home"                   : Key("home"),
     "edge"                   : Key("end"),
-    "cliff"                  : Cmd("(md-go-to-cliff)"),
     "top side"               : Key("a-langle"),
     "bottom"                 : Key("a-rangle"),
     "window top side"        : Cmd("(goto-char (window-start))"),

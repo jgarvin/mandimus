@@ -125,7 +125,7 @@ _mapping = {
 
     # buffer commands
     "switch (buff | buffer)"      : Key("c-t, b"),
-    "destroy buff"                : Key("c-t,k,enter"),
+    "destroy buff"                : Key("c-t,k,enter", 100),
 
     "open client log"             : Cmd("(md-open-most-recent-file \"~/dragonshare/log\" \"client-[^.]*.log\")"),
 
@@ -272,7 +272,7 @@ _mapping  = {
 
     "discard"                       : Key("c-c,c-k"),
 
-    "view"                          : Key("a-d"),
+    "view <charrule>"               : Key("a-d") + PressKey(),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)
