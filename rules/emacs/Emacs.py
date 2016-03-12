@@ -146,7 +146,7 @@ _mapping = {
     "toggle refresh client"       : toggleRefreshClientSources,
     "magnify [<i>]"               : Key("c-t,c-plus:%(i)d"),
     "demagnify [<i>]"             : Key("c-t,c-minus:%(i)d"),
-    "compile"                     : Minibuf("compile"),
+    # "compile"                     : Minibuf("compile"),
     "visual line mode"            : Minibuf("visual-line-mode"),
     "set indent <j>"              : Cmd("(etc-set-indent-preference %(j)d)"),
     "toggle namespace indent"     : Cmd("(etc-toggle-namespace-indent)"),
@@ -218,7 +218,7 @@ _mapping  = {
     "knock [<n>]"                   : Key("backspace:%(n)d"),
     "squeeze"                       : Cmd('(cycle-spacing)'),
 
-    "paste"                         : Key("c-y"),
+    "paste [<i>]"                   : Key("c-y:%(i)d"),
     "rotate [<i>]"                  : Key("a-y:%(i)d"),
     #"term (yank | paste)"          : Key("s-insert"),
 
