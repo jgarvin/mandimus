@@ -2,7 +2,7 @@ import mdlog
 log = mdlog.getLogger(__name__)
 
 from itertools import dropwhile, chain
-import string
+import string, re
 
 def dictReplace(s, dic):
     "Whole word replace keys with values in s"
@@ -75,14 +75,23 @@ def deCamelize(word):
             buildingWord = []
         cat = newCategory
         buildingWord.append(c)
-    return wordList
+
+    # do a final pass to make sure we split on special characters
+    # that occur after a run of capital letters
+    finalWordList = []
+    for w in wordList:
+        newWords = re.split(r'([^a-zA-Z])', w)
+        newWords = [a for a in newWords if a]
+        finalWordList.extend(newWords)
+    return finalWordList
 
 if __name__ == "__main__":
     assert(deCamelize("helloWorld") == ["hello", "World"])
-    assert(deCamelize("FXWorld") == ["F", "X", "World"])
     assert(deCamelize("FXWorld") == ["F", "X", "World"])
     assert(deCamelize("hello2world") == ["hello", "2", "world"])
     assert(deCamelize("3hello@WorldThere") == ["3", "hello", "@", "World", "There"])
     assert(deCamelize("a7a") == ["a", "7", "a"])
     assert(deCamelize("BFF") == ["B", "F", "F"])
     assert(deCamelize("BFFHello") == ["B", "F", "F", "Hello"])
+    assert(deCamelize("FooLZ4") == ["Foo", "L", "Z", "4"])
+    assert(deCamelize("LZ4Foo") == ["L", "Z", "4", "Foo"])
