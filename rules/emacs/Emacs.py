@@ -131,6 +131,7 @@ _mapping = {
 
     "open server log"             : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
     "show home folder"            : Cmd("(find-file \"~\")"),
+    "show temp folder"            : Cmd("(find-file \"/tmp\")"),
 
     # misc
     "start irc"                   : Minibuf("irc-maybe"),
