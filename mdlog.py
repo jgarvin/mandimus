@@ -2,6 +2,7 @@ import logging
 import time
 import os.path as op
 import sys
+import os
 from copy import copy
 
 def initLogging(name, loggingFolder="E:\\log\\", stdOut=False, level=20):

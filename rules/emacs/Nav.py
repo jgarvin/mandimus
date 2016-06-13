@@ -52,8 +52,10 @@ _mapping = {
     "line <charrule> [<i>]"  : CharCmd("(md-find-line-starting-with-char 1 %s)"),
     "Nile <charrule> [<i>]"  : CharCmd("(md-find-line-starting-with-char -1 %s)"),
     # chopping block?
-    "sym <charrule> [<i>]"   : CharCmd("(md-move-up-to-symbol-starting-with-char 1 %s)"),
-    "miss <charrule> [<i>]"  : CharCmd("(md-move-up-to-symbol-starting-with-char -1 %s)"),
+    "sym <charrule> [<i>]"   : CharCmd("(md-move-up-to-symbol-starting-with-char nil %s)"),
+    # "sym <charrule> [<i>]"   : Key("c-c,s,s,%(charrule)s"),
+    "miss <charrule> [<i>]"  : CharCmd("(md-move-up-to-symbol-starting-with-char t %s)"),
+    # "miss <charrule> [<i>]"  : CharCmd("(md-move-up-to-symbol-starting-with-char -1 %s)"),
 
     "lookup"                 : Key("a-dot"),
     "references"             : Key("a-comma"),
