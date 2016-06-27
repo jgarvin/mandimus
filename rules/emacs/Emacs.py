@@ -274,6 +274,11 @@ _mapping  = {
     "discard"                       : Key("c-c,c-k"),
 
     "view <charrule>"               : Key("a-d") + PressKey(),
+
+    "hide block" : Key("c-c,h"),
+    "show block" : Key("c-c,u"),
+    "hide all" : Key("c-c,H"),
+    "show all" : Key("c-c,U"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)
