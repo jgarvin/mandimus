@@ -93,6 +93,8 @@ _keywords = [
     "while",
     ["xargs", "X args"],
     ["zsh", "Z shell"],
+    "crontab",
+    "sleep",
 
     [">", "stood out"],
     ["2>", "stood err"],

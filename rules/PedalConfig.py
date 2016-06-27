@@ -27,7 +27,7 @@ from Pedals import setPedalCallback, getPedalCallback
 #getLoop().subscribeEvent(PedalsEvent, onPedalSpeakingDay)
 
 def toggleMic():
-    runCmd("amixer -c $(arecord -l | grep ACL898 | cut -d' ' -f2 | sed 's/://') sset Mic toggle")
+    runCmd("amixer sset 'Capture' toggle")
 
 def pedalArrowCb2(pedalStates, changed):
     updown = ["keyup", "keydown"]
