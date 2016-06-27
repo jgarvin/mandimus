@@ -276,7 +276,8 @@ _mapping  = {
     "view <charrule>"               : Key("a-d") + PressKey(),
 
     "hide block" : Key("c-c,h"),
-    "show block" : Key("c-c,u"),
+    "unfold" : Key("c-c,u"),
+    "show block" : Key("c-c,f"),
     "hide all" : Key("c-c,H"),
     "show all" : Key("c-c,U"),
 }
