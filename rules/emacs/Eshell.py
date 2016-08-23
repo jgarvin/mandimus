@@ -12,6 +12,7 @@ _keywords = [
     "alias",
     ["apt-get", "apt get"],
     ["awk", "ock"],
+    "bash",
     ["calc-eval", "calc"],
     "cat",
     ["cd", "CD"],
