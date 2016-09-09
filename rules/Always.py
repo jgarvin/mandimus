@@ -18,7 +18,7 @@ from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 
 _mapping = {
     'rep [<n>]'                                : RepeatPreviousAction(),
-    "[control] [alt] [cap] <charrule> [<i>]"   : PressKey(),
+    "[control] [alt] [tall] <charrule> [<i>]"   : PressKey(),
     'scoot [<i>]'                              : Key("tab:%(i)d"),
     'cap scoot [<i>]'                          : Key("s-tab:%(i)d"),
 #    "letter <dgnletters>" : PrintLetter(),

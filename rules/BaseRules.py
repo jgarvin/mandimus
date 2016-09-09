@@ -166,8 +166,8 @@ class PressKey(object):
         keystring = []
         foundModifier = True
 
-        if self.force_shift and "cap" not in words:
-            words = ["cap"] + words
+        if self.force_shift and "tall" not in words:
+            words = ["tall"] + words
 
         repetitions = extras['i']
         if "control" in words:
@@ -176,7 +176,7 @@ class PressKey(object):
         if "alt" in words:
             keystring.append('a')
             foundModifier = True
-        if "cap" in words:
+        if "tall" in words:
             keystring.append('s')
             foundModifier = True
 
