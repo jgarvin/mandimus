@@ -93,7 +93,7 @@ _keywords = [
     ["zsh", "Z shell"],
     "crontab",
     "sleep",
-
+    "time",
     [">", "stood out"],
     ["2>", "stood err"],
     ["&>", "stood both"],
