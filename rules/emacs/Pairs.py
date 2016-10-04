@@ -4,76 +4,31 @@ from protocol import RuleType, RuleRef, makeHashedRule
 from EventLoop import pushEvent
 from EventList import RuleRegisterEvent
 import rules.BaseRules as BaseRules
-from rules.emacs.Cmd import CharCmd, Cmd, Minibuf
+from rules.emacs.Cmd import CharCmd, Cmd, Minibuf, Key
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from rules.emacs.common import emacsExtras, emacsDefaults
 
-_mapping = {
-    "larp"   : "(",
-    "lace"   : "{",
-    "lack"   : "[",
-    "quote"  : "\\\"",
-    "soot"   : "'",
-    "lesser" : "<",
-}
-
-PairsRule = makeHashedRule("PairsRule", _mapping, ruleType=RuleType.INDEPENDENT)
-pushEvent(RuleRegisterEvent(PairsRule))
-
-_mapping = {
-    "after"             : "sp-forward-sexp",
-    "before"            : "sp-backward-sexp",
-    "dive"              : "sp-down-sexp",
-    "back dive"         : "sp-backward-down-sexp",
-    "away"              : "sp-up-sexp",
-    "back away"         : "sp-backward-up-sexp",
-    "peak"              : "sp-next-sexp",
-    "boo"               : "sp-previous-sexp",
-    "start"             : "sp-beginning-of-sexp",
-    #"after start"      : "sp-beginning-of-next-sexp",
-    #"before start"     : "sp-beginning-of-previous-sexp",
-    "close"             : "sp-end-of-sexp",
-    #"after close"      : "sp-end-of-next-sexp",
-    #"before close"     : "sp-end-of-previous-sexp",
-    # building on this is needed for selecting current sexp
-    # "select next"     : "sp-select-next-thing",
-    # "select previous" : "sp-select-previous-thing",
-    "slurp"             : "sp-forward-slurp-sexp",
-    "flip slurp"        : "sp-backward-slurp-sexp",
-    "barf"              : "sp-forward-barf-sexp",
-    "flip barf"         : "sp-backward-barf-sexp",
-    "peel"              : "sp-splice-sexp",
-    #"obliterate"       : "sp-splice-sexp-killing-around",
-    "split"             : "sp-split-sexp",
-}
-
-PairOpsRule = makeHashedRule("PairOpsRule", _mapping, ruleType=RuleType.INDEPENDENT)
-pushEvent(RuleRegisterEvent(PairOpsRule))
-
-class PairCmd(Cmd):
-    def _lisp(self, extras={}):
-        op = PairOpsRule.rule.mapping[" ".join(extras['sexpFunction']['words'])]
-
-        pair = " ".join(extras['sexpPair']['words']) if 'sexpPair' in extras else None
-        pair = PairsRule.rule.mapping[pair] if pair else None
-
-        if pair:
-            return "(single-pair-only-sexp \"%s\" '%s)" % (pair, op)
-        return "(call-interactively '%s)" % op
-
 _mapping  = {
-    # the pair specific ones were hardly used and smartparens doesn't handle them
-    # correctly for quotes anyway, may as well remove possibilities from the grammar
-    #"<sexpFunction> [<sexpPair>] [<i>]" : PairCmd(),
-    "<sexpFunction> [<i>]" : PairCmd(),
-    "rewrap" : Minibuf("sp-rewrap-sexp"),
+    "rewrap"     : Key("ca-z"),
+    "after"      : Key("ca-f"),
+    "before"     : Key("ca-b"),
+    "dive"       : Key("ca-d"),
+    "back dive"  : Key("cs-d"),
+    "away"       : Key("ca-o"),
+    "back away"  : Key("cs-u"),
+    "peak"       : Key("ca-n"),
+    "boo"        : Key("ca-p"),
+    "start"      : Key("ca-home"),
+    "close"      : Key("ca-end"),
+    "slurp"      : Key("ca-y"),
+    "back slurp" : Key("ca-g"),
+    "barf"       : Key("ca-v"),
+    "back barf"  : Key("ca-k"),
+    "peel"       : Key("ca-j"),
+    "split"      : Key("ca-i"),
+
 }
 
-_extras = emacsExtras + [
-    RuleRef(PairsRule, "sexpPair"),
-    RuleRef(PairOpsRule, "sexpFunction"),
-]
-
-PairCmdRule = makeContextualRule("PairCmd", _mapping, _extras, emacsDefaults)
+PairCmdRule = makeContextualRule("PairCmd", _mapping, emacsExtras, emacsDefaults)
 PairCmdRule.context.addRequirement(IsEmacs)
