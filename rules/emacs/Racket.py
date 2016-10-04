@@ -39,7 +39,8 @@ keywords = [
     "guard",
     "inst",
     "lambda",
-    "lang",
+    ["#lang", "lang"],
+    ["#%module-begin", "module begin"],
     "length",
     "let",
     "let-values",
@@ -73,7 +74,9 @@ keywords = [
     ["set!", "set"],
     "raise",
     "String",
-    "unless"
+    "unless",
+    ["s-exp", "sexp"],
+    ["#%%module-begin", "module begin"],
 ]
 
 RacketKeywordRule = KeywordRule(["racket-mode", "racket-repl-mode"], keywords)

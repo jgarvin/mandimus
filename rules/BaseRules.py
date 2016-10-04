@@ -88,7 +88,7 @@ _mapping = {
     "band"       : "bar",
     "plus"       : "plus",
     "underscore" : "underscore",
-    "pop"        : "space",
+    "hop"        : "space",
 }
 
 _literalMapping = {
@@ -124,7 +124,7 @@ _literalMapping = {
     "band"       : "|",
     "plus"       : "+",
     "underscore" : "_",
-    "pop"        : " ",
+    "hop"        : " ",
 }
 
 SymRule = makeHashedRule("SymRule", _mapping, ruleType=RuleType.INDEPENDENT)
