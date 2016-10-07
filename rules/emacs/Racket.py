@@ -77,6 +77,7 @@ keywords = [
     "unless",
     ["s-exp", "sexp"],
     ["#%%module-begin", "module begin"],
+    "this",
 ]
 
 RacketKeywordRule = KeywordRule(["racket-mode", "racket-repl-mode"], keywords)
