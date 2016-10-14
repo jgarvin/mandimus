@@ -17,7 +17,7 @@ _mapping = {
     "blank"             : Cmd('(md-sn-next-slot)'),
     "make blank"        : Cmd('(md-sn-drop-slot)'),
     "funk call [<i>]"   : Cmd("(md-insert-call-snippet %(i)d)"),
-    "new <snippetList>" : Cmd("(md-insert-snippet \"%(snippetList)s\")"),
+    "make <snippetList>" : Cmd("(md-insert-snippet \"%(snippetList)s\")"),
 }
 
 _extras = [

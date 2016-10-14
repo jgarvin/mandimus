@@ -1,6 +1,28 @@
 from Actions import Key, Text, RepeatPreviousAction
-from protocol import Integer
+from protocol import Integer, RuleType
 from rules.ContextualRule import makeContextualRule
+
+
+_extras = [
+    Integer("n", 3, 20),
+    Integer("d", 0, 10),
+    Integer("i", 3, 8),
+]
+
+_defaults = {
+    "n": 1,
+    "i": 1,
+}
+
+# put the more dangerous stuff by itself
+_mapping  = {
+    "destroy window"                : Key("ca-x"),
+    "restart window manager"        : Key("csa-q"),
+    "launch emacs"                  : Key("csa-w"),
+}
+
+XMonadIndependentRule = makeContextualRule("XMonadIndependent", _mapping, _extras, _defaults, ruleType=RuleType.INDEPENDENT)
+XMonadIndependentRule.activate()
 
 _mapping  = {
     # "mon (one | left)"            : Key("ca-up"),
@@ -22,31 +44,19 @@ _mapping  = {
     "expand [<n>]"                  : Key("ca-equal:%(n)d"),
     "shrink [<n>]"                  : Key("ca-minus:%(n)d"),
     "cycle [<i>]"                   : Key("csa-rbracket:%(i)d"),
-    "destroy window"                : Key("ca-x"),
+    # "destroy window"                : Key("ca-x"),
     "master"                        : Key("ca-enter"),
     "add master [<i>]"              : Key("ca-comma:%(i)d"),
     "remove master"                 : Key("ca-period"),
 
-    "launch emacs"                  : Key("csa-w"),
     "browser"                       : Key("csa-b"),
     "new terminal"                  : Key("csa-t"),
-    "restart window manager"        : Key("csa-q"),
     "reflect X"                     : Key("csa-x"),
     "reflect Y"                     : Key("csa-y"),
     # we need this because we are a different series merge group
-    'rep [<n>]'                     : RepeatPreviousAction(),
+    # 'rep [<n>]'                     : RepeatPreviousAction(),
 }
 
-_extras = [
-    Integer("n", 3, 20),
-    Integer("d", 0, 10),
-    Integer("i", 3, 8),
-]
-
-_defaults = {
-    "n": 1,
-    "i": 1,
-}
-
-XMonadRule = makeContextualRule("XMonad", _mapping, _extras, _defaults, seriesMergeGroup=1)
+# XMonadRule = makeContextualRule("XMonad", _mapping, _extras, _defaults, seriesMergeGroup=1)
+XMonadRule = makeContextualRule("XMonad", _mapping, _extras, _defaults)
 XMonadRule.activate()
