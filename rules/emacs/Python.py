@@ -26,8 +26,11 @@ PythonRule.context.addRequirement(ModeRequirement(modes=["python-mode", "inferio
 keywords = [
     "True", "False", "set", "list", "dict", "None", "self", "print", "object",
     "len", "reversed", "enumerate", "range", ["__init__", "init"], "help", "type",
-    ["__name__", "name"], ["str", "string"], "unicode", "dir", "all", "any",
+    ["__name__", "name"], ["str", "stir"], "unicode", "dir", "all", "any",
     ["isinstance", "is instance"],
+    ["int", "integer"],
+    "bool",
+    "float"
 ] + keyword.kwlist
 
 PythonKeywordRule = KeywordRule(["python-mode", "inferior-python-mode"], keywords)
