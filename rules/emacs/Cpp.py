@@ -131,4 +131,4 @@ types = [
     "vector",
 ]
 
-CppKeywordRule = KeywordRule("c++-mode", keywords + types)
+CppKeywordRule = KeywordRule(["c++-mode", "c-mode"], keywords + types)
