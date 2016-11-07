@@ -61,6 +61,7 @@ _keywords = [
     ["mkdir", "make dir"],
     "mount",
     ["mv", "move"],
+    ["nc", "net cat"],
     "ping",
     ["pkill", "P kill"],
     "python",

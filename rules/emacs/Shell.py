@@ -9,6 +9,7 @@ from rules.emacs.Text import EmacsText
 
 _keywords = [
     "ack",
+    ["acore", "A core"],
     ["apt-get", "apt get"],
     ["awk", "ock"],
     "bash",
@@ -57,6 +58,7 @@ _keywords = [
     ["mkdir", "make dir"],
     "mount",
     ["mv", "move"],
+    ["nc", "net cat"],
     "ping",
     ["pkill", "P kill"],
     "python",
