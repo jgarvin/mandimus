@@ -160,7 +160,6 @@ EmacsIsolatedRule = makeContextualRule("EmacsIsolated", _mapping, emacsExtras, e
 EmacsIsolatedRule.context.addRequirement(IsEmacs)
 
 _mapping = {
-    "toggle"             : Key('a-t'),
     "help function"      : Key("c-h,f"),
     "help function slap" : Key("c-h,f,enter"),
     "help variable"      : Key("c-h,v"),
@@ -194,6 +193,7 @@ _mapping  = {
     #"other [<i>] collapse"         : (Key("c-t, o") * Repeat(extra="i")) + Key("c-t, 1"),
 
     "replace"                       : Key('as-percent'),
+    "regex replace"                 : Key('c-percent'),
     "center"                        : Key("c-l"),
 
     "slap [<i>]"                    : Key("enter:%(i)d"),
@@ -276,11 +276,15 @@ _mapping  = {
 
     "view <charrule>"               : Key("a-d") + PressKey(),
 
-    "hide block" : Key("c-c,h"),
-    "unfold" : Key("c-c,u"),
-    "show block" : Key("c-c,f"),
-    "hide all" : Key("c-c,H"),
-    "show all" : Key("c-c,U"),
+    "hide block"                    : Key("c-c,h"),
+    "unfold"                        : Key("c-c,u"),
+    "show block"                    : Key("c-c,f"),
+    "hide all"                      : Key("c-c,H"),
+    "show all"                      : Key("c-c,U"),
+    "toggle"                        : Key('a-t'),
+
+    "prior [<i>]"   : Key("a-p:%(i)d"),
+    "future [<i>]"  : Key("a-n:%(i)d"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

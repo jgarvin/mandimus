@@ -257,7 +257,6 @@ if __name__ == "__main__":
         ('rules.emacs.Profiling', ['']),
         ('rules.emacs.Mic', ['']),
         ('rules.emacs.Magit', ['']),
-        ('rules.emacs.Minibuf', ['']),
         ('rules.emacs.Nav', ['']),
         ('rules.emacs.NickNames', ['']),
         ('rules.emacs.Org', ['']),
