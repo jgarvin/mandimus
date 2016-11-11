@@ -131,4 +131,6 @@ types = [
     "vector",
 ]
 
-CppKeywordRule = KeywordRule(["c++-mode", "c-mode"], keywords + types)
+# not sure why but having the modes be a list without naming the rule
+# causes Dragon to stop being able to recognize anything as soon as I enter a C/C++ buffer!
+CppKeywordRule = KeywordRule(["c++-mode", "c-mode"], keywords + types, "c_common")

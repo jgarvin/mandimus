@@ -104,7 +104,7 @@ _mapping = {
     "project file"                : Key("c-c,p,f"),
     "project kill"                : Key("c-c,p,k"),
     "project root"                : Key("c-c,p,D"),
-    "build"                       : Key("c-c,p,c"),
+    # "build"                       : Key("c-c,p,c"),
     "invalidate projectile cache" : Key("c-c,p,i"),
 
     # compilation mode commands
