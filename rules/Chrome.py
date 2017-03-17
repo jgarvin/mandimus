@@ -72,6 +72,7 @@ _mapping  = {
     #misc
     "private browsing"              : Key("cs-n"),
     "link"                          : Key("escape") + Key("f"),
+    "view source"                   : Key("c-u"),
     }
 
 _extras = [
