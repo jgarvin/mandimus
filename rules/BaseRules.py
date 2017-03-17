@@ -8,32 +8,32 @@ from EventList import RuleRegisterEvent
 from EventLoop import pushEvent
 
 _mapping = {
-    "abe"  : "a", # not great
-    "boy"  : "b",
-    "coup" : "c",
-    "dog"  : "d",
-    "echo" : "e",
-    "fox"  : "f",
-    "golf" : "g",
-    "his"  : "h", # not great
-    "ivy"  : "i",
-    "john" : "j",
-    "king" : "k",
-    "lima" : "l",
-    "mike" : "m",
-    "nay"  : "n",
-    "osh"  : "o",
-    "pig"  : "p",
-    "quid" : "q",
-    "robe" : "r",
-    "shoe" : "s",
-    "toss" : "t",
-    "use"  : "u",
-    "vict" : "v",
-    "was"  : "w",
-    "xray" : "x",
-    "yes"  : "y",
-    "zulu" : "z",
+    "abe"   : "a", # not great
+    "boy"   : "b",
+    "coup"  : "c",
+    "dog"   : "d",
+    "echo"  : "e",
+    "fox"   : "f",
+    "golf"  : "g",
+    "his"   : "h", # not great
+    "ivy"   : "i",
+    "john"  : "j",
+    "king"  : "k",
+    "lima"  : "l",
+    "mike"  : "m",
+    "knave" : "n",
+    "osh"   : "o",
+    "pig"   : "p",
+    "quid"  : "q",
+    "robe"  : "r",
+    "shoe"  : "s",
+    "toss"  : "t",
+    "use"   : "u",
+    "vict"  : "v",
+    "was"   : "w",
+    "xray"  : "x",
+    "yes"   : "y",
+    "zulu"  : "z",
 }
 
 AlphaRule = makeHashedRule("AlphaRule", _mapping, ruleType=RuleType.INDEPENDENT)

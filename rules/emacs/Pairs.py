@@ -10,7 +10,7 @@ from requirements.Emacs import IsEmacs
 from rules.emacs.common import emacsExtras, emacsDefaults
 
 _mapping  = {
-    "rewrap"     : Key("ca-z"),
+    # hot
     "after"      : Key("ca-f"),
     "before"     : Key("ca-b"),
     "dive"       : Key("ca-d"),
@@ -23,11 +23,12 @@ _mapping  = {
     "close"      : Key("c-end"),
     "slurp"      : Key("ca-y"),
     "back slurp" : Key("ca-g"),
-    "barf"       : Key("ca-v"),
-    "back barf"  : Key("ca-k"),
     "peel"       : Key("ca-j"),
-    "split"      : Key("ca-i"),
-
+    # cold
+    "pair barf"       : Key("ca-v"),
+    "pair back barf"  : Key("ca-k"),
+    "pair split"      : Key("ca-i"),
+    "pair rewrap"     : Key("ca-z"),
 }
 
 PairCmdRule = makeContextualRule("PairCmd", _mapping, emacsExtras, emacsDefaults)
