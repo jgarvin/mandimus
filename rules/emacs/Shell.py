@@ -62,6 +62,7 @@ _keywords = [
     "ping",
     ["pkill", "P kill"],
     "python",
+    "read",
     ["rm", "remove"],
     ["rsync", "R sync"],
     "search",

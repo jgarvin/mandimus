@@ -1,6 +1,7 @@
 from Actions import Key, Text
 from protocol import Integer, Dictation, RuleType
 from requirements.Emacs import NotEmacs
+from rules.emacs.Cmd import CharCmd
 from rules.ContextualRule import makeContextualRule
 
 _mapping = {
@@ -38,9 +39,9 @@ _mapping = {
     "edge"                : Key("end"),
     "left [<n>]"          : Key("left:%(n)d"),
     "right [<n>]"         : Key("right:%(n)d"),
-    "up [<n>]"            : Key("up:%(n)d"),
-    "down [<n>]"          : Key("down:%(n)d"),
-    "thump [<n>]"          : Key("delete:%(n)d"),
+    "hike [<n>]"          : Key("up:%(n)d"),
+    "slide [<n>]"         : Key("down:%(n)d"),
+    "thump [<n>]"         : Key("delete:%(n)d"),
     "knock [<n>]"         : Key("backspace:%(n)d"),
     "slap [<n>]"          : Key("enter:%(n)d"),
     "num <big>"           : Text("%(big)d"),
@@ -53,6 +54,10 @@ _mapping = {
     "save file"           : Key("c-s"),
     "open file"           : Key("c-o"),
     "new file"            : Key("c-n"),
+
+    # Also in the emacs rules, but since emacs rules are mutually exclusive with these
+    # both definition should never be active at the same time.
+    "view <charrule>"     : CharCmd("(md-select-window-with-glyph %s)"),
 }
 
 _extras = [
