@@ -30,7 +30,8 @@ keywords = [
     ["isinstance", "is instance"],
     ["int", "integer"],
     "bool",
-    "float"
+    "float",
+    "nonlocal"
 ] + keyword.kwlist
 
 PythonKeywordRule = KeywordRule(["python-mode", "inferior-python-mode"], keywords)

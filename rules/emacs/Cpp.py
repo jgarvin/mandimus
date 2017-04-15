@@ -75,7 +75,7 @@ keywords = [
     "switch",
     "template",
     "this",
-    "thread_local",
+    ["thread_local", "thread local"],
     "throw",
     "true",
     "try",
