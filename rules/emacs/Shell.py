@@ -22,6 +22,7 @@ _keywords = [
     ["/dev/null", "dev null"],
     "diff",
     "disown",
+    ["dmesg", "D message"],
     "do",
     "done",
     "echo",

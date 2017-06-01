@@ -26,6 +26,7 @@ _keywords = [
     "disown",
     # "do",
    # "done",
+    ["dmesg", "D message"],
     "echo",
     "else",
     "env",
