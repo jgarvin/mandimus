@@ -75,7 +75,8 @@ MicStateMsg = _newDataType("MicStateMsg", "state")
 RecognitionStateMsg = _newDataType("RecognitionStateMsg", "state")
 RequestRulesMsg = _newDataType("RequestRulesMsg", "hashes")
 WordListMsg = _newDataType("WordListMsg", "name words")
-ClientQuitMsg = _newDataType("CliengQuitMsg", [])
+ClientQuitMsg = _newDataType("ClientQuitMsg", [])
+ToggleVolumeMsg = _newDataType("ToggleVolumeMsg", [])
 
 Integer = _newDataType("Integer", "name min max")
 Dictation = _newDataType("Dictation", "name")
@@ -173,7 +174,7 @@ def parseStream(msgs, buf, nextMsgSize):
                 idx += 4
             else:
                 break
-        
+
         if len(buf) - idx >= nextMsgSize:
             msgs.append(buf[idx:idx+nextMsgSize])
             idx += nextMsgSize

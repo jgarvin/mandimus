@@ -21,7 +21,7 @@ from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadStateMsg, RequestRulesMsg, RecognitionStateMsg,
                       MatchEventMsg, HeartbeatMsg, WordListMsg, makeJSON,
-                      parseMessage, Rule, HashedRule, ClientQuitMsg)
+                      parseMessage, Rule, HashedRule, ClientQuitMsg, ToggleVolumeMsg)
 
 HEARTBEAT_TIME = 1
 BLOCK_TIME = 0.05
@@ -41,7 +41,7 @@ class DragonflyThread(DragonflyNode):
         # we can check if we actually need to send changes
         self.activatedLastCommit = set()
         self.lastWordList = {}
-        
+
         self.server_socket = self.makeSocket()
         self.server_socket.bind(self.address)
         self.server_socket.listen(1)
@@ -81,13 +81,13 @@ class DragonflyThread(DragonflyNode):
     def onRuleActivate(self, ev):
         # if not isinstance(ev.rule, HashedRule):
         #     return
-        
+
         self.onRuleRegister(ev)
 
         if ev.rule in self.activatedRules:
             log.info("Requested to activate already activated rule [%s], ignoring." % (ev.rule,))
             return
-        
+
         log.info("Activating rule [%s]" % (ev.rule.rule.name,))
         self.activatedRules.add(ev.rule)
 
@@ -118,7 +118,7 @@ class DragonflyThread(DragonflyNode):
                 self.onConnect()
             except socket.timeout:
                 return
-        
+
     def dumpOther(self):
         if self.otherHandle:
             self.otherHandle.unsubscribe()
@@ -148,7 +148,7 @@ class DragonflyThread(DragonflyNode):
         if hash not in self.hashedRules:
             log.error("Client requested rule we don't have! Hash: %s" % hash)
             return
-        
+
         log.info("Loading rule: %s" % (self.hashedRules[hash].rule.name,))
         self.sendMsg(makeJSON(LoadRuleMsg(self.stripActions(hash))))
 
@@ -166,6 +166,9 @@ class DragonflyThread(DragonflyNode):
         self.commitRuleEnabledness()
         log.info("Pushing connected event.")
         self.pushQ.put(ConnectedEvent())
+
+    def toggleClientMicrophone(self):
+        self.pushQ.put(ToggleVolumeMsg())
 
     def onMessage(self, json_msg):
         log.debug("Client msg: [%s]" % json_msg)

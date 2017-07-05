@@ -59,6 +59,8 @@ class WordSelector(object):
         allWords = set()
         for n in choices:
             choiceWords = self._extractWords(n)
+            if not choiceWords:
+                continue
 
             # If a phrase is too long, we split up the parts we can
             # and dump the rest in the last list ref. So if the limit

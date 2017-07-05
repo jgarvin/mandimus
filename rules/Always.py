@@ -17,11 +17,11 @@ from protocol import Integer, Dictation, RuleRef, Repetition, RuleType
 #         log.info("Heard letter! %s" % extras['words'])
 
 _mapping = {
-    'rep [<n>]'                                : RepeatPreviousAction(),
-    "[control] [alt] [tall] <charrule> [<i>]"   : PressKey(),
-    'scoot [<i>]'                              : Key("tab:%(i)d"),
-    'cap scoot [<i>]'                          : Key("s-tab:%(i)d"),
-#    "letter <dgnletters>" : PrintLetter(),
+    'rep [<n>]'                              : RepeatPreviousAction(),
+    "[control] [alt] [sky] <charrule> [<i>]" : PressKey(),
+    'scoot [<i>]'                            : Key("tab:%(i)d"),
+    'cap scoot [<i>]'                        : Key("s-tab:%(i)d"),
+#    "letter <dgnletters>"                   : PrintLetter(),
 }
 
 _extras = [

@@ -12,13 +12,15 @@ punc2Words = {
 }
 
 englishWords = set()
-with open("/usr/share/dict/american-english") as f:
+# with open("/usr/share/dict/american-english") as f:
+with open("/home/jgarvin/mandimus/american-english") as f:
     for w in f.readlines():
         # strip punctuation because there's a bunch of weird
         # apostrophes and other things.
         word = "".join(c for c in w if c not in string.punctuation)
         word = word.lower()
         englishWords.update(set(re.findall("[a-z]+", word)))
+
 
 normalConsonantBlends = {
     "bl",
@@ -82,6 +84,8 @@ l33tTranslation = {
     '4' : 'a',
     '7' : 't',
 }
+
+
 
 def deL33t(w):
     return ''.join(l33tTranslation[c] if c in l33tTranslation else c for c in w)

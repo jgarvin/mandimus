@@ -13,7 +13,7 @@ resetImportState()
 
 import dragonfly as dfly
 from dragonfly import (
-    Grammar, CompoundRule, MappingRule, ActionBase, 
+    Grammar, CompoundRule, MappingRule, ActionBase,
     Key, Text, MappingRule, Function, get_engine, List )
 from dragonfly.actions.action_base import BoundAction
 from dragonfly.grammar.elements import ElementBase
@@ -27,10 +27,10 @@ from collections import namedtuple
 import hashlib, time
 
 import protocol
-from protocol import (EnableRulesMsg, LoadRuleMsg, 
+from protocol import (EnableRulesMsg, LoadRuleMsg,
                       HeartbeatMsg, MatchEventMsg, MicStateMsg, RecognitionStateMsg,
                       RequestRulesMsg, WordListMsg, RuleType, parseMessage,
-                      makeJSON, LoadStateMsg, ClientQuitMsg)
+                      makeJSON, LoadStateMsg, ClientQuitMsg, ToggleVolumeMsg)
 
 importOrReload("SeriesMappingRule", "SeriesMappingRule")
 importOrReload("DragonflyNode", "DragonflyNode")
@@ -101,7 +101,7 @@ class ReportingAction(ActionBase):
         self.grammarString = grammarString
         self.ruleHash = ruleHash
         ActionBase.__init__(self)
-        
+
     def _execute(self, data=None):
         try:
             self.dclient.onMatch(self.grammarString, data)
@@ -118,7 +118,7 @@ class ReportingAction(ActionBase):
 # the grammars depending on a rule so that when that rule
 # finally arrives we can finish building the grammar and
 # activate it, provided at this point it's still the active
-# master grammar. 
+# master grammar.
 class NeedDependency(set): pass
 
 class MissingDependency(Exception):
@@ -133,7 +133,7 @@ class MasterGrammar(object):
     def __init__(self, baseRuleSet, client, ruleCache):
         self.client = client
         self.ruleCache = ruleCache
-        
+
         # Hashes that are directly part of this grammar
         self.baseRuleSet = set(baseRuleSet)
         # Hashes of rules that we discover are dependencies
@@ -209,13 +209,13 @@ class MasterGrammar(object):
         for r in ruleSet:
             if self.checkDep(r):
                 rule = self.ruleCache[r] # HashedRule
-                
+
                 rule = rule.rule
                 log.info("rule [%s]" % (rule,))
                 for e in rule.extras:
                     if hasattr(e, "rule_ref"):
                         newDeps.add(e.rule_ref)
-                        
+
         self.dependencyRuleSet.update(newDeps)
         self.checkDeps(newDeps)
 
@@ -264,7 +264,7 @@ class MasterGrammar(object):
             if "name" not in x:
                 x["name"] = ""
             if "hash" not in x:
-                x["hash"] = set()    
+                x["hash"] = set()
 
             x["ruleType"] = rule.ruleType
             x["seriesMergeGroup"] = rule.seriesMergeGroup
@@ -325,7 +325,7 @@ class MasterGrammar(object):
                 self.cleanupProtoRule(v, allPrototypes)
                 cleanupEnd = time.time()
                 cleanupTime += (cleanupEnd - cleanupStart)
-                
+
         log.info("Total Cleanup time: %ss" % cleanupTime)
         log.info("Total Concrete time: %ss" % (self.concreteTime))
 
@@ -371,7 +371,7 @@ class MasterGrammar(object):
 
     def setupFinalDflyGrammar(self):
         log.info("Setting up final grammar.")
-        
+
         assert not self.dflyGrammar
         self.dflyGrammar = Grammar(self.fullName + "Grammar")
         if self.finalDflyRule:
@@ -401,7 +401,7 @@ class MasterGrammar(object):
 
         # they're enabled by default, don't activate until explicitly made to
         self.dflyGrammar.disable()
-        
+
     def active(self):
         #log.info("active check [%s %s %s]" % (self.dflyGrammar is None, self.dflyGrammar and self.dflyGrammar.loaded, self.dflyGrammar and self.dflyGrammar.enabled))
         return self.dflyGrammar and self.dflyGrammar.loaded and self.dflyGrammar.enabled
@@ -495,12 +495,12 @@ class MasterGrammar(object):
                 raise Exception("Unknown extra type: [%s]" % e)
 
         r["extras"] = newExtras
-        
+
         self.concreteStartTime = time.time()
         self.buildConcreteRule(r)
         self.concreteEndTime = time.time()
         self.concreteTime += (self.concreteEndTime - self.concreteStartTime)
-        
+
         r["built"] = True
         return True
 
@@ -508,7 +508,7 @@ class MasterGrammar(object):
         if name not in self.concreteWordLists:
             # log.info("Word list [%s] not in grammar [%s], ignoring" % (name, self.hash))
             return
-        
+
         # We want to check if the value has actually changed because List's
         # set method will blindly tell Dragon to delete its old list and replace
         # it with this one and we don't want to disturb Dragon unless we have to
@@ -600,7 +600,7 @@ class DragonflyClient(DragonflyNode):
         self.heartbeat()
         self.updateMicState()
         self.updateLoadState()
-            
+
     def setRecognitionState(self, state):
         self.recognitionState = state
         log.info("Recognition state: [%s]" % state)
@@ -608,7 +608,7 @@ class DragonflyClient(DragonflyNode):
 
     def updateMicState(self):
         micState = natlink.getMicState()
-        
+
         # filter redundant change events
         if self.lastMicState is None or micState != self.lastMicState:
             if micState == "off":
@@ -659,10 +659,10 @@ class DragonflyClient(DragonflyNode):
                 log.info("active? %s" % g.active())
                 state = 'done' if g.active() else state
         log.info("last load state [%s] new load state [%s]" % (self.lastLoadState, state))
-        if self.lastLoadState is None or self.lastLoadState != state: 
+        if self.lastLoadState is None or self.lastLoadState != state:
             if self.sendMsg(makeJSON(LoadStateMsg(state))):
                 self.lastLoadState = state
-    
+
     def sendLoadRequest(self, hashes):
         unrequested = hashes - self.requestedLoads
         if unrequested:
@@ -675,25 +675,25 @@ class DragonflyClient(DragonflyNode):
         assert isinstance(msg.rule.rule.mapping, dict)
         assert isinstance(msg.rule.rule.extras, list)
         assert isinstance(msg.rule.rule.defaults, dict)
-        
+
         if msg.rule.hash in self.requestedLoads:
             self.requestedLoads.remove(msg.rule.hash)
 
-        inNeed = set() 
+        inNeed = set()
         if msg.rule.hash in self.hashedRules:
             entry = self.hashedRules[msg.rule.hash]
             if isinstance(entry, NeedDependency):
-                inNeed = entry 
+                inNeed = entry
             else:
                 log.error("Received already cached rule, ignoring [%s of type %s]" % (msg, type(entry)))
                 return
 
         log.info("Inserting [%s] in hashedRules" % (msg.rule,))
         self.hashedRules[msg.rule.hash] = msg.rule
-        mapping = self.hashedRules[msg.rule.hash].rule.mapping 
+        mapping = self.hashedRules[msg.rule.hash].rule.mapping
         for k in mapping:
             mapping[k] = ReportingAction(k, self, msg.rule.hash)
-        
+
         noneMissing = True
         for grammarHash in inNeed:
             grammar = self.hashedRules[grammarHash]
@@ -778,7 +778,7 @@ class DragonflyClient(DragonflyNode):
 
     def addValue(self, d, k, v):
         if k in d:
-            # Single values get upgraded to lists if they occur multiple times 
+            # Single values get upgraded to lists if they occur multiple times
             if type(d[k]) != list:
                 d[k] = [d[k], v]
             else:
@@ -791,7 +791,7 @@ class DragonflyClient(DragonflyNode):
             values = {}
 
         refTypes = (dfly.Repetition, dfly.RuleRef)
-        isRefType = any([isinstance(node.actor, t) for t in refTypes]) 
+        isRefType = any([isinstance(node.actor, t) for t in refTypes])
 
         if node.name and isinstance(node.actor, ElementBase) and not isRefType:
             v = node.value()
@@ -841,10 +841,10 @@ class DragonflyClient(DragonflyNode):
         for e in rule.extras:
             if e.name not in extras and e.name in rule.defaults:
                 extras[e.name] = rule.defaults[e.name]
-        
+
         log.info("Extras [%s] Words [%s] Phrase [%s] Hash [%s]" % (extras, words, phrase, hash))
         return MatchEventMsg(hash, phrase, extras, words)
-        
+
     def onMatch(self, grammarString, data):
         if natlink.getMicState() != 'on':
             return
@@ -865,7 +865,7 @@ class DragonflyClient(DragonflyNode):
                 # ... probably we shuld really only be looking at ReportingAction nodes?
                 if m.actor.enabled:
                     matches.append(self.getMatchFromNode(m))
-        
+
         terminator = root.get_child_by_name('terminator')
         if terminator:
             matches.append(self.getMatchFromNode(terminator))

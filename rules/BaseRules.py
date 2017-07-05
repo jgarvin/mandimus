@@ -8,7 +8,7 @@ from EventList import RuleRegisterEvent
 from EventLoop import pushEvent
 
 _mapping = {
-    "abe"   : "a", # not great
+    "air"   : "a",
     "boy"   : "b",
     "coup"  : "c",
     "dog"   : "d",
@@ -74,7 +74,7 @@ _mapping = {
     "point"      : "period",
     "arg"        : "comma",
     "squiggle"   : "tilde",
-    "soot"       : "squote",
+    "sing"       : "squote",
     "quote"      : "dquote",
     "lesser"     : "langle",
     "greater"    : "rangle",
@@ -110,7 +110,7 @@ _literalMapping = {
     "point"      : ".",
     "arg"        : ",",
     "squiggle"   : "~",
-    "soot"       : "'",
+    "sing"       : "'",
     "quote"      : "\"",
     "lesser"     : "<",
     "greater"    : ">",
@@ -166,8 +166,8 @@ class PressKey(object):
         keystring = []
         foundModifier = True
 
-        if self.force_shift and "tall" not in words:
-            words = ["tall"] + words
+        if self.force_shift and "sky" not in words:
+            words = ["sky"] + words
 
         repetitions = extras['i']
         if "control" in words:
@@ -176,7 +176,7 @@ class PressKey(object):
         if "alt" in words:
             keystring.append('a')
             foundModifier = True
-        if "tall" in words:
+        if "sky" in words:
             keystring.append('s')
             foundModifier = True
 
