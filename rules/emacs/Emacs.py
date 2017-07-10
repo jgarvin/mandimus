@@ -216,7 +216,7 @@ _mapping  = {
     "kill [<n>]"                    : Key('c-k:%(n)d'),
     "chip [<n>]"                    : Cmd('(md-backward-kill-word)'),
     "pitch [<n>]"                   : Cmd('(md-forward-kill-word)'),
-    "thump [<n>]"                   : Key("delete:%(n)d"),
+    "bonk [<n>]"                    : Key("delete:%(n)d"),
     "knock [<n>]"                   : Key("backspace:%(n)d"),
     "squeeze"                       : Cmd('(cycle-spacing)'),
 
@@ -283,8 +283,8 @@ _mapping  = {
     "show all"                      : Key("c-c,U"),
     "toggle"                        : Key('a-t'),
 
-    "prior [<i>]"   : Key("a-p:%(i)d"),
-    "future [<i>]"  : Key("a-n:%(i)d"),
+    "prior [<i>]"                   : Key("a-p:%(i)d"),
+    "future [<i>]"                  : Key("a-n:%(i)d"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

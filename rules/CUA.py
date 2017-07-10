@@ -41,7 +41,7 @@ _mapping = {
     "right [<n>]"         : Key("right:%(n)d"),
     "hike [<n>]"          : Key("up:%(n)d"),
     "slide [<n>]"         : Key("down:%(n)d"),
-    "thump [<n>]"         : Key("delete:%(n)d"),
+    "bonk [<n>]"         : Key("delete:%(n)d"),
     "knock [<n>]"         : Key("backspace:%(n)d"),
     "slap [<n>]"          : Key("enter:%(n)d"),
     "num <big>"           : Text("%(big)d"),
