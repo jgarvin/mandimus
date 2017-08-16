@@ -89,6 +89,7 @@ _keywords = [
     "unsetopt",
     ["/usr/bin/", "user bin"],
     "up",
+    "valgrind",
     "wait",
     ["wc", "word count"],
     "which",
