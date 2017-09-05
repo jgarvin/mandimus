@@ -72,6 +72,7 @@ _keywords = [
     "setopt",
     "shift",
     "sort",
+    "source",
     ["ssh", "S S H"],
     ["strace", "S trace"],
     "sudo",
