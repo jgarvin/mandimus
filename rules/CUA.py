@@ -5,18 +5,6 @@ from rules.emacs.Cmd import CharCmd
 from rules.ContextualRule import makeContextualRule
 
 _mapping = {
-    "find [<search_terms>]" : Key("c-f") + Text("%(search_terms)s"),
-}
-
-_extras = [
-    Dictation("search_terms"),
-]
-
-CUAFindRule = makeContextualRule("CUAFind", _mapping, _extras, {},
-                                 ruleType=RuleType.TERMINAL)
-CUAFindRule.context.addRequirement(NotEmacs)
-
-_mapping = {
     "copy"                : Key("c-c"),
     "cut"                 : Key("c-x"),
     "paste"               : Key("c-v"),
@@ -31,6 +19,7 @@ _mapping = {
     "next form"           : Key("tab"),
     "previous form"       : Key("s-tab"),
     "axe"                 : Key("escape"),
+    "find"                : Key("c-f"),
     "find next [<n>]"     : Key("F3:%(n)d"),
     "find previous [<n>]" : Key("s-F3:%(n)d"),
     "leaf [<n>]"          : Key("pgdown:%(n)d"),
@@ -41,7 +30,7 @@ _mapping = {
     "right [<n>]"         : Key("right:%(n)d"),
     "hike [<n>]"          : Key("up:%(n)d"),
     "slide [<n>]"         : Key("down:%(n)d"),
-    "bonk [<n>]"         : Key("delete:%(n)d"),
+    "bonk [<n>]"          : Key("delete:%(n)d"),
     "knock [<n>]"         : Key("backspace:%(n)d"),
     "slap [<n>]"          : Key("enter:%(n)d"),
     "num <big>"           : Text("%(big)d"),
