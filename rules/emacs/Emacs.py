@@ -253,7 +253,7 @@ _mapping  = {
 
     "num <big>"                     : EmacsText("%(big)d"),
     "insert character"              : Key("c-t,8,enter"),
-    "complete"                      : Minibuf("company-complete"),
+    # "complete"                      : Minibuf("company-complete"),
     "open this"                     : Key("c-enter"),
     "shell command"                 : Minibuf("etc-shell-command"),
     "insert path"                   : InsertString("(buffer-file-name)"),
