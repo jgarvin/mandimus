@@ -202,7 +202,7 @@ _mapping  = {
     "nepo [<i>]"                    : Cmd("(md-open-line-anywhere)"),
 
     # mark commands
-    "exchange"                      : Cmd("(exchange-point-and-mark)"),
+    "exchange"                      : Key("c-t,c-t"),
     "select [<i>]"                  : Key("c-equal:%(i)d"),
     "contract"                      : Key("a-equal"),
 
@@ -214,8 +214,8 @@ _mapping  = {
     "rectangle"                     : Key("c-t,space"),
 
     "kill [<n>]"                    : Key('c-k:%(n)d'),
-    "chip [<n>]"                    : Cmd('(md-backward-kill-word)'),
-    "pitch [<n>]"                   : Cmd('(md-forward-kill-word)'),
+    "chip [<n>]"                    : Key('c-backspace:%(n)d'),
+    "pitch [<n>]"                   : Key('c-delete:%(n)d'),
     "bonk [<n>]"                    : Key("delete:%(n)d"),
     "knock [<n>]"                   : Key("backspace:%(n)d"),
     "squeeze"                       : Cmd('(cycle-spacing)'),
