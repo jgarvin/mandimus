@@ -285,6 +285,8 @@ _mapping  = {
 
     "prior [<i>]"                   : Key("a-p:%(i)d"),
     "future [<i>]"                  : Key("a-n:%(i)d"),
+
+    "e-mail" : Key("c-c,e"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)
