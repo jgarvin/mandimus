@@ -13,6 +13,7 @@ WordListEvent = namedtuple("WordListEvent", "name words")
 RecognitionStateEvent = namedtuple("RecognitionStateEvent", "state") 
 PedalsEvent = namedtuple("PedalsEvent", "pedalStates changed")
 ExitEvent = namedtuple("ExitEvent", [])
+RepeatRequestEvent = namedtuple("RepeatRequestEvent", [])
 
 # emacs events
 BufferListEvent = namedtuple("BufferListEvent", "query choices") 

@@ -6,10 +6,9 @@ log = mdlog.getLogger(__name__)
 
 from protocol import RuleType
 from ContextualRule import makeContextualRule
-from EventList import PedalsEvent
-from EventLoop import getLoop
-from Actions import runCmd
-from Actions import Key
+from EventList import PedalsEvent, RepeatRequestEvent
+from EventLoop import getLoop, pushEvent
+from Actions import runCmd, Key, Repeat
 from Pedals import setPedalCallback, getPedalCallback
 
 
@@ -29,9 +28,12 @@ from Pedals import setPedalCallback, getPedalCallback
 def toggleMic():
     runCmd("amixer sset 'Capture' toggle")
 
+def sendRepeatEvent():
+    pushEvent(RepeatRequestEvent())
+
 def pedalArrowCb2(pedalStates, changed):
     updown = ["keyup", "keydown"]
-    pedalKeys = ["Up", toggleMic, "Down"]
+    pedalKeys = ["Up", sendRepeatEvent, "Down"]
     global _lastPedal
     if changed == 1:
         if not pedalStates[1] and _lastPedal == 1:

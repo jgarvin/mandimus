@@ -16,7 +16,7 @@ from EventLoop import getLoop
 from EventList import (MicrophoneEvent, RuleMatchEvent, ConnectedEvent,
                        StartupCompleteEvent, WordEvent, RuleActivateEvent,
                        RuleRegisterEvent, RuleDeactivateEvent, LoadingRulesEvent,
-                       EventsDrainedEvent, WordListEvent, RecognitionStateEvent)
+                       EventsDrainedEvent, WordListEvent, RecognitionStateEvent, RepeatRequestEvent)
 from copy import copy
 from protocol import (EnableRulesMsg, LoadRuleMsg, MicStateMsg,
                       LoadStateMsg, RequestRulesMsg, RecognitionStateMsg,
@@ -58,6 +58,7 @@ class DragonflyThread(DragonflyNode):
         getLoop().subscribeEvent(RuleDeactivateEvent, self.onRuleDeactivate)
         getLoop().subscribeEvent(EventsDrainedEvent, self.commitRuleEnabledness)
         getLoop().subscribeEvent(WordListEvent, self.onWordList)
+        getLoop().subscribeEvent(RepeatRequestEvent, self.onRepeatRequest)
 
     def onWordList(self, ev):
         # We track whether word lists have changed in the server class because
@@ -202,6 +203,16 @@ class DragonflyThread(DragonflyNode):
             log.error("Unknown message type, ignoring: [%s]" % json_msg)
             return
 
+    def onRepeatRequest(self, ev=None, extras={}):
+        if 'n' not in extras:
+            extras['n'] = 1
+            
+        if len(self.history) >= 1:
+            repetitions = extras['n']
+            hash, phrase, extras, words = self.history[-1]
+            for i in range(repetitions):
+                self.onMatch(hash, phrase, extras, words)
+
     def onMatch(self, hash, phrase, extras, words):
         if hash not in self.hashedRules:
             log.error("Received match for unknown hash [%s]" % hash)
@@ -225,11 +236,7 @@ class DragonflyThread(DragonflyNode):
             cb = rule.mapping[phrase]
 
             if isinstance(cb, RepeatPreviousAction):
-                if len(self.history) >= 1:
-                    repetitions = extras['n']
-                    hash, phrase, extras, words = self.history[-1]
-                    for i in range(repetitions):
-                        self.onMatch(hash, phrase, extras, words)
+                self.onRepeatRequest(extras=extras)
                 return
             else:
                 self.history.append(RuleMatchEvent(hash, phrase, extras, words))
