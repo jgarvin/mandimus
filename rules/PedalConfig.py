@@ -33,11 +33,11 @@ def pedalArrowCb2(pedalStates, changed):
     updown = ["keyup", "keydown"]
     pedalKeys = ["Up", toggleMic, "Down"]
     global _lastPedal
-    if not pedalStates[1] and changed == 1 and _lastPedal == 1:
-        pedalKeys[changed]()
-        _lastPedal = changed
-        return
-    runCmd("xdotool %s %s" % (updown[pedalStates[changed]], pedalKeys[changed]))
+    if changed == 1:
+        if not pedalStates[1] and _lastPedal == 1:
+            pedalKeys[changed]()
+    else:
+        runCmd("xdotool %s %s" % (updown[pedalStates[changed]], pedalKeys[changed]))
     _lastPedal = changed
 
 def pedalModifierCb(pedalStates, changed):
@@ -90,9 +90,9 @@ def setModifierPedals(extras={}):
     log.info("Setting pedals to modifier mode.")
     setPedalCallback(pedalModifierCb)
 
-_mapping = {
-    "pedals"                               : cyclePedals,
-    "modifierPedals" : setModifierPedals,
-}
-PedalRule = makeContextualRule("PedalRule", _mapping, ruleType=RuleType.INDEPENDENT)
-PedalRule.activate()
+# _mapping = {
+#     "pedals"                               : cyclePedals,
+#     "modifierPedals" : setModifierPedals,
+# }
+# PedalRule = makeContextualRule("PedalRule", _mapping, ruleType=RuleType.INDEPENDENT)
+# PedalRule.activate()
