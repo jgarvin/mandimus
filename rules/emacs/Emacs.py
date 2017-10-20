@@ -84,27 +84,26 @@ _mapping = {
     "debug function"              : Key("c-t,c-m") + Text("debug-on-entry") + Key("enter"),
     "cancel debug function"       : Key("c-t,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
 
-    "ace line"                    : Key("c-u,c-u,c-c,space"),
-
     "go to line"                  : Key("a-g,a-g"),
-    "go to line <big>"            : Key("a-g,a-g") + Text("%(big)d") + Key("enter"),
+    # "go to line <big>"            : Key("a-g,a-g") + Text("%(big)d") + Key("enter"),
 
-    "new frame [<i>]"             : Cmd("(make-frame-command)"),
+    "new frame"             : Cmd("(make-frame-command)"),
     "mini buffer"                 : Cmd("(md-select-minibuffer)"),
 
     "list buffs"                  : Key("c-t,c-b,c-t,o") + Cmd("(ace-jump-line-mode)"),
-    "list project files"          : Key("c-c,p,f"),
 
     # projectile commands
     "switch project"              : Key("c-c,p,p"),
     "root folder"                 : Key("c-c,p,d"),
-    "ack"                         : Key("c-c,p,s,g"),
+    "project search"              : Key("c-c,p,s,g"),
+    "directory search"            : Key("c-c,p,s,d"),
+    "project source search"       : Key("c-c,p,s,s"),
     "occur"                       : Key("c-c,p,o"),
     "project replace"             : Key("c-c,p,r"),
     "project file"                : Key("c-c,p,f"),
     "project kill"                : Key("c-c,p,k"),
     "project root"                : Key("c-c,p,D"),
-    # "build"                       : Key("c-c,p,c"),
+    # "build"                     : Key("c-c,p,c"),
     "invalidate projectile cache" : Key("c-c,p,i"),
 
     # compilation mode commands
@@ -141,13 +140,13 @@ _mapping = {
     "get status"                  : Minibuf("magit-status"),
     "submit"                      : Key("c-t,hash"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
-    "show top"                    : Cmd("(etc-start-or-open-top)"),
+    # "show top"                  : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
     "toggle command logging"      : toggleCommandLogging,
     "toggle refresh client"       : toggleRefreshClientSources,
     "magnify [<i>]"               : Key("c-t,c-plus:%(i)d"),
     "demagnify [<i>]"             : Key("c-t,c-minus:%(i)d"),
-    # "compile"                     : Minibuf("compile"),
+    # "compile"                   : Minibuf("compile"),
     "visual line mode"            : Minibuf("visual-line-mode"),
     "set indent <j>"              : Cmd("(etc-set-indent-preference %(j)d)"),
     "toggle namespace indent"     : Cmd("(etc-toggle-namespace-indent)"),
@@ -286,10 +285,13 @@ _mapping  = {
     "prior [<i>]"                   : Key("a-p:%(i)d"),
     "future [<i>]"                  : Key("a-n:%(i)d"),
 
-    "e-mail" : Key("c-c,e"),
+    "read e-mail" : Key("c-c,e"),
     "compose e-mail" : Key("c-x,m"),
     "jabber roster" : Key("c-t,c-j,c-r"),
-    "fill paragraph" : Key("a-q")
+    "fill paragraph" : Key("a-q"),
+
+    "maggot find file" : Key("c-c,m,h"),
+    "maggot show origin master" : Key("c-c,m,o"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)
