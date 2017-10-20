@@ -250,6 +250,7 @@ if __name__ == "__main__":
         ('rules.emacs.ERC', ['']),
         ('rules.emacs.Eshell', ['']),
         ('rules.emacs.GnuDebugger', ['']),
+        ('rules.emacs.Julia', ['']),
         ('rules.emacs.Lisp', ['']),
         ('rules.emacs.Python', ['']),
         ('rules.emacs.Pairs', ['']),
