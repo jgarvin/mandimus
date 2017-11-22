@@ -81,13 +81,13 @@ _mapping = {
     "command"                     : Key("a-x"),
     "toggle emacs debug"          : Cmd("(toggle-debug-on-error)"),
     "exit debug"                  : Key("c-t,X,a"),
-    "debug function"              : Key("c-t,c-m") + Text("debug-on-entry") + Key("enter"),
-    "cancel debug function"       : Key("c-t,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
+    # "debug function"              : Key("c-t,c-m") + Text("debug-on-entry") + Key("enter"),
+    # "cancel debug function"       : Key("c-t,c-m") + Text("cancel-debug-on-entry") + Key("enter"),
 
     "go to line"                  : Key("a-g,a-g"),
-    # "go to line <big>"            : Key("a-g,a-g") + Text("%(big)d") + Key("enter"),
+    # "go to line <big>"          : Key("a-g,a-g") + Text("%(big)d") + Key("enter"),
 
-    "new frame"             : Cmd("(make-frame-command)"),
+    "new frame"                   : Cmd("(make-frame-command)"),
     "mini buffer"                 : Cmd("(md-select-minibuffer)"),
 
     "list buffs"                  : Key("c-t,c-b,c-t,o") + Cmd("(ace-jump-line-mode)"),
@@ -110,8 +110,8 @@ _mapping = {
     # don't think I can make these mode specific...
     "oops"                        : Key("a-g,n"),
     "spoo"                        : Key("a-g,p"),
-    "file oops"                   : Key("a-rbrace"),
-    "file spoo"                   : Key("a-lbrace"),
+    # "file oops"                   : Key("a-rbrace"),
+    # "file spoo"                   : Key("a-lbrace"),
     "toggle trace"                : Key("c-c,c-f"),
 
     # file commands
@@ -131,6 +131,7 @@ _mapping = {
     "open server log"             : Cmd("(md-open-most-recent-file \"/tmp\" \"server-[^.]*.log\")"),
     "show home folder"            : Cmd("(find-file \"~\")"),
     "show temp folder"            : Cmd("(find-file \"/tmp\")"),
+    "show root folder"            : Cmd("(find-file \"/\")"),
 
     # misc
     "start irc"                   : Minibuf("irc-maybe"),
@@ -138,7 +139,6 @@ _mapping = {
     "toggle tail mode"            : Cmd("(auto-revert-tail-mode)"),
     "list packages"               : Minibuf("list-packages"),
     "get status"                  : Minibuf("magit-status"),
-    "submit"                      : Key("c-t,hash"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
     # "show top"                  : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
@@ -172,9 +172,6 @@ _mapping = {
     "help bindings"      : Key("c-h,b"),
 
     "inspect character"  : Key("c-u,c-t,equal"),
-
-    "last change"        : Key("c-period"),
-    "next change"        : Key("c-comma"),
 }
 
 EmacsSearchRule = makeContextualRule("EmacsSearch", _mapping, emacsExtras, emacsDefaults, ruleType=RuleType.TERMINAL)
@@ -252,7 +249,7 @@ _mapping  = {
 
     "num <big>"                     : EmacsText("%(big)d"),
     "insert character"              : Key("c-t,8,enter"),
-    # "complete"                      : Minibuf("company-complete"),
+    # "complete"                    : Minibuf("company-complete"),
     "open this"                     : Key("c-enter"),
     "shell command"                 : Minibuf("etc-shell-command"),
     "insert path"                   : InsertString("(buffer-file-name)"),
@@ -271,6 +268,7 @@ _mapping  = {
     "swoop"                         : Key("a-i"),
     "show kill ring"                : Key("cs-y"),
 
+    "submit"                        : Key("c-c,c-c"),
     "discard"                       : Key("c-c,c-k"),
 
     "view <charrule>"               : Key("a-d") + PressKey(),
@@ -285,13 +283,16 @@ _mapping  = {
     "prior [<i>]"                   : Key("a-p:%(i)d"),
     "future [<i>]"                  : Key("a-n:%(i)d"),
 
-    "read e-mail" : Key("c-c,e"),
-    "compose e-mail" : Key("c-x,m"),
-    "jabber roster" : Key("c-t,c-j,c-r"),
-    "fill paragraph" : Key("a-q"),
+    "read e-mail"                   : Key("c-c,e"),
+    "compose e-mail"                : Key("c-x,m"),
+    "jabber roster"                 : Key("c-t,c-j,c-r"),
+    "fill paragraph"                : Key("a-q"),
 
-    "maggot find file" : Key("c-c,m,h"),
-    "maggot show origin master" : Key("c-c,m,o"),
+    "maggot find file"              : Key("c-c,m,h"),
+    "maggot show origin master"     : Key("c-c,m,o"),
+
+    "last change"                   : Key("c-period"),
+    "next change"                   : Key("c-comma"),
 }
 
 EmacsRule = makeContextualRule("Emacs", _mapping, emacsExtras, emacsDefaults)

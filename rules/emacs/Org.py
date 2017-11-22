@@ -5,10 +5,10 @@ from requirements.ModeRequirement import ModeRequirement
 from rules.emacs.common import emacsExtras, emacsDefaults
 
 _mapping = {
-    "save link"   : Key("c-c,l"),
-    "agenda menu" : Key("c-c,a"),
-    "agenda"      : Key("c-c,a,a"),
-    "list to do"  : Key("c-c,a,t"),
+    "org save link"   : Key("c-c,l"),
+    "org agenda menu" : Key("c-c,a"),
+    "org agenda"      : Key("c-c,a,a"),
+    "org list to do"  : Key("c-c,a,t"),
 }
 
 OrgAnywhereRule = makeContextualRule("OrgAnywhere", _mapping, emacsExtras, emacsDefaults)
