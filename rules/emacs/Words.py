@@ -27,7 +27,7 @@ class EmacsWordGen(EmacsEventGenerator):
         lst = [''.join([c for c in n if c in string.printable]) for n in lst]
         lst = [x for x in lst if self._filter(x)]
         return lst
-    
+
 emacsWordGen = EmacsWordGen("EmacsWord", "md-global-word-cache", EmacsWordEvent)
 emacsSymbolGen = EmacsWordGen("EmacsSymbol", "md-global-symbol-cache", EmacsSymbolEvent)
 
@@ -48,15 +48,17 @@ class EmacsWordNames(WordSelector):
         elif "come" in action["words"]:
             Cmd("(md-go-to-previous \"%s\")" % choice)()
         else:
-            EmacsText("%s" % choice, lower=False)()        
+            EmacsText("%s" % choice, lower=False)()
 
     # TODO: this filtering should really be done on the emacs side
     def _filter(self, words):
         newWords = copy(words)
         for w in words:
-            if len(w) < 3:
+            # don't bother with tiny connecting words like if/or/and
+            # and don't bother with anything longer than len("Supercalifragilisticexpialidocious")
+            if len(w) < 3 or len(w) > 34:
                 newWords.remove(w)
-            
+
             try:
                 int(w)
                 newWords.remove(w)
@@ -80,7 +82,7 @@ _actions = [
 
 _wordActions = ["word"] + [w + " word" for w in _actions]
 _symbolActions = ["toke"] + [w + " toke" for w in _actions]
-    
+
 _emacsWordNameSelector = EmacsWordNames("EmacsWordNames", _wordActions, EmacsWordEvent)
 _emacsSymbolNameSelector = EmacsWordNames("EmacsSymbolNames", _symbolActions, EmacsSymbolEvent)
 
