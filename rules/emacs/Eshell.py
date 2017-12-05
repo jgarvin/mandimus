@@ -111,8 +111,6 @@ _mapping = {
     "back [<i>]"      : Key("b,enter") * Repeat(extra="i"),
     "forward [<i>]"   : Key("f,enter") * Repeat(extra="i"),
     "surface [<i>]"   : (EmacsText("up") + Key("enter")) * Repeat(extra="i"),
-    "prior [<i>]"       : Key("a-p:%(i)d"),
-    "future [<i>]"      : Key("a-n:%(i)d"),
     "history"           : Key("a-r"),
     "interrupt"         : Key("c-c,c-c"),
     "prompt up [<n>]"   : Key("c-c,c-p:%(n)d"),

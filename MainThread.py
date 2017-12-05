@@ -270,6 +270,7 @@ if __name__ == "__main__":
         ('rules.emacs.Racket', ['']),
         ('rules.emacs.Shell', ['']),
         ('rules.emacs.Snippet', ['']),
+        ('rules.emacs.Sql', ['']),
         ('rules.emacs.SymbolPicker', ['']),
         ('rules.emacs.VarNames', ['']),
         ('rules.WindowNames', ['']),
