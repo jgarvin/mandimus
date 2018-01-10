@@ -8,7 +8,7 @@ from EventList import RuleRegisterEvent
 from EventLoop import pushEvent
 
 _mapping = {
-    "air"   : "a",
+    "air"   : "a", # not great
     "boy"   : "b",
     "coup"  : "c",
     "dog"   : "d",

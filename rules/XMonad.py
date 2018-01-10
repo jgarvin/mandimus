@@ -4,7 +4,7 @@ from rules.ContextualRule import makeContextualRule
 
 
 _extras = [
-    Integer("n", 3, 20),
+    Integer("n", 3, 100),
     Integer("d", 0, 10),
     Integer("i", 3, 8),
 ]
