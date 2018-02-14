@@ -21,7 +21,6 @@ _mapping = {
     "[control] [alt] [sky] <charrule> [<i>]" : PressKey(),
     'scoot [<i>]'                            : Key("tab:%(i)d"),
     'cap scoot [<i>]'                        : Key("s-tab:%(i)d"),
-#    "letter <dgnletters>"                   : PrintLetter(),
 }
 
 _extras = [
