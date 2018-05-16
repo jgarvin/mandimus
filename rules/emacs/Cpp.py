@@ -56,7 +56,13 @@ keywords = [
     "namespace",
     "new",
     ["noexcept", "no except"],
+
+    # redundant entries because it has a really hard time recognizing this
     ["nullptr", "knoll pointer"],
+    ["nullptr", "knoll puter"],
+    ["nullptr", "null pointer"],
+    ["nullptr", "null puter"],
+    
     "operator",
     "private",
     "protected",
