@@ -45,7 +45,7 @@ class EmacsWordNames(WordSelector):
     def _select(self, action, choice):
         if "go" in action["words"]:
             Cmd("(md-go-to-next \"%s\")" % choice)()
-        elif "come" in action["words"]:
+        elif "doog" in action["words"]:
             Cmd("(md-go-to-previous \"%s\")" % choice)()
         else:
             EmacsText("%s" % choice, lower=False)()
@@ -77,7 +77,7 @@ class EmacsWordNames(WordSelector):
 
 _actions = [
     "go",
-    "come",
+    "doog",
 ]
 
 _wordActions = ["word"] + [w + " word" for w in _actions]

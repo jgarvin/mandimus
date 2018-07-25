@@ -16,7 +16,7 @@ _mapping = {
     "fox"   : "f",
     "golf"  : "g",
     "his"   : "h", # not great
-    "ivy"   : "i",
+    "igloo"   : "i", # "sky ivy" not reliably recognized
     "john"  : "j",
     "king"  : "k",
     "lima"  : "l",
@@ -88,7 +88,7 @@ _mapping = {
     "band"       : "bar",
     "plus"       : "plus",
     "underscore" : "underscore",
-    "hop"        : "space",
+    "pow"        : "space",
 }
 
 _literalMapping = {
@@ -124,7 +124,7 @@ _literalMapping = {
     "band"       : "|",
     "plus"       : "+",
     "underscore" : "_",
-    "hop"        : " ",
+    "pow"        : " ",
 }
 
 SymRule = makeHashedRule("SymRule", _mapping, ruleType=RuleType.INDEPENDENT)

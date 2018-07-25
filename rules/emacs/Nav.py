@@ -31,7 +31,7 @@ _mapping = {
     "slide [<n>]"             : Key("c-n:%(n)d"),
 
     "go <charrule> [<i>]"     : CharCmd("(md-move-up-to-char 1 %s)"),
-    "come <charrule> [<i>]"   : CharCmd("(md-move-up-to-char -1 %s)"),
+    "doog <charrule> [<i>]"   : CharCmd("(md-move-up-to-char -1 %s)"),
     "function"                : Key("ca-a"),
     "snug [<i>]"              : Cmd("(md-find-indentation-change 1 '>)"),
     "guns [<i>]"              : Cmd("(md-find-indentation-change -1 '>)"),

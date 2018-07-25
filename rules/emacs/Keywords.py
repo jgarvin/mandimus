@@ -9,7 +9,7 @@ from EventList import RuleRegisterEvent
 
 _mapping = {
     "key" : None,
-    "come key" : None,
+    "doog key" : None,
     "go key" : None,
 }
 
@@ -31,7 +31,7 @@ class KeywordCmd(Cmd):
         writtenKeyword = self.writtenForms[spokenKeyword]
         if command == "key":
             EmacsText("%s" % writtenKeyword, lower=False)()
-        elif command == "come key":
+        elif command == "doog key":
             return "(md-go-to-previous \"%s\")" % writtenKeyword
         elif command == "go key":
             return "(md-go-to-next \"%s\")" % writtenKeyword
