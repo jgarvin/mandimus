@@ -171,9 +171,18 @@ class Speak(Action):
         runCmd(cmd)
 
 class Key(Action):
-    def __init__(self, data, delay=12):
+    def __init__(self, data, delay=12, style="press_once"):
         Action.__init__(self, data)
         self.delay = delay
+        self.style = style
+
+    def up(self, extras={}):
+        cmd = ("xdotool keyup --delay %d " % self.delay) + parseKeyString(self.data % extras)
+        runCmd(cmd)
+
+    def down(self, extras={}):
+        cmd = ("xdotool keydown --delay %d " % self.delay) + parseKeyString(self.data % extras)
+        runCmd(cmd)
 
     def __call__(self, extras={}):
         cmd = ("xdotool key --delay %d " % self.delay) + parseKeyString(self.data % extras)

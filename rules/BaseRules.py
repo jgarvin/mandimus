@@ -63,7 +63,7 @@ _mapping = {
     "bang"       : "exclamation",
     "question"   : "question",
     "swirl"      : "at",
-    "pound"      : "hash",
+    "thorpe"      : "hash",
     "cash"       : "dollar",
     "frak"       : "percent", # short for fraction
     "caret"      : "caret",
@@ -99,7 +99,7 @@ _literalMapping = {
     "bang"       : "!",
     "question"   : "?",
     "swirl"      : "@",
-    "pound"      : "#",
+    "thorpe"      : "#",
     "cash"       : "$",
     "frak"       : "%",
     "caret"      : "^",
