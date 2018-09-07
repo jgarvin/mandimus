@@ -4,31 +4,94 @@
 from inputs import devices
 from Actions import Key
 
+from collections import defaultdict
+
 JOYSTICK_CHOICE=0
 
+class JoyButton(object):
+    def __init__(self, button_name, button_state=1):
+        self.button_name = button_name
+        self.button_state = button_state
+
+    def state(self, button_state):
+        return JoyButton(self.button_name, button_state)
+
+    def __add__(self, other):
+        return JoyCombo(self, other)
+
+    def __eq__(self, other):
+        return self.button_name == other.button_name and self.button_state == other.button_state
+
+    def __hash__(self):
+        return hash((self.button_name, self.button_state))
+
+class JoyCombo(object):
+    def __init__(self, a, b=None):
+        self.components = []
+        self.extend(a)
+        if b is not None:
+            self.extend(b)
+
+    def extend(self, a):
+        if isinstance(a, JoyCombo):
+            self.components.extend(a.components)
+            return
+        elif isinstance(a, JoyButton):
+            self.components.append(a)
+            return
+        assert(False)
+
+    def __eq__(self, other):
+        for componentA, componentB in zip(self.components, other.components):
+            if componentA != componentB:
+                return False
+        return True
+
+    def __hash__(self):
+        return hash(frozenset(self.components))
+
+class ButtonContainer(object): pass
+
+buttons = ButtonContainer()
+buttons.Start = JoyButton("ABS_Y", 255)
+buttons.Select = JoyButton("BTN_BASE4")
+buttons.Center = JoyButton("BTN_TOP2")
+buttons.LeftUp = JoyButton("BTN_BASE")
+buttons.RightUp = JoyButton("BTN_BASE2")
+buttons.LeftDown = JoyButton("BTN_BASE3")
+buttons.RightDown = JoyButton("BTN_PINKIE")
+buttons.Up = JoyButton("BTN_TRIGGER")
+buttons.Down = JoyButton("BTN_THUMB")
+buttons.Left = JoyButton("BTN_THUMB2")
+buttons.Right = JoyButton("BTN_TOP")
+
 joystick_actions = {
-    # start
-    "ABS_Y" : Key("c-g", delay=0, style="hold"),
-    # select
-    "BTN_BASE4" : Key("c-g", delay=0, style="hold"),
-    # center button
-    "BTN_TOP2" : None,
-    # left up diagonal
-    "BTN_BASE" : Key("ca-h", delay=0),
-    # right up diagonal
-    "BTN_BASE2" : Key("ca-e", delay=0),
-    # left down diagonal
-    "BTN_BASE3" : Key("c-slash"),
-    # right down diagonal
-    "BTN_PINKIE" : None, # turn this into repeat
-    # up arrow
-    "BTN_TRIGGER" : Key("up", delay=0, style="hold"),
-    # down arrow
-    "BTN_THUMB" : Key("down", delay=0, style="hold"),
-    # left arrow
-    "BTN_THUMB2" : None,
-    # right arrow
-    "BTN_TOP" : None
+    buttons.Start                    : Key("c-g", delay=0, style="hold"),
+    buttons.Select                   : Key("c-g", delay=0, style="hold"),
+
+    # too easy to hit by accident
+    buttons.Center                   : None,
+    # buttons.Left + buttons.Center  : Key("enter", delay=0),
+    # buttons.Right + buttons.Center : Key("space", delay=0),
+
+    buttons.Left + buttons.LeftUp    : Key("ca-h", delay=0),
+    buttons.Left + buttons.RightUp   : Key("ca-e", delay=0),
+    buttons.Right + buttons.LeftUp   : Key("ca-backspace", delay=0),
+    buttons.Right + buttons.RightUp  : Key("ca-space", delay=0),
+
+    # undo/redo
+    buttons.Right + buttons.LeftDown : Key("c-slash"),
+    buttons.Left + buttons.LeftDown  : Key("a-slash"),
+
+    buttons.Left + buttons.RightDown : Key("enter", delay=0), # turn this into repeat
+    buttons.Left + buttons.Up        : Key("up", delay=0, style="hold"),
+    buttons.Left + buttons.Down      : Key("down", delay=0, style="hold"),
+    buttons.Right + buttons.Up       : Key("pgup", delay=0), 
+    buttons.Right + buttons.Down     : Key("pgdown", delay=0), 
+
+    # treat these as modifiers
+    buttons.Left                     : None,
+    buttons.Right                    : None
 }
 
 def get_chosen_joystick():
@@ -38,23 +101,39 @@ def get_chosen_joystick():
 
 def joystick_event_loop():
     joystick = get_chosen_joystick()
+    joystick_state = defaultdict(lambda: 0)
+    combo_state = {}
     while True:
         events = joystick.read()
         for event in events:
-            if event.code in joystick_actions and joystick_actions[event.code]:
-                print(type(joystick_actions[event.code]))
-                print(dir(joystick_actions[event.code]))
-                if joystick_actions[event.code].style == "hold":
-                    if event.state == 0 or event.state == 127:  # 127 handles ABS_Y
-                        joystick_actions[event.code].up({})
-                    if event.state == 1 or event.state == 255: # 255 handles ABS_Y
-                        joystick_actions[event.code].down({})
-                elif joystick_actions[event.code].style == "press_once":
-                    if event.state == 1 or event.state == 255: # 255 handles ABS_Y
-                        joystick_actions[event.code]({})
-            print(type(event.code))
-            print(event.ev_type, event.code, event.state)
-    # while joystick.read():
-        # continue
+            joystick_state[event.code] = event.state
+        for condition, action in joystick_actions.items():
+            if action is None:
+                continue
+
+            # normalize buttons to be combos of one-button, no-op if already a combo
+            combo = JoyCombo(condition)
+            if combo not in combo_state:
+                combo_state[combo] = False
+
+            new_combo_state = True
+            for button in combo.components:
+                if joystick_state[button.button_name] != button.button_state:
+                    new_combo_state = False
+                    break
+
+            if new_combo_state == combo_state[combo]:
+                combo_state[combo] = new_combo_state
+                continue
+            combo_state[combo] = new_combo_state
+
+            if action.style == "hold":
+                if not new_combo_state:
+                    action.up({})
+                if new_combo_state:
+                    action.down({})
+            elif action.style == "press_once":
+                if new_combo_state:
+                    action({})
 
 joystick_event_loop()
