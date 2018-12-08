@@ -188,7 +188,7 @@ _mapping  = {
     "collapse"                      : Key("c-rbracket"),
     #"other [<i>] collapse"         : (Key("c-t, o") * Repeat(extra="i")) + Key("c-t, 1"),
 
-    "replace"                       : Key('as-percent'),
+    "replace"                       : Key('a-percent'),
     "regex replace"                 : Key('c-percent'),
     "center"                        : Key("c-l"),
 

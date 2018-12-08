@@ -12,8 +12,8 @@ punc2Words = {
 }
 
 englishWords = set()
-# with open("/usr/share/dict/american-english") as f:
-with open("/home/jgarvin/mandimus/american-english") as f:
+with open("/usr/share/dict/american-english") as f:
+#with open("/home/jgarvin/mandimus/american-english") as f:
     for w in f.readlines():
         # strip punctuation because there's a bunch of weird
         # apostrophes and other things.
