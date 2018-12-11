@@ -8,20 +8,6 @@ from collections import defaultdict
 import string
 import time
 
-#################################
-###
-### the next bit to do is tie this inte the event loop
-### so we always know the currently focused window and
-### can use that to trigger mode switches...
-### oh yeah i wanted each window to have its own mode stack...
-### maybe i still want that
-
-## ok now for simplification we'll just have one mode stack.
-## and if you change your mind you'll have to move away and
-## then back.
-## after this is working and i have some working per window
-## commands i can play more with making grammars work.
-
 class XpropException(Exception):
     pass
 
@@ -51,7 +37,9 @@ class Window(object):
             "_NET_WM_ICON",
             "WM_ICON_NAME",
             "WM_CLASS",
-            "WM_WINDOW_ROLE"
+            "WM_WINDOW_ROLE",
+            "mandimus_server_host",
+            "mandimus_server_port"
         ]
 
         self.xpropJob = Xprop(self.winId, properties)
@@ -66,15 +54,18 @@ class Window(object):
 
     def __hash__(self):
         return self.winId
-            
+
     def __getXprop(self, prop):
         if self.xpropResult is None:
             # force job to finish
-            self.xpropResult = self.xpropJob.result         
+            self.xpropResult = self.xpropJob.result
 
         for line in self.xpropResult:
             x = line.split("=")
+            log.info("XXXXXXXXXXX: {}".format(x))
             if len(x) < 2:
+                # this will skip over errors like if we asked for a
+                # property not on this window.
                 continue
             field, value = x[0].strip(), x[1].strip()
             if field == prop:
@@ -116,12 +107,20 @@ class Window(object):
 
     @property
     def iconName(self):
-        return self.__getXprop("WM_ICON_NAME(STRING)")    
+        return self.__getXprop("WM_ICON_NAME(STRING)")
+
+    @property
+    def emacsMandimusHost(self):
+        return self.__getXprop("mandimus_server_host(STRING)")
+
+    @property
+    def emacsMandimusPort(self):
+        return int(self.__getXprop("mandimus_server_port(STRING)"))
 
     @property
     def wmclass(self):
         return self.__getXprop("WM_CLASS(STRING)")
-    
+
     @property
     def role(self):
         return self.__getXprop("WM_WINDOW_ROLE(STRING)")
@@ -178,7 +177,7 @@ def getFocusedWindow():
     except ValueError:
         # no window currently selected!
         return None
-    
+
 if __name__ == "__main__":
     w = Window(winId=Window.FOCUSED)
     print w.size, w.name, w.wmclass, w.iconName
