@@ -62,7 +62,6 @@ class Window(object):
 
         for line in self.xpropResult:
             x = line.split("=")
-            log.info("XXXXXXXXXXX: {}".format(x))
             if len(x) < 2:
                 # this will skip over errors like if we asked for a
                 # property not on this window.
@@ -111,11 +110,17 @@ class Window(object):
 
     @property
     def emacsMandimusHost(self):
-        return self.__getXprop("mandimus_server_host(STRING)")
+        host = self.__getXprop("mandimus_server_host(STRING)")
+        if host == "":
+            return None
+        return host
 
     @property
     def emacsMandimusPort(self):
-        return int(self.__getXprop("mandimus_server_port(STRING)"))
+        port = self.__getXprop("mandimus_server_port(STRING)")
+        if port == "":
+            return None
+        return int(port)
 
     @property
     def wmclass(self):

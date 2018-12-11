@@ -10,18 +10,11 @@ import subprocess
 from Actions import Action, Key, Text
 import EventLoop
 from EventLoop import getLoop
-from EventList import FocusChangeEvent, EmacsConnectedEvent
+from EventList import EmacsConnectedEvent, FocusChangeEvent
 import grammar
 import rules.BaseRules as BaseRules
 import socket
 import errno
-from Window import getFocusedWindow
-
-EMACSCLIENT = "timeout 5 emacsclient" # timeout so we don't get stuck blocking
-alternative = op.join(os.getenv("HOME"), "opt/bin/emacsclient")
-log.info(alternative)
-if op.exists(alternative):
-    EMACSCLIENT = alternative
 
 logCommands = False
 def toggleCommandLogging(*args):
@@ -30,10 +23,12 @@ def toggleCommandLogging(*args):
 
 class CommandClient(object):
     EMACS_TIMEOUT = 5
-    
-    def __init__(self):
+
+    def __init__(self, host, port):
         self.sock = None
         self.sock = self.makeSocket()
+        self.host = host
+        self.port = port
 
     def makeSocket(self):
         if self.sock:
@@ -52,7 +47,7 @@ class CommandClient(object):
 
         self.sock.settimeout(0.05)
         try:
-            self.sock.connect(("localhost", 23233))
+            self.sock.connect((self.host, self.port))
             log.info("Connected to emacs!")
             getLoop().put(EmacsConnectedEvent())
             return True
@@ -114,7 +109,7 @@ class CommandClient(object):
             log.info("New data dump: [%s]" % newData)
             self.dumpOther()
             raise
-            
+
         out = out.decode('utf-8')
         return out
 
@@ -144,7 +139,7 @@ class CommandClient(object):
 
         for w in reversed(wrapper):
             command = w.format(command)
-            
+
         # have to delete newlines since they're the protocol delimeter
         command = command.replace("\n", "")
 
@@ -157,15 +152,36 @@ class CommandClient(object):
             return "nil"
 
         out = self.recvMsg().rstrip()
-        
+
         if dolog or logCommands:
             log.info('emacs output: [%s]' % out)
         return out
 
-clientInst = CommandClient()
+clientInst = None
+
+allCommandClients = {
+    # "HOSTNAME" : PORT
+}
+
+def _choose_command_client(ev):
+    global allCommandClients
+    global clientInst
+    if not ev.window.emacsMandimusHost or not ev.window.emacsMandimusPort:
+        return
+
+    key = (ev.window.emacsMandimusHost, ev.window.emacsMandimusPort)
+    if key not in allCommandClients:
+        allCommandClients[key] = CommandClient(key[0], key[1])
+
+    clientInst = allCommandClients[key]
+
+getLoop().subscribeEvent(FocusChangeEvent, _choose_command_client)
 
 def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False, queryOnly=True):
     global clientInst
+    if clientInst is None:
+        log.info("Can't run command because not attached to any emacs: {}".format(command))
+        return ""
     return clientInst.runCmd(command, inFrame, dolog, allowError, queryOnly)
 
 class Minibuf(Action):
@@ -177,13 +193,13 @@ class Minibuf(Action):
 
 class Cmd(Action):
     classLog = False
-    
+
     def __init__(self, data=None, log=False, queryOnly=False):
         Action.__init__(self, data)
         self.log = log
         self.queryOnly = queryOnly
         # self.log = True
-    
+
     def _fillData(self, extras):
         """Normally extras contains the full structure of the tree,
         but to make it so you can write self.data more succintly
@@ -210,7 +226,7 @@ class Cmd(Action):
             return
         if self.log or self.classLog:
             log.info("%s lisp code: [%s]" % (type(self).__name__, code))
-            
+
         for i in range(self._repetitions(extras)):
             runEmacsCmd(code, dolog=(self.log or self.classLog), queryOnly=self.queryOnly)
 
@@ -236,7 +252,7 @@ def emacsChar(char):
 
 getCommandsEl = """
 (let ((y '()))
-  (mapatoms 
+  (mapatoms
    (lambda (x)
      (and (fboundp x)                    ; does x name a function?
 	  (commandp (symbol-function x)) ; is it interactive?
@@ -265,5 +281,3 @@ def updateCommandGrammar():
     #     grammar += [' ']
     # updateListGrammar(commandlist, 'command', set(),
     #                   SelectCommand, "EmacsCommandMapping")
-            
-
