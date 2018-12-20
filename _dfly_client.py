@@ -574,9 +574,9 @@ class DragonflyClient(DragonflyNode):
             self.other = self.makeSocket()
             self.other.settimeout(0.05)
             try:
-                #self.other.connect(("10.0.0.2", 23133))
+                self.other.connect(("10.0.2.2", 23133))
                 log.info("attempting to connect")
-                self.other.connect(("192.168.56.1", 23133))
+                #self.other.connect(("192.168.56.1", 23133))
                 log.info('connected')
 
                 # Should reset variables here rather than on disconnect,
@@ -588,10 +588,10 @@ class DragonflyClient(DragonflyNode):
                 self.lastMicState = None
                 self.lastLoadState = None
             except socket.error as e:
-                log.info('connect error')
+                log.info('connect error: %s' % e)
                 self.dumpOther()
             except socket.timeout as e:
-                log.info('connect timeout')
+                log.info('connect timeout: %s' % e)
                 self.dumpOther()
                 return
 
