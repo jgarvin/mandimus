@@ -29,6 +29,13 @@ class CommandClient(object):
         self.sock = self.makeSocket()
         self.host = host
         self.port = port
+        if self.host != socket.gethostname():
+            log.info("Requested emacs foreign host: {}:{}".format(self.host, self.port))
+            from os.path import expanduser
+            home = expanduser("~")
+            self.port = int(open(home + "/.emacs_ports/" + self.host).read())
+            self.host = "localhost"
+            log.info("Remapping through local tunnel: {}:{}".format(self.host, self.port))
 
     def makeSocket(self):
         if self.sock:
