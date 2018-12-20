@@ -35,8 +35,8 @@ _mapping  = {
     "move East [<i>]"               : Key("csa-space:%(i)d"),
     "West [<i>]"                    : Key("ca-backspace:%(i)d"),
     "move West [<i>]"               : Key("csa-backspace:%(i)d"),
-    "desk <d>"                      : Key("ca-%(d)d"),
-    "move desk <d>"                 : Key("csa-%(d)d"),
+    # "desk <d>"                      : Key("ca-%(d)d"),
+    # "move desk <d>"                 : Key("csa-%(d)d"),
     "clock [<i>]"                   : Key("ca-e:%(i)d"),
     "wise [<i>]"                    : Key("ca-h:%(i)d"),
     "move clock [<i>]"              : Key("cas-e:%(i)d"),
@@ -56,6 +56,18 @@ _mapping  = {
     # we need this because we are a different series merge group
     # 'rep [<n>]'                     : RepeatPreviousAction(),
 }
+
+
+numeric_to_symbol = ["exclamation", "at", "hash", "dollar", "percent", "caret", "ampersand", "asterisk", "lparen", "rparen"]
+
+number_names = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+
+_desk_mapping = { "desk {}".format(number_names[i]) : Key("ca-{}".format(numeric_to_symbol[i])) for i in range(9)}
+
+_move_desk_mapping = { "move desk {}".format(number_names[i]) : Key("csa-{}".format(numeric_to_symbol[i])) for i in range(9)}
+
+_mapping.update(_desk_mapping)
+_mapping.update(_move_desk_mapping)
 
 # XMonadRule = makeContextualRule("XMonad", _mapping, _extras, _defaults, seriesMergeGroup=1)
 XMonadRule = makeContextualRule("XMonad", _mapping, _extras, _defaults)
