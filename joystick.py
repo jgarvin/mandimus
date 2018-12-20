@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+
 from inputs import devices
 from Actions import Key
 
+
+import time
+import sys
 from collections import defaultdict
 
 JOYSTICK_CHOICE=0
@@ -86,8 +91,8 @@ joystick_actions = {
     buttons.Left + buttons.RightDown : Key("enter", delay=0), # turn this into repeat
     buttons.Left + buttons.Up        : Key("up", delay=0, style="hold"),
     buttons.Left + buttons.Down      : Key("down", delay=0, style="hold"),
-    buttons.Right + buttons.Up       : Key("pgup", delay=0), 
-    buttons.Right + buttons.Down     : Key("pgdown", delay=0), 
+    buttons.Right + buttons.Up       : Key("pgup", delay=0),
+    buttons.Right + buttons.Down     : Key("pgdown", delay=0),
 
     # treat these as modifiers
     buttons.Left                     : None,
@@ -100,7 +105,14 @@ def get_chosen_joystick():
             return joystick
 
 def joystick_event_loop():
-    joystick = get_chosen_joystick()
+    joystick = None
+    while True:
+        joystick = get_chosen_joystick()
+        if joystick is not None:
+            break
+        print("Can't find joystick, will retry in one second...", file=sys.stderr)
+        time.sleep(1)
+
     joystick_state = defaultdict(lambda: 0)
     combo_state = {}
     while True:
