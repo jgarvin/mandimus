@@ -1,3 +1,7 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+log.setLevel(20)
+
 from EventList import FocusChangeEvent, MajorModeEvent, EmacsConnectedEvent
 from EventLoop import getLoop, pushEvent
 from rules.emacs.Cmd import runEmacsCmd, Cmd
@@ -14,6 +18,7 @@ def _updateMajorMode(ev):
     _majorMode = runEmacsCmd("(md-get-all-modes)")
     _majorMode = _getEmacsList(_majorMode)
     if _majorMode != _oldMajorMode:
+        log.info("Switching major mode: {}".format(_majorMode))
         pushEvent(MajorModeEvent(_majorMode))
     _oldMajorMode = _majorMode
     

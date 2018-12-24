@@ -180,9 +180,15 @@ def _choose_command_client(ev):
     if key not in allCommandClients:
         allCommandClients[key] = CommandClient(key[0], key[1])
 
-    clientInst = allCommandClients[key]
+    if clientInst is not allCommandClients[key]:
+        log.info("Switching to emacs: {}".format(key))
+        clientInst = allCommandClients[key]
+        # getLoop().put(EmacsConnectedEvent())
 
-getLoop().subscribeEvent(FocusChangeEvent, _choose_command_client)
+# priority=-1 in order to make sure it runs before the code that
+# queries the current major mode, otherwise you might get the major
+# mode of the last focused emacs not the newly focused emacs.
+getLoop().subscribeEvent(FocusChangeEvent, _choose_command_client, priority=-1)
 
 def runEmacsCmd(command, inFrame=True, dolog=False, allowError=False, queryOnly=True):
     global clientInst
