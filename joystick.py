@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+from inputs import DeviceManager
 from inputs import devices
 from Actions import Key
 
@@ -99,15 +100,17 @@ joystick_actions = {
     buttons.Right                    : None
 }
 
-def get_chosen_joystick():
-    for i, joystick in enumerate(devices.gamepads):
+def get_chosen_joystick(device_manager):
+    for i, joystick in enumerate(device_manager.gamepads):
         if i == JOYSTICK_CHOICE:
             return joystick
 
 def joystick_event_loop():
     joystick = None
     while True:
-        joystick = get_chosen_joystick()
+        # device_manager = DeviceManager() # re-create every loop in case
+        device_manager = devices # re-create every loop in case
+        joystick = get_chosen_joystick(device_manager)
         if joystick is not None:
             break
         print("Can't find joystick, will retry in one second...", file=sys.stderr)
@@ -115,9 +118,11 @@ def joystick_event_loop():
 
     joystick_state = defaultdict(lambda: 0)
     combo_state = {}
+    print("Joystick ready!", file=sys.stderr)
     while True:
         events = joystick.read()
         for event in events:
+            print("Event {},{}".format(event.code, event.state), file=sys.stderr)
             joystick_state[event.code] = event.state
         for condition, action in joystick_actions.items():
             if action is None:

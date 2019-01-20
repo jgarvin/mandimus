@@ -30,7 +30,7 @@ EmacsTypingRule.context.addRequirement(IsEmacs)
     
 _mapping = {
     "fasten <text>" : EmacsText("%(text)s", False, spaceCheck=False),
-    "cap fasten <text>" : EmacsText("%(text)s", False, spaceCheck=False, allCaps=True),
+    "sky fasten <text>" : EmacsText("%(text)s", False, spaceCheck=False, allCaps=True),
 }
 
 EmacsFastenRule = makeContextualRule("EmacsFastenRule", _mapping, _extras, _defaults, RuleType.TERMINAL)
@@ -52,7 +52,7 @@ EmacsStudRule.context.addRequirement(IsEmacs)
 
 _mapping = {
     "hyphen <text>"     : EmacsHyphen("%(text)s"),
-    "cap hyphen <text>" : EmacsHyphen("%(text)s", True),
+    "sky hyphen <text>" : EmacsHyphen("%(text)s", True),
 }    
 
 EmacsHyphenRule = makeContextualRule("EmacsHyphenRule", _mapping, _extras, _defaults, RuleType.TERMINAL)
@@ -60,7 +60,7 @@ EmacsHyphenRule.context.addRequirement(IsEmacs)
 
 _mapping = {
     "score <text>"     : EmacsUnderscore("%(text)s"),
-    "cap score <text>" : EmacsUnderscore("%(text)s", True),
+    "sky score <text>" : EmacsUnderscore("%(text)s", True),
 }
 
 EmacsScoreRule = makeContextualRule("EmacsScoreRule", _mapping, _extras, _defaults, RuleType.TERMINAL)

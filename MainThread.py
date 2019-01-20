@@ -268,6 +268,7 @@ if __name__ == "__main__":
         ('rules.emacs.Term', ['']),
         ('rules.emacs.ModeLine', ['']),
         ('rules.emacs.Racket', ['']),
+        ('rules.emacs.Rust', ['']),
         ('rules.emacs.Shell', ['']),
         ('rules.emacs.Snippet', ['']),
         ('rules.emacs.Sql', ['']),

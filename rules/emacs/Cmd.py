@@ -21,6 +21,12 @@ def toggleCommandLogging(*args):
     global logCommands
     logCommands = not logCommands
 
+clientInst = None
+
+allCommandClients = {
+    # "HOSTNAME" : PORT
+}
+
 class CommandClient(object):
     EMACS_TIMEOUT = 5
 
@@ -29,7 +35,11 @@ class CommandClient(object):
         self.sock = self.makeSocket()
         self.host = host
         self.port = port
-        if self.host != socket.gethostname():
+        if self.host == socket.gethostname():
+            # necessary starting in emacs 26.1... seems to be a distinction between
+            # localhost and 127.0.0.1
+            self.host = "127.0.0.1"
+        else:
             log.info("Requested emacs foreign host: {}:{}".format(self.host, self.port))
             from os.path import expanduser
             home = expanduser("~")
@@ -52,7 +62,7 @@ class CommandClient(object):
         if not self.sock:
             self.makeSocket()
 
-        self.sock.settimeout(0.05)
+        self.sock.settimeout(0.50)
         try:
             self.sock.connect((self.host, self.port))
             log.info("Connected to emacs!")
@@ -65,6 +75,11 @@ class CommandClient(object):
         return False
 
     def dumpOther(self):
+        # This will prevent mandimus from hanging when emacs stops responding,
+        # as long as emacs isn't given focus.
+        # global clientInst
+        # clientInst = None
+
         self.sock.close()
         self.sock = None
 
@@ -103,12 +118,12 @@ class CommandClient(object):
         except socket.timeout as e:
             log.info("Emacs socket timeout.")
             self.dumpOther()
-            return False
+            return None
         except socket.error as e:
             log.info("Emacs socket error while receiving: %s" % e)
             if e.errno == errno.EPIPE or e.errno == errno.EBADF:
                 self.dumpOther()
-                return False
+                return None
             else:
                 raise
         except Exception as e:
@@ -158,17 +173,17 @@ class CommandClient(object):
             log.info("Couldn't send message: [%s]" % command)
             return "nil"
 
-        out = self.recvMsg().rstrip()
+        out = self.recvMsg()
+        if out is None:
+            log.error("Error getting result of command: [%s]" % command)
+            return "nil"
+
+        out = out.rstrip()
 
         if dolog or logCommands:
             log.info('emacs output: [%s]' % out)
         return out
 
-clientInst = None
-
-allCommandClients = {
-    # "HOSTNAME" : PORT
-}
 
 def _choose_command_client(ev):
     global allCommandClients
