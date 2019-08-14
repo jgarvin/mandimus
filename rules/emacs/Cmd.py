@@ -188,10 +188,22 @@ class CommandClient(object):
 def _choose_command_client(ev):
     global allCommandClients
     global clientInst
-    if not ev.window.emacsMandimusHost or not ev.window.emacsMandimusPort:
+
+    key = None
+    try:
+        window_name = ev.window.name
+        host_and_port_string = window_name.rsplit("mandimus[")[1]
+        host_and_port_string = host_and_port_string.split("]")[0]
+        key = host_and_port_string.split(":")
+        key[1] = int(key[1])
+        key = tuple(key)
+    except IndexError:
+        if ev.window.emacsMandimusHost and ev.window.emacsMandimusPort:
+            key = (ev.window.emacsMandimusHost, ev.window.emacsMandimusPort)
+
+    if key is None:
         return
 
-    key = (ev.window.emacsMandimusHost, ev.window.emacsMandimusPort)
     if key not in allCommandClients:
         allCommandClients[key] = CommandClient(key[0], key[1])
 

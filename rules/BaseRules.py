@@ -25,7 +25,7 @@ _mapping = {
     "osh"   : "o",
     "pig"   : "p",
     "quid"  : "q",
-    "robe"  : "r",
+    "road"  : "r",
     "shoe"  : "s",
     "toss"  : "t",
     "use"   : "u",

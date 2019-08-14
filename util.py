@@ -10,7 +10,7 @@ def rindex(lst, item):
     try:
         return dropwhile(index_ne, reversed(xrange(len(lst)))).next()
     except StopIteration:
-        raise ValueError, "rindex(lst, item): item not in list"
+        raise ValueError("rindex(lst, item): item not in list")
 
 def enum(**enums):
     return type('Enum', (), enums)

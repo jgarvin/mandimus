@@ -47,7 +47,23 @@ keywords = [
     "unsafe",
     "use",
     "where",
-    "while"
+    "while",
+    ["i8", "signed 8"],
+    ["i16", "signed 16"],
+    ["i32", "signed 32"],
+    ["i64", "signed 64"],
+    ["isize", "signed size"],
+    ["u8", "unsigned 8"],
+    ["u16", "unsigned 16"],
+    ["u32", "unsigned 32"],
+    ["u64", "unsigned 64"],
+    ["usize", "unsigned size"],
+    ["f32", "float 32"],
+    ["f64", "float 64"],
+    "bool",
+    "true",
+    "false",
+    "char"
 ]
 
 RustKeywordRule = KeywordRule("rust-mode", keywords)

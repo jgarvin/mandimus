@@ -160,6 +160,7 @@ EmacsIsolatedRule.context.addRequirement(IsEmacs)
 
 _mapping = {
     "help function"      : Key("c-h,f"),
+    "help language"      : Key("c-h,g"),
     "help function slap" : Key("c-h,f,enter"),
     "help variable"      : Key("c-h,v"),
     "help variable slap" : Key("c-h,v,enter"),
