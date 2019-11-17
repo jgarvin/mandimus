@@ -138,7 +138,7 @@ _mapping = {
     "stop irc"                    : Minibuf("stop-irc"),
     "toggle tail mode"            : Cmd("(auto-revert-tail-mode)"),
     "list packages"               : Minibuf("list-packages"),
-    "get status"                  : Minibuf("magit-status"),
+    "get status"                  : Key("c-t,g"),
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
     # "show top"                  : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
