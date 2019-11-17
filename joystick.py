@@ -1,7 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+
+import sys
+print("Attempting imports from: {}".format(sys.path), file=sys.stderr)
 
 from inputs import DeviceManager
 from inputs import devices
@@ -9,7 +12,6 @@ from Actions import Key
 
 
 import time
-import sys
 from collections import defaultdict
 
 JOYSTICK_CHOICE=0
