@@ -1,7 +1,7 @@
 import mdlog
 log = mdlog.getLogger(__name__)
 
-from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction
+from Actions import Key, Text, Camel, Underscore, Hyphen, Speak, Action, RepeatPreviousAction, click
 from listHelpers import dictReplace
 import rules.BaseRules as BaseRules
 from rules.BaseRules import AlphaRule, DigitRule, SymRule, CharRule, PressKey
@@ -23,6 +23,9 @@ _mapping = {
     'cap scoot [<i>]'                        : Key("s-tab:%(i)d"),
     'greek alpha' : Text("alpha"),
     'greek alphas' : Text("alphas"),
+    "click left" : click(1),
+    "click middle" : click(2),
+    "click right" : click(3)
 }
 
 _extras = [

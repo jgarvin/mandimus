@@ -532,7 +532,7 @@ class click:
     def __init__(self, keyStr):
         self.keyStr = keyStr
 
-    def __call__(self):
+    def __call__(self, extras={}):
         # TODO: pay attention to errors, exit status
         cmd = "xdotool click " + str(self.keyStr)
 #        log.info("executing: " + cmd)
