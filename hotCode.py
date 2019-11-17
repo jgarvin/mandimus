@@ -15,7 +15,10 @@ def resetImportState():
     also import x, we don't end up reloading x again,
     even if in both cases importOrReload('x') was called."""
     global __importState
-    __importState = random.randint(0, sys.maxint) 
+    if hasattr(sys, "maxint"):
+        __importState = random.randint(0, sys.maxint)
+    else:
+        __importState = random.randint(0, sys.maxsize)
 
 resetImportState()        
 
