@@ -21,7 +21,7 @@ while true; do
     # to trigger restarts
     TRAPINT() {}
     
-    python MainThread.py
+    python2 MainThread.py
 
     # but only when python is running, this way if we
     # hold control-c we still quit the whole loop
