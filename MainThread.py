@@ -274,6 +274,8 @@ if __name__ == "__main__":
         ('rules.emacs.Sql', ['']),
         ('rules.emacs.SymbolPicker', ['']),
         ('rules.emacs.VarNames', ['']),
+        ('rules.emacs.Vhdl', ['']),
+        ('rules.emacs.Verilog', ['']),
         ('rules.WindowNames', ['']),
         ('rules.emacs.Words', ['']),
         ('rules.XMonad', ['']),
