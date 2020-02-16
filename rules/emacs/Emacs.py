@@ -142,6 +142,7 @@ _mapping = {
     "open terminal"               : Cmd("(etc-start-or-open-terminal)"),
     # "show top"                  : Cmd("(etc-start-or-open-top)"),
     "open temp"                   : Cmd("(md-create-temp-file \"temp\")"),
+    "open tramp"                   : Key("c-c,s,t"),
     "toggle command logging"      : toggleCommandLogging,
     "toggle refresh client"       : toggleRefreshClientSources,
     "magnify [<i>]"               : Key("c-t,c-plus:%(i)d"),
