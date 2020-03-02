@@ -276,6 +276,7 @@ if __name__ == "__main__":
         ('rules.emacs.VarNames', ['']),
         ('rules.emacs.Vhdl', ['']),
         ('rules.emacs.Verilog', ['']),
+        ('rules.Terminal', ['']),
         ('rules.WindowNames', ['']),
         ('rules.emacs.Words', ['']),
         ('rules.XMonad', ['']),

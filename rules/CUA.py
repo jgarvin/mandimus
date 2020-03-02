@@ -1,6 +1,7 @@
 from Actions import Key, Text
 from protocol import Integer, Dictation, RuleType
 from requirements.Emacs import NotEmacs
+from requirements.Terminal import NotTerminal
 from rules.emacs.Cmd import CharCmd
 from rules.ContextualRule import makeContextualRule
 
@@ -63,3 +64,4 @@ _defaults = {
 
 CUARule = makeContextualRule("CUA", _mapping, _extras, _defaults)
 CUARule.context.addRequirement(NotEmacs)
+CUARule.context.addRequirement(NotTerminal)
