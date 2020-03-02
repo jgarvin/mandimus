@@ -19,10 +19,10 @@ class WindowRequirement(Requirement):
         log.info("testing requirement for: [%s]" % (self.wmclass,))
         for c in self.wmclass:
             log.info("testing if [%s] in [%s]" % (c, ev.window.wmclass))
-            if (c in ev.window.wmclass) ^ self.negate:
+            if (c in ev.window.wmclass):
                 matched = True
                 break
-        if matched:
+        satisfied =  (matched and not self.negate) or (not matched and self.negate)
+        if satisfied:
             log.info("Window req matched: [%s%s]" % ("^" if self.negate else "", self.wmclass))
-        self._met(matched)
-
+        self._met(satisfied)
