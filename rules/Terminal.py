@@ -30,6 +30,10 @@ _mapping  = {
     "chip [<n>]"          : Key("c-w:%(n)d"),
     "pitch [<n>]"         : Key("a-d:%(n)d"),
     "run top"         : Text("top") + Key("enter"),
+    "run H top"         : Text("htop") + Key("enter"),
+    "switch user" : Text("su - "),
+    "C D" : Text("cd "),
+    "run D message" : Text("dmesg") + Key("enter"),
     "S S H" : Text("ssh "),
     # Also in the emacs rules, but since emacs rules are mutually exclusive with these
     # both definition should never be active at the same time.
