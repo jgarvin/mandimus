@@ -58,11 +58,17 @@ class FolderNames(BufferNames):
 
 class ShellNames(BufferNames):
     phrase = "shell"
-    query = "(md-get-buffers-in-modes 'comint-mode)"
+    query = "(md-get-buffers-in-modes 'shell-mode)"
 
     def _noChoice(self):
         Key("c-z")()
-        #runEmacsCmd("(etc-open-shell nil)", queryOnly=False)
+
+class EShellNames(BufferNames):
+    phrase = "eshell" # wanted to make "E shell" or "e-shell "but then rules never load
+    query = "(md-get-buffers-in-modes 'eshell-mode)"
+
+    def _noChoice(self):
+        (Key("c-c") + Key("c-z"))()
 
 class ChannelNames(BufferNames):
     phrase = "channel"
@@ -75,6 +81,7 @@ class SpecialNames(BufferNames):
 _bufferQueryTable = [
     FolderNames,
     ShellNames,
+    EShellNames,
     ChannelNames,
     SpecialNames,
 ]
@@ -98,11 +105,19 @@ for e in _bufferQueryTable:
 # but leaves the first shell as just $shell, we add this for voice command
 # uniformity
 _mapping = {
-    "shell one" : Cmd("(switch-to-buffer \"$shell\")")
+    "shell one" : Cmd("(switch-to-buffer \"*shell*\")")
 }
 ShellOneRule = makeContextualRule("ShellOneRule", _mapping)
 ShellOneRule.context.addRequirement(IsEmacs)
 
+# Because uniquify buffer code will start naming things $eshell<2>, $eshell<3>,
+# but leaves the first eshell as just $eshell, we add this for voice command
+# uniformity
+_mapping = {
+    "eshell one" : Cmd("(switch-to-buffer \"*eshell*\")")
+}
+EshellOneRule = makeContextualRule("EshellOneRule", _mapping)
+EshellOneRule.context.addRequirement(IsEmacs)
 
 _mapping = {}
 for e in _bufferQueryTable:
