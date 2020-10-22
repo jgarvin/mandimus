@@ -63,6 +63,8 @@ def parseSingleKeystring(keyStr):
             xdo += ['alt']
         elif modifier == 's':
             xdo += ['shift']
+        elif modifier == 'w':
+            xdo += ['Super_L']
         else:
             raise Exception('Unknown modifier: ' + modifier)
 

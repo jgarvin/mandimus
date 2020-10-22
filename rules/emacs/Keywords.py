@@ -1,3 +1,6 @@
+import mdlog
+log = mdlog.getLogger(__name__)
+
 from rules.ContextualRule import makeContextualRule
 from requirements.Emacs import IsEmacs
 from requirements.ModeRequirement import ModeRequirement
@@ -39,6 +42,8 @@ class KeywordCmd(Cmd):
             assert False
 
 def normalizeKeywords(keywords):
+##    for k in keywords:
+##        log.info("Keyword: [%s] Type: [%s]" % (k, type(k)))
     return [x if type(x) not in (str, unicode) else (x, x) for x in keywords]
 
 def makeKeywordListRule(name, keywords):

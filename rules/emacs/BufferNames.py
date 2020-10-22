@@ -68,7 +68,7 @@ class EShellNames(BufferNames):
     query = "(md-get-buffers-in-modes 'eshell-mode)"
 
     def _noChoice(self):
-        (Key("c-c") + Key("c-z"))()
+        (Key("c-c") + Key("z"))()
 
 class ChannelNames(BufferNames):
     phrase = "channel"

@@ -105,6 +105,8 @@ _keywords = [
     [">", "stood out"],
     ["2>", "stood err"],
     ["&>", "stood both"],
+    ["ulimit", "you limit"],
+    ["taskset", "task set"]
 ]
 
 ShellKeywordRule = KeywordRule(["shell-mode", "sh-mode"], _keywords)
